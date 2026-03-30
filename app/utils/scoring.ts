@@ -16,6 +16,12 @@ export function calcSpeedStars(score: number): number {
   return 1;
 }
 
+export function calcLogicStars(correct: number): number {
+  if (correct >= 6) return 3;
+  if (correct >= 4) return 2;
+  return 1;
+}
+
 export function calcPatternStars(correct: number): number {
   if (correct >= 6) return 3;
   if (correct >= 4) return 2;

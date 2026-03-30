@@ -2,11 +2,11 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-export type GameType = 'memory' | 'word' | 'speed' | 'pattern';
+export type GameType = 'memory' | 'logic' | 'speed' | 'pattern';
 
 interface DomainScores {
   memory: number;
-  word: number;
+  logic: number;
   speed: number;
   pattern: number;
 }
@@ -32,7 +32,7 @@ function getWeekStart(): string {
 export const useBrainStore = create<BrainState>()(
   persist(
     (set) => ({
-      domains: { memory: 62, word: 55, speed: 40, pattern: 38 },
+      domains: { memory: 62, logic: 55, speed: 40, pattern: 38 },
       weeklyBaseline: 742,
       weekStart: getWeekStart(),
 

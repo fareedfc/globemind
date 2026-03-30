@@ -177,7 +177,7 @@ export default function MemoryGame() {
       </View>
 
       <ScrollView contentContainerStyle={s.body} showsVerticalScrollIndicator={false}>
-        <Text style={[s.domainTag, { color: Colors.gold }]}>Working Memory</Text>
+        <Text style={[s.domainTag, { color: Colors.gold }]}>Memory</Text>
 
         <View style={s.instr}>
           <Text style={s.instrTxt}>{level.desc}</Text>

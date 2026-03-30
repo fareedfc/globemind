@@ -193,7 +193,7 @@ export default function PatternGame() {
       </View>
 
       <View style={s.body}>
-        <Text style={[s.domainTag, { color: Colors.teal }]}>Pattern Recognition</Text>
+        <Text style={[s.domainTag, { color: Colors.teal }]}>Pattern</Text>
 
         <View style={s.instr}>
           <Text style={s.instrTxt}>{level.desc}</Text>

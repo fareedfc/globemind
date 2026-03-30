@@ -14,18 +14,18 @@ const DOMAIN_META: Array<{
   label: string;
   color: string;
 }> = [
-  { key: 'memory',  icon: '🧩', label: 'Working Memory',     color: Colors.gold },
-  { key: 'speed',   icon: '⚡', label: 'Processing Speed',   color: Colors.coral },
-  { key: 'word',    icon: '🔤', label: 'Verbal Fluency',      color: Colors.teal },
-  { key: 'pattern', icon: '🔮', label: 'Pattern Recognition', color: Colors.purple },
-  { key: 'focus',   icon: '🎯', label: 'Attention & Focus',   color: Colors.blue },
+  { key: 'memory',  icon: '🧩', label: 'Memory',  color: Colors.gold },
+  { key: 'speed',   icon: '⚡', label: 'Speed',   color: Colors.coral },
+  { key: 'logic',   icon: '🔤', label: 'Logic',   color: Colors.teal },
+  { key: 'pattern', icon: '🔮', label: 'Pattern', color: Colors.purple },
+  { key: 'focus',   icon: '🎯', label: 'Focus',   color: Colors.blue },
 ];
 
 const COACH_TIPS: Record<GameType, string> = {
-  memory:  'Working Memory is your biggest growth area. Aim for zero wrong flips on Memory Match levels.',
-  speed:   'Processing Speed is your opportunity this week. Stack combos on Speed Match to accelerate gains.',
-  word:    'Verbal Fluency needs a boost. Go for longer words on Word Builder — they score more and train harder.',
-  pattern: 'Pattern Recognition is your growth zone. Focus on Pattern Pulse levels to build this skill fast.',
+  memory:  'Memory is your biggest growth area. Aim for zero wrong flips on Memory levels.',
+  speed:   'Speed is your opportunity this week. Stack combos on Speed Match to accelerate gains.',
+  logic:   'Logic is your growth zone this week. Take your time and think it through.',
+  pattern: 'Pattern is where you grow fastest. Focus on Pattern Pulse levels to build this skill.',
 };
 
 export default function BrainScreen() {
@@ -40,7 +40,7 @@ export default function BrainScreen() {
   const percentile = Math.min(99, Math.max(1, Math.round(50 + (score - 700) / 15)));
 
   // Weakest of the 4 playable domains
-  const weakestKey = (['memory', 'speed', 'word', 'pattern'] as GameType[])
+  const weakestKey = (['memory', 'speed', 'logic', 'pattern'] as GameType[])
     .sort((a, b) => domains[a] - domains[b])[0];
 
   const coachTip = COACH_TIPS[weakestKey];
@@ -70,8 +70,8 @@ export default function BrainScreen() {
           </View>
         </LinearGradient>
 
-        {/* Cognitive Domains */}
-        <Text style={s.sectionLbl}>Cognitive Domains</Text>
+        {/* Brain Training Areas */}
+        <Text style={s.sectionLbl}>Brain Training Areas</Text>
         <View style={s.domainList}>
           {DOMAIN_META.map(d => {
             const pct = d.key === 'focus' ? 0 : domains[d.key as GameType];

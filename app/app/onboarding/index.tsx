@@ -27,8 +27,8 @@ const SLIDES = [
     emoji: '🧩',
     accent: Colors.teal,
     title: '4 games.\n4 brain powers.',
-    body: 'Memory Match, Word Builder, Speed Match, and Pattern Pulse — each level trains a key cognitive skill.',
-    extras: ['🎴 Working Memory', '⚡ Processing Speed', '🔤 Verbal Fluency', '🔮 Pattern Recognition'],
+    body: 'Memory Match, Word Builder, Speed Match, and Pattern Pulse — each level is designed to give your brain a great workout.',
+    extras: ['🧩 Memory', '⚡ Speed', '🔮 Pattern', '🔤 Logic'],
   },
   {
     emoji: '🧠',

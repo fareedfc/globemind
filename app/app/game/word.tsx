@@ -144,7 +144,7 @@ export default function WordGame() {
       </View>
 
       <ScrollView contentContainerStyle={s.body} showsVerticalScrollIndicator={false}>
-        <Text style={[s.domainTag, { color: Colors.purple }]}>Verbal Fluency</Text>
+        <Text style={[s.domainTag, { color: Colors.purple }]}>Logic</Text>
 
         <View style={s.instr}>
           <Text style={s.instrTxt}>{level.desc}</Text>

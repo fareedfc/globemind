@@ -37,22 +37,22 @@ Existing brain training apps (Lumosity, BrainHQ) feel like homework. GlobeMind f
 
 ## The 4 Game Modes
 
-### 1. Memory Match — Working Memory
+### 1. Memory Match — Memory
 - Classic card flip-and-match
 - Cards show emoji on reveal
 - Pip indicators track pairs found
 - Board size scales with level difficulty (3 pairs → 6 pairs)
 - Win: find all pairs
 
-### 2. Word Builder — Verbal Fluency
-- Letter tiles laid out in a grid
-- Tap letters to build words
-- Submit to validate against word list
-- Clear button to reset current attempt
-- Win: find 5 valid words
-- Letters: curated sets (TRAVELS, WORLDS, JOURNEY etc.)
+### 2. Odd One Out — Logic
+- 4 emoji shown in a 2×2 grid
+- 3 belong to a group, 1 is the odd one out
+- Tap the one that doesn't belong before the 8 second timer runs out
+- Brief hint shown after each round ("Not a fruit")
+- 7 rounds per game
+- Win: complete all 7 rounds (score = correct answers)
 
-### 3. Speed Match — Processing Speed
+### 3. Speed Match — Speed
 - Target symbol shown at top
 - 6 options shown in 3x2 grid below
 - Tap the matching symbol as fast as possible
@@ -60,22 +60,24 @@ Existing brain training apps (Lumosity, BrainHQ) feel like homework. GlobeMind f
 - Combo multiplier for consecutive correct answers
 - Win: timer runs out (score based)
 
-### 4. Pattern Pulse — Pattern Recognition
+### 4. Pattern Pulse — Pattern
 - Sequence of emoji lights up one by one
 - Then goes dim — player must remember
 - 4 choices shown: pick what comes next
 - 8 second answer timer
-- 7 rounds per game, various pattern types (AB, AAB, ABC repeat, odd-one-out)
+- 7 rounds per game, various pattern types (AB, AAB, ABC repeat)
 - Win: complete all 7 rounds (score = correct answers)
 
-## Cognitive Domains Tracked
-1. 🧩 Working Memory
-2. ⚡ Processing Speed
-3. 🔤 Verbal Fluency
-4. 🔮 Pattern Recognition
-5. 🎯 Attention & Focus (planned, not yet built)
+## Brain Training Areas Tracked
+1. 🧩 Memory
+2. ⚡ Speed
+3. 🔤 Logic
+4. 🔮 Pattern
+5. 🎯 Focus (planned, not yet built)
 
-Each completed game updates the player's Brain Score and domain percentages.
+Each completed game updates the player's Brain Score and training area percentages.
+
+**Important:** We never use the word "cognitive" in the product. We frame GlobeMind as a brain training / wellness tool. Regulators scrutinise cognitive ability claims for computer games — our language stays warm and wellness-oriented ("sharpen your mind", "mental fitness", "brain workout").
 
 ## Brain Score System
 - Composite score across all 5 domains
@@ -105,25 +107,28 @@ Each completed game updates the player's Brain Score and domain percentages.
 
 One-time IAP: Continent Packs ($2.99), Explorer Kit ($4.99), Extra Lives
 
-## What Has Been Prototyped
-A fully working HTML prototype exists (`globemind.html`) with:
-- All 4 games playable end-to-end
+## What Has Been Built
+A fully working React Native (Expo) app exists in `app/` with:
+- All 4 games playable end-to-end (Memory Match, Odd One Out, Speed Match, Pattern Pulse)
 - Scrolling zigzag level path (15 levels)
 - Bottom sheet level modal
 - Win screen with brain insight
-- Brain tab with domain bars
+- Brain tab with training area bars
 - Miles tab with passport stamps
 - Brain score updates live after each game
-- Candy Crush-style visual feel
+- Lives system with refill timer
+- Day streak tracking
+- Local persistence via AsyncStorage (Zustand)
+- Onboarding flow with animated baseline reveal
 
-The prototype is a single HTML file with vanilla JS — no framework, no build step.
+A legacy HTML prototype also exists (`globemind_prototype.html`) — single file, vanilla JS, for reference only.
 
-## Tech Stack Decision (TBD)
-The prototype is vanilla HTML/CSS/JS. For production, recommend:
-- **React Native** or **Expo** for cross-platform mobile (iOS + Android)
-- OR **Capacitor** wrapping a React/Vue web app for faster iteration
-- Backend: Firebase or Supabase for auth, scores, streaks
-- Consider keeping web-first with PWA for faster MVP
+## Tech Stack
+- **React Native + Expo (SDK 54)** — cross-platform mobile (iOS + Android)
+- **expo-router** — file-based navigation
+- **Zustand + AsyncStorage** — local state persistence
+- **React Native built-in `Animated`** — animations (no Reanimated dependency)
+- Backend (planned): Supabase for auth/scores, RevenueCat for subscriptions
 
 ## Key Design Principles
 1. **Never make the player feel dumb** — frame difficulty as "brain warming up"
