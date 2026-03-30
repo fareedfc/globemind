@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<title>GlobeMind — Train Your Brain</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{--bg:#1a1a2e;--bg2:#16213e;--gold:#FFD166;--gold2:#FFAA00;--teal:#06D6A0;--coral:#EF476F;--purple:#9B5DE5;--blue:#118AB2;--white:#F8F9FA;--muted:rgba(248,249,250,0.5);}
+html,body{height:100%;background:#111;display:flex;align-items:center;justify-content:center;}
+body{font-family:'Nunito',sans-serif;color:var(--white);overflow:hidden;}
+.app{width:100%;max-width:420px;height:100vh;max-height:900px;display:flex;flex-direction:column;background:var(--bg);position:relative;overflow:hidden;box-shadow:0 0 60px rgba(0,0,0,0.6);}
+@media(max-width:480px){.app{max-height:100vh;box-shadow:none;}}
+.bottom-nav{display:flex;border-top:1px solid rgba(255,255,255,0.07);background:var(--bg);flex-shrink:0;z-index:50;}
+.nav-btn{flex:1;background:none;border:none;padding:10px 0 16px;cursor:pointer;font-family:'Nunito',sans-serif;display:flex;flex-direction:column;align-items:center;gap:3px;}
+.nav-ico{font-size:22px;}
+.nav-lbl{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;}
+.nav-btn.active .nav-lbl{color:var(--gold);}
+.page{display:none;flex-direction:column;flex:1;overflow:hidden;}
+.page.active{display:flex;}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:16px 20px 10px;flex-shrink:0;}
+.logo{font-size:22px;font-weight:900;letter-spacing:-.5px;}
+.logo em{color:var(--gold);font-style:normal;}
+.pills{display:flex;gap:8px;}
+.pill{display:flex;align-items:center;gap:4px;border-radius:20px;padding:5px 11px;font-size:13px;font-weight:700;}
+.pill.gold{background:rgba(255,209,102,.15);color:var(--gold);}
+.pill.red{background:rgba(239,71,111,.15);color:var(--coral);}
+.pill.teal{background:rgba(6,214,160,.12);color:var(--teal);}
+.path-scroll{flex:1;overflow-y:auto;padding:0 20px 100px;-webkit-overflow-scrolling:touch;}
+.path-scroll::-webkit-scrollbar{display:none;}
+.vibe-banner{margin:8px 0 20px;border-radius:20px;height:80px;background:linear-gradient(135deg,#1a3a5c,#0d2137);display:flex;align-items:center;padding:0 20px;}
+.vibe-lbl{font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;opacity:.6;}
+.vibe-title{font-size:20px;font-weight:900;margin-top:2px;}
+.path-container{position:relative;min-height:1800px;}
+.path-svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;}
+.level-node{position:absolute;display:flex;flex-direction:column;align-items:center;cursor:pointer;transition:transform .15s;-webkit-tap-highlight-color:transparent;}
+.level-node:active{transform:scale(.92);}
+.bubble{width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:28px;border:3px solid rgba(255,255,255,.1);box-shadow:0 4px 16px rgba(0,0,0,.35);position:relative;}
+.bubble.done{background:linear-gradient(135deg,#FFD166,#FF9500);border-color:var(--gold);}
+.bubble.curr{background:linear-gradient(135deg,#06D6A0,#118AB2);border-color:var(--teal);animation:bob 2s ease-in-out infinite;}
+.bubble.lock{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.08);opacity:.45;cursor:default;}
+.bubble.boss{background:linear-gradient(135deg,#EF476F,#9B5DE5);border-color:var(--coral);}
+@keyframes bob{0%,100%{transform:translateY(0) scale(1);}50%{transform:translateY(-5px) scale(1.06);}}
+.bubble.curr::after{content:'';position:absolute;inset:-8px;border-radius:50%;border:3px solid rgba(6,214,160,.35);animation:ring 2s ease-in-out infinite;}
+@keyframes ring{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.3;transform:scale(1.18);}}
+.stars{display:flex;gap:2px;margin-top:4px;font-size:11px;}
+.milestone{display:flex;align-items:center;gap:10px;margin:20px 0;padding:11px 16px;background:rgba(255,255,255,.04);border-radius:50px;border:1px dashed rgba(255,255,255,.12);}
+.milestone-txt{font-size:13px;font-weight:700;opacity:.6;}
+.locked-hint{text-align:center;padding:20px 0 40px;opacity:.25;}
+.overlay{display:none;position:fixed;inset:0;z-index:100;background:rgba(10,10,20,.85);align-items:flex-end;justify-content:center;}
+.overlay.open{display:flex;}
+.modal{width:100%;max-width:420px;background:var(--bg2);border-radius:28px 28px 0 0;padding:22px 20px 34px;animation:up .3s cubic-bezier(.34,1.2,.64,1);}
+@keyframes up{from{transform:translateY(100%);}to{transform:translateY(0);}}
+.drag{width:40px;height:4px;background:rgba(255,255,255,.2);border-radius:2px;margin:0 auto 18px;}
+.modal-row{display:flex;align-items:center;gap:12px;margin-bottom:4px;}
+.modal-ico{font-size:38px;}
+.modal-title{font-size:22px;font-weight:900;}
+.modal-domain{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;}
+.modal-desc{font-size:14px;color:var(--muted);line-height:1.6;margin-bottom:18px;}
+.modal-play{width:100%;padding:17px;border:none;border-radius:16px;font-size:17px;font-weight:900;cursor:pointer;font-family:'Nunito',sans-serif;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#1a1a2e;}
+.modal-skip{width:100%;padding:13px;border:none;border-radius:13px;background:rgba(255,255,255,.07);color:var(--white);font-size:14px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;margin-top:10px;}
+.game-screen{display:none;position:fixed;inset:0;z-index:200;background:var(--bg);flex-direction:column;max-width:420px;margin:0 auto;}
+.game-screen.open{display:flex;}
+.g-head{display:flex;align-items:center;padding:14px 20px;gap:12px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0;}
+.g-back{background:rgba(255,255,255,.08);border:none;color:var(--white);width:38px;height:38px;border-radius:50%;cursor:pointer;font-size:17px;font-family:'Nunito',sans-serif;}
+.g-title{font-size:13px;font-weight:800;flex:1;line-height:1.3;}
+.g-pill{padding:5px 12px;border-radius:20px;font-size:13px;font-weight:800;}
+.g-body{flex:1;display:flex;flex-direction:column;padding:14px 20px;overflow:hidden;}
+.dtag{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px;}
+.instr{font-size:13px;color:var(--muted);line-height:1.5;margin-bottom:14px;padding:10px 13px;background:rgba(255,255,255,.04);border-radius:11px;}
+.tbar-wrap{margin-bottom:12px;}
+.tbar-bg{height:7px;background:rgba(255,255,255,.08);border-radius:4px;overflow:hidden;}
+.tbar-fill{height:100%;border-radius:4px;transition:width .1s linear,background .3s;}
+.tbar-lbl{font-size:11px;color:var(--muted);font-weight:700;text-align:right;margin-top:3px;}
+.mem-grid{display:grid;gap:9px;flex:1;}
+.mem-card{border-radius:13px;cursor:pointer;transition:transform .35s;transform-style:preserve-3d;position:relative;min-height:64px;}
+.mem-card.flipped{transform:rotateY(180deg);}
+.mem-card.matched{transform:rotateY(180deg);opacity:.55;cursor:default;}
+.mf,.mb{position:absolute;inset:0;border-radius:13px;display:flex;align-items:center;justify-content:center;backface-visibility:hidden;}
+.mf{background:rgba(255,255,255,.08);border:1.5px solid rgba(255,255,255,.1);font-size:20px;font-weight:900;color:rgba(255,255,255,.25);}
+.mb{transform:rotateY(180deg);background:rgba(6,214,160,.15);border:2px solid var(--teal);font-size:26px;}
+.mem-pips{display:flex;justify-content:center;gap:7px;padding:8px 0;}
+.mpip{width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,.12);transition:background .3s;}
+.mpip.lit{background:var(--teal);}
+.word-disp{min-height:64px;background:rgba(255,255,255,.06);border-radius:15px;border:2px dashed rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;margin-bottom:12px;font-size:26px;font-weight:900;letter-spacing:7px;color:var(--gold);transition:border-color .2s;}
+.word-disp.has{border-color:rgba(255,209,102,.4);}
+.word-disp.good{border-color:var(--teal);color:var(--teal);}
+.word-disp.bad{border-color:var(--coral);color:var(--coral);animation:shk .3s;}
+@keyframes shk{0%,100%{transform:translateX(0);}25%{transform:translateX(-7px);}75%{transform:translateX(7px);};}
+.ltiles{display:flex;flex-wrap:wrap;gap:7px;justify-content:center;margin-bottom:12px;}
+.ltile{width:44px;height:48px;border-radius:11px;background:rgba(255,255,255,.09);border:1.5px solid rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;cursor:pointer;transition:background .15s,transform .1s;color:var(--white);}
+.ltile:hover{background:rgba(255,209,102,.2);border-color:var(--gold);}
+.ltile:active{transform:scale(.88);}
+.ltile.used{opacity:.2;pointer-events:none;}
+.wbtns{display:flex;gap:9px;margin-bottom:12px;}
+.wbtn{flex:1;padding:12px;border:none;border-radius:11px;font-size:14px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif;}
+.wbtn-sub{background:var(--teal);color:#0a1a15;}
+.wbtn-clr{background:rgba(255,255,255,.08);color:var(--white);}
+.found-chips{display:flex;flex-wrap:wrap;gap:5px;}
+.fchip{background:rgba(6,214,160,.15);border:1px solid rgba(6,214,160,.3);color:var(--teal);padding:4px 11px;border-radius:20px;font-size:12px;font-weight:700;}
+.sp-prompt{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;}
+.sp-lbl{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);}
+.sp-target{font-size:62px;line-height:1;animation:popIn .25s cubic-bezier(.34,1.56,.64,1);}
+@keyframes popIn{from{transform:scale(.4);opacity:0;}to{transform:scale(1);opacity:1;}}
+.sp-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;width:100%;}
+.sp-opt{padding:14px 6px;border-radius:15px;border:2px solid rgba(255,255,255,.1);background:rgba(255,255,255,.06);cursor:pointer;font-size:30px;text-align:center;transition:transform .1s;-webkit-tap-highlight-color:transparent;}
+.sp-opt:active{transform:scale(.88);}
+.sp-opt.c{border-color:var(--teal);background:rgba(6,214,160,.15);}
+.sp-opt.w{border-color:var(--coral);background:rgba(239,71,111,.15);}
+.sp-combo{font-size:13px;font-weight:700;color:var(--gold);height:20px;text-align:center;}
+.pat-phase{font-size:13px;font-weight:800;text-align:center;min-height:22px;margin-bottom:8px;}
+.pat-phase.watch{color:var(--teal);}
+.pat-phase.recall{color:var(--gold);}
+.pat-seq{display:flex;align-items:center;justify-content:center;gap:7px;margin-bottom:14px;min-height:52px;flex-wrap:wrap;}
+.psym{width:42px;height:42px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:20px;border:2px solid rgba(255,255,255,.1);background:rgba(255,255,255,.06);transition:all .25s;}
+.psym.lit{border-color:var(--teal);background:rgba(6,214,160,.2);transform:scale(1.15);}
+.psym.dim{opacity:.15;}
+.psym.ok{border-color:var(--teal);background:rgba(6,214,160,.2);}
+.psym.err{border-color:var(--coral);background:rgba(239,71,111,.2);}
+.pat-q{text-align:center;min-height:26px;margin-bottom:12px;font-size:13px;color:var(--muted);font-weight:700;}
+.pat-choices{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:10px;}
+.pchoice{padding:11px 4px;border-radius:13px;border:2px solid rgba(255,255,255,.1);background:rgba(255,255,255,.06);cursor:pointer;font-size:22px;text-align:center;transition:transform .1s,border-color .2s;-webkit-tap-highlight-color:transparent;}
+.pchoice:active{transform:scale(.88);}
+.pchoice.ok{border-color:var(--teal);background:rgba(6,214,160,.2);}
+.pchoice.err{border-color:var(--coral);background:rgba(239,71,111,.15);}
+.pat-pips{display:flex;gap:5px;justify-content:center;margin-bottom:8px;}
+.ppip{width:28px;height:6px;border-radius:3px;background:rgba(255,255,255,.1);transition:background .3s;}
+.ppip.ok{background:var(--teal);}
+.ppip.err{background:var(--coral);}
+.win-screen{display:none;position:fixed;inset:0;z-index:300;background:var(--bg);flex-direction:column;align-items:center;justify-content:center;padding:28px 24px;text-align:center;max-width:420px;margin:0 auto;overflow-y:auto;}
+.win-screen.open{display:flex;}
+.win-emoji{font-size:72px;animation:burst .5s cubic-bezier(.34,1.56,.64,1);}
+@keyframes burst{from{transform:scale(0) rotate(-20deg);opacity:0;}to{transform:scale(1) rotate(0);opacity:1;}}
+.win-h{font-size:28px;font-weight:900;margin:14px 0 6px;}
+.win-sub{font-size:14px;color:var(--muted);line-height:1.6;margin-bottom:20px;}
+.win-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;width:100%;margin-bottom:18px;}
+.ws{background:rgba(255,255,255,.06);border-radius:13px;padding:13px 6px;border:1px solid rgba(255,255,255,.07);}
+.ws-num{font-size:20px;font-weight:900;color:var(--gold);}
+.ws-lbl{font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.4px;margin-top:2px;}
+.win-insight{width:100%;background:rgba(6,214,160,.07);border:1px solid rgba(6,214,160,.18);border-radius:13px;padding:13px;margin-bottom:20px;text-align:left;}
+.wi-lbl{font-size:11px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;}
+.wi-txt{font-size:13px;line-height:1.5;}
+.win-btns{display:flex;flex-direction:column;gap:9px;width:100%;}
+.btn-p{padding:17px;background:linear-gradient(135deg,var(--gold),var(--gold2));border:none;border-radius:15px;font-size:16px;font-weight:900;cursor:pointer;font-family:'Nunito',sans-serif;color:#1a1a2e;}
+.btn-s{padding:13px;background:rgba(255,255,255,.07);border:none;border-radius:13px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;color:var(--white);}
+.brain-scroll,.miles-scroll{flex:1;overflow-y:auto;padding:0 20px 100px;-webkit-overflow-scrolling:touch;}
+.brain-scroll::-webkit-scrollbar,.miles-scroll::-webkit-scrollbar{display:none;}
+.score-hero{background:linear-gradient(135deg,#1a3a5c,#0d2137);border-radius:20px;padding:20px;margin-bottom:16px;display:flex;align-items:center;gap:16px;}
+.score-num{font-size:52px;font-weight:900;color:var(--gold);line-height:1;}
+.score-lbl{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;opacity:.6;margin-bottom:2px;}
+.score-rank{font-size:14px;color:var(--teal);font-weight:700;}
+.score-week{font-size:13px;color:var(--muted);margin-top:2px;}
+.section-lbl{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:12px;}
+.domain-list{display:flex;flex-direction:column;gap:13px;margin-bottom:20px;}
+.drow{display:flex;align-items:center;gap:11px;}
+.dico{font-size:18px;width:28px;text-align:center;}
+.dlbl{font-size:13px;font-weight:700;width:130px;flex-shrink:0;}
+.dtrack{flex:1;height:8px;background:rgba(255,255,255,.08);border-radius:4px;overflow:hidden;}
+.dfill{height:100%;border-radius:4px;}
+.dpct{font-size:13px;font-weight:800;color:var(--gold);width:36px;text-align:right;}
+.tip-card{background:rgba(255,209,102,.08);border:1px solid rgba(255,209,102,.2);border-radius:14px;padding:14px;margin-bottom:16px;}
+.tip-lbl{font-size:11px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;}
+.tip-txt{font-size:13px;line-height:1.5;}
+.streak-card{background:linear-gradient(135deg,rgba(239,71,111,.15),rgba(155,93,229,.1));border-radius:14px;padding:16px;display:flex;align-items:center;gap:14px;border:1px solid rgba(239,71,111,.2);}
+.streak-ico{font-size:32px;}
+.streak-lbl{font-size:12px;color:var(--muted);font-weight:700;}
+.streak-num{font-size:26px;font-weight:900;color:var(--coral);}
+.passport-cover{background:linear-gradient(135deg,#8B1A1A,#5C1010);border-radius:20px;padding:20px;margin-bottom:16px;display:flex;align-items:center;gap:14px;}
+.pp-book{font-size:42px;}
+.pp-title{font-size:18px;font-weight:900;}
+.pp-sub{font-size:13px;opacity:.7;margin-top:2px;}
+.stamps-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px;}
+.stamp{border-radius:13px;aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;border:2px solid;gap:3px;}
+.stamp.earned{border-color:var(--gold);background:rgba(255,209,102,.1);}
+.stamp.locked{border-color:rgba(255,255,255,.1);background:rgba(255,255,255,.03);opacity:.4;}
+.stamp-ico{font-size:22px;}
+.stamp-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;text-align:center;color:var(--muted);}
+.stamp.earned .stamp-lbl{color:var(--gold);}
+.miles-hero{background:rgba(255,255,255,.05);border-radius:14px;padding:16px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;}
+.miles-num{font-size:34px;font-weight:900;color:var(--gold);}
+.miles-meta{text-align:right;}
+.miles-lbl{font-size:12px;color:var(--muted);font-weight:700;}
+.miles-next{font-size:13px;color:var(--teal);font-weight:700;margin-top:2px;}
+.ptn-bar{height:8px;background:rgba(255,255,255,.08);border-radius:4px;overflow:hidden;margin-top:6px;}
+.ptn-fill{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold2));border-radius:4px;}
+.ptn-lbl{font-size:12px;color:var(--muted);font-weight:700;margin-top:4px;}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="page active" id="pg-journey">
+    <div class="topbar">
+      <div class="logo">Globe<em>Mind</em></div>
+      <div class="pills">
+        <div class="pill gold">⚡ <span id="hdr-score">742</span></div>
+        <div class="pill red">❤️ 5</div>
+        <div class="pill teal">🔥 14</div>
+      </div>
+    </div>
+    <div class="path-scroll">
+      <div class="vibe-banner"><div><div class="vibe-lbl">Your journey</div><div class="vibe-title">Level 4 of 15 🌍</div></div></div>
+      <div class="path-container" id="pathContainer"></div>
+      <div class="milestone"><span>🌅</span><span class="milestone-txt">Keep going — new challenges ahead</span></div>
+      <div class="locked-hint"><div>🔒</div><div style="font-size:13px;font-weight:700;margin-top:6px;">More adventures unlocking soon</div></div>
+    </div>
+  </div>
+  <div class="page" id="pg-brain">
+    <div class="topbar"><div class="logo">Globe<em>Mind</em></div><div class="pills"><div class="pill gold">⚡ <span id="brain-score-pill">742</span></div></div></div>
+    <div class="brain-scroll">
+      <div class="score-hero"><div class="score-num" id="brainScoreNum">742</div><div><div class="score-lbl">Brain Score</div><div class="score-rank">Sharper than 71% your age</div><div class="score-week">↑ +38 pts this week</div></div></div>
+      <div class="section-lbl">Cognitive Domains</div>
+      <div class="domain-list">
+        <div class="drow"><div class="dico">🧩</div><div class="dlbl">Working Memory</div><div class="dtrack"><div class="dfill" style="width:72%;background:var(--gold);"></div></div><div class="dpct">72%</div></div>
+        <div class="drow"><div class="dico">⚡</div><div class="dlbl">Processing Speed</div><div class="dtrack"><div class="dfill" style="width:58%;background:var(--coral);"></div></div><div class="dpct">58%</div></div>
+        <div class="drow"><div class="dico">🔤</div><div class="dlbl">Verbal Fluency</div><div class="dtrack"><div class="dfill" style="width:84%;background:var(--teal);"></div></div><div class="dpct">84%</div></div>
+        <div class="drow"><div class="dico">🔮</div><div class="dlbl">Pattern Recognition</div><div class="dtrack"><div class="dfill" style="width:65%;background:var(--purple);"></div></div><div class="dpct">65%</div></div>
+        <div class="drow"><div class="dico">🎯</div><div class="dlbl">Attention &amp; Focus</div><div class="dtrack"><div class="dfill" style="width:77%;background:var(--blue);"></div></div><div class="dpct">77%</div></div>
+      </div>
+      <div class="tip-card"><div class="tip-lbl">🧠 Coach Tip</div><div class="tip-txt">Your processing speed is your growth area this week. Speed Match levels are your best friend — try to hit 3 in a row!</div></div>
+      <div class="streak-card"><div class="streak-ico">🔥</div><div><div class="streak-lbl">Day Streak</div><div class="streak-num">14 days</div></div></div>
+    </div>
+  </div>
+  <div class="page" id="pg-miles">
+    <div class="topbar"><div class="logo">Globe<em>Mind</em></div></div>
+    <div class="miles-scroll">
+      <div class="passport-cover"><div class="pp-book">📔</div><div><div class="pp-title">Your Passport</div><div class="pp-sub">2 stamps earned · 6 to go</div></div></div>
+      <div class="section-lbl">Stamps Collected</div>
+      <div class="stamps-grid">
+        <div class="stamp earned"><div class="stamp-ico">🌸</div><div class="stamp-lbl">Explorer</div></div>
+        <div class="stamp earned"><div class="stamp-ico">⭐</div><div class="stamp-lbl">Wordsmith</div></div>
+        <div class="stamp locked"><div class="stamp-ico">🔒</div><div class="stamp-lbl">Speedster</div></div>
+        <div class="stamp locked"><div class="stamp-ico">🔒</div><div class="stamp-lbl">Pathfinder</div></div>
+        <div class="stamp locked"><div class="stamp-ico">🔒</div><div class="stamp-lbl">Horizon</div></div>
+        <div class="stamp locked"><div class="stamp-ico">🔒</div><div class="stamp-lbl">Luminary</div></div>
+        <div class="stamp locked"><div class="stamp-ico">🔒</div><div class="stamp-lbl">Voyager</div></div>
+        <div class="stamp locked"><div class="stamp-ico">🔒</div><div class="stamp-lbl">Legend</div></div>
+      </div>
+      <div class="miles-hero">
+        <div><div style="font-size:12px;color:var(--muted);font-weight:700;">Total Miles</div><div class="miles-num" id="milesNum">2,840 ✈️</div></div>
+        <div class="miles-meta"><div class="miles-lbl">Next reward</div><div class="miles-next">at 5,000 mi</div></div>
+      </div>
+      <div><div style="font-size:13px;font-weight:700;margin-bottom:6px;">Progress to next stamp</div><div class="ptn-bar"><div class="ptn-fill" id="milesFill" style="width:57%;"></div></div><div class="ptn-lbl" id="milesLbl">2,840 / 5,000 miles · 57%</div></div>
+    </div>
+  </div>
+  <div class="bottom-nav">
+    <button class="nav-btn active" id="nav-journey" onclick="switchPage('journey')"><div class="nav-ico">🗺️</div><div class="nav-lbl">Journey</div></button>
+    <button class="nav-btn" id="nav-brain" onclick="switchPage('brain')"><div class="nav-ico">🧠</div><div class="nav-lbl">Brain</div></button>
+    <button class="nav-btn" id="nav-miles" onclick="switchPage('miles')"><div class="nav-ico">✈️</div><div class="nav-lbl">Miles</div></button>
+  </div>
+</div>
+<div class="overlay" id="overlay" onclick="maybeClose(event)">
+  <div class="modal">
+    <div class="drag"></div>
+    <div class="modal-row"><div class="modal-ico" id="mIco">🎴</div><div class="modal-title" id="mTitle">Level 4</div></div>
+    <div class="modal-domain" id="mDomain"></div>
+    <div class="modal-desc" id="mDesc"></div>
+    <button class="modal-play" onclick="launchGame()">▶ Play Now</button>
+    <button class="modal-skip" onclick="closeOverlay()">Maybe later</button>
+  </div>
+</div>
+<div class="game-screen" id="gameScreen">
+  <div class="g-head">
+    <button class="g-back" onclick="closeGame()">←</button>
+    <div class="g-title" id="gTitle">Level 4</div>
+    <div class="g-pill" id="gPill">0</div>
+  </div>
+  <div class="g-body" id="gBody"></div>
+</div>
+<div class="win-screen" id="winScreen">
+  <div class="win-emoji" id="wEmoji">🌟</div>
+  <div class="win-h" id="wTitle">Nailed it!</div>
+  <div class="win-sub" id="wSub"></div>
+  <div class="win-stats" id="wStats"></div>
+  <div class="win-insight"><div class="wi-lbl">🧠 Brain insight</div><div class="wi-txt" id="wInsight"></div></div>
+  <div class="win-btns">
+    <button class="btn-p" onclick="replayGame()">Play Again ↺</button>
+    <button class="btn-s" onclick="closeWin()">Back to Journey</button>
+  </div>
+</div>
+<script>
+const LEVELS=[
+  {id:1,e:'🌸',type:'memory',domain:'Working Memory',desc:'Flip cards, find the matching pairs. Your memory journey begins!',done:true,stars:3},
+  {id:2,e:'🔤',type:'word',domain:'Verbal Fluency',desc:'Build words from the letter tiles. Find as many as you can!',done:true,stars:3},
+  {id:3,e:'🌊',type:'memory',domain:'Working Memory',desc:'More pairs, bigger board — your memory is warming up.',done:true,stars:2},
+  {id:4,e:'⚡',type:'speed',domain:'Processing Speed',desc:'A symbol flashes — tap its match fast! Build combos for bonus points.',done:false,curr:true},
+  {id:5,e:'🔮',type:'pattern',domain:'Pattern Recognition',desc:'Watch the sequence light up. What comes next? Trust your instincts.',done:false},
+  {id:6,e:'🎯',type:'word',domain:'Verbal Fluency',desc:'Bigger letter set, longer words. Go for the high scores!',done:false},
+  {id:7,e:'🌺',type:'memory',domain:'Working Memory',desc:'More cards, more challenge — hold the whole board in your mind.',done:false},
+  {id:8,e:'🚀',type:'speed',domain:'Processing Speed',desc:'Faster rounds, tighter timer. How quick is your brain today?',done:false},
+  {id:9,e:'🧩',type:'pattern',domain:'Pattern Recognition',desc:'Longer sequences, trickier rules. The patterns get sneakier!',done:false},
+  {id:10,e:'🏆',type:'memory',domain:'Working Memory',desc:"Boss level! Biggest board yet — show what you've got.",done:false,boss:true},
+  {id:11,e:'🌙',type:'word',domain:'Verbal Fluency',desc:'Night market letters — how many words hide in the tiles?',done:false},
+  {id:12,e:'💫',type:'speed',domain:'Processing Speed',desc:'Speed Match with similar-looking symbols. Stay sharp!',done:false},
+  {id:13,e:'🦋',type:'pattern',domain:'Pattern Recognition',desc:'Trickier sequences — can you spot the hidden rule?',done:false},
+  {id:14,e:'🌴',type:'memory',domain:'Working Memory',desc:'Symbols rotate between flips — memory and focus combined.',done:false},
+  {id:15,e:'🎠',type:'word',domain:'Verbal Fluency',desc:'Rare letters, rare words — big points for big vocabulary.',done:false},
+];
+const POS=[{x:.55,y:.025},{x:.22,y:.075},{x:.55,y:.128},{x:.22,y:.18},{x:.58,y:.233},{x:.22,y:.285},{x:.55,y:.338},{x:.22,y:.39},{x:.58,y:.443},{x:.22,y:.495},{x:.55,y:.548},{x:.22,y:.60},{x:.58,y:.653},{x:.22,y:.705},{x:.55,y:.758}];
+const EMOJIS=['🌸','🌊','🏔️','🌺','⭐','🎯','🌍','✈️','🎭','🦋','🌙','🎪','🌻','🏄','🎨','🌈','🎲','🦜','🌴','🎠'];
+const WPOOL=[
+  {letters:['T','R','A','V','E','L','S'],words:['TRAVEL','TRAVELS','RAVEL','TALES','STARE','RATES','LATER','ALERT','ALTER','EARS','REAL','TALE','SALE','LAST','TARS','EATS','STAR']},
+  {letters:['W','O','R','L','D','S','E'],words:['WORLD','WORLDS','OLDER','SWORD','WORDS','LOWER','OWES','WORE','LORE','DOES','ROWS','OLDS','OWLS','ORES','LORDS','DOER']},
+  {letters:['J','O','U','R','N','E','Y'],words:['JOURNEY','ENJOY','RUNE','EURO','YOUR','YORE','ERNE','JURY','JUNE']},
+];
+const PAT=[
+  {seq:['🌸','🌊','🌸','🌊','🌸'],ans:'🌊',ch:['🌊','🏔️','🌺','⭐']},
+  {seq:['⭐','⭐','🌙','⭐','⭐'],ans:'🌙',ch:['🌙','⭐','🌺','✈️']},
+  {seq:['🎯','🌍','🎭','🎯','🌍'],ans:'🎭',ch:['🎭','🎯','🌍','🦋']},
+  {seq:['🌺','🌸','🌻','🌺','🌸'],ans:'🌻',ch:['🌸','🌺','🌻','🌊']},
+  {seq:['✈️','✈️','✈️','🌍','✈️','✈️'],ans:'🌍',ch:['✈️','🌍','🎨','⭐']},
+  {seq:['🎲','🎭','🎪','🎲','🎭'],ans:'🎪',ch:['🎪','🎲','🎭','🌙']},
+  {seq:['🦋','🌙','🦋','🦋','🌙'],ans:'🦋',ch:['🌙','🦋','🌸','⭐']},
+];
+let cLv=null,cGame=null,gT=[],bScore=742,miles=2840;
+function switchPage(p){document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.nav-btn').forEach(x=>x.classList.remove('active'));document.getElementById('pg-'+p).classList.add('active');document.getElementById('nav-'+p).classList.add('active');}
+function buildPath(){
+  const c=document.getElementById('pathContainer'),W=c.offsetWidth||360,H=1800;c.style.minHeight=H+'px';
+  const pts=POS.map(p=>({x:p.x*W,y:p.y*H}));
+  let d=`M${pts[0].x} ${pts[0].y}`;
+  for(let i=1;i<pts.length;i++){const p=pts[i-1],q=pts[i],cx=(p.x+q.x)/2;d+=` C${cx} ${p.y},${cx} ${q.y},${q.x} ${q.y}`;}
+  const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');svg.setAttribute('class','path-svg');svg.setAttribute('viewBox',`0 0 ${W} ${H}`);svg.setAttribute('preserveAspectRatio','none');
+  const g=mkP(d,'rgba(255,209,102,.1)','20'),da=mkP(d,'rgba(255,209,102,.3)','3.5');da.setAttribute('stroke-dasharray','10 8');svg.appendChild(g);svg.appendChild(da);c.appendChild(svg);
+  ['✈️','🗺️','🌏','⭐','🌈','🎒','🧭','🌸','☁️','🌟'].forEach((e,i)=>{const s=document.createElement('div');s.style.cssText='position:absolute;font-size:18px;opacity:0.1;pointer-events:none;';s.style.left=(12+Math.random()*68)+'%';s.style.top=(3+(i/10)*93)+'%';s.textContent=e;c.appendChild(s);});
+  LEVELS.forEach((lv,i)=>{const pos=POS[i];if(!pos)return;const node=document.createElement('div');node.className='level-node';node.style.left=(pos.x*W-32)+'px';node.style.top=(pos.y*H-32)+'px';let cls=lv.done?'done':lv.curr?'curr':'lock';if(lv.boss&&!lv.done)cls='boss';const st=lv.done?'⭐'.repeat(lv.stars||3)+'☆'.repeat(3-(lv.stars||3)):'☆☆☆';node.innerHTML=`<div class="bubble ${cls}">${lv.e}</div><div class="stars">${st.split('').map(s=>`<span>${s}</span>`).join('')}</div>`;if(lv.done||lv.curr)node.onclick=()=>openModal(lv);c.appendChild(node);});
+}
+function mkP(d,stroke,sw){const p=document.createElementNS('http://www.w3.org/2000/svg','path');p.setAttribute('d',d);p.setAttribute('fill','none');p.setAttribute('stroke',stroke);p.setAttribute('stroke-width',sw);p.setAttribute('stroke-linecap','round');return p;}
+function openModal(lv){cLv=lv;document.getElementById('mIco').textContent=lv.e;document.getElementById('mTitle').textContent='Level '+lv.id;const colors={memory:'color:var(--gold)',word:'color:var(--purple)',speed:'color:var(--coral)',pattern:'color:var(--teal)'};document.getElementById('mDomain').style.cssText=colors[lv.type]||'';document.getElementById('mDomain').textContent='🧠 '+lv.domain;document.getElementById('mDesc').textContent=lv.desc;document.getElementById('overlay').classList.add('open');}
+function maybeClose(e){if(e.target===document.getElementById('overlay'))closeOverlay();}
+function closeOverlay(){document.getElementById('overlay').classList.remove('open');}
+function launchGame(){closeOverlay();clrT();cGame=cLv.type;const gC={memory:'background:rgba(255,209,102,.2);color:var(--gold)',word:'background:rgba(155,93,229,.2);color:var(--purple)',speed:'background:rgba(239,71,111,.2);color:var(--coral)',pattern:'background:rgba(6,214,160,.2);color:var(--teal)'};document.getElementById('gTitle').textContent='Level '+cLv.id+' · '+cLv.domain;document.getElementById('gPill').style.cssText=gC[cGame];document.getElementById('gPill').textContent='0';if(cGame==='memory')bMem();else if(cGame==='word')bWord();else if(cGame==='speed')bSpeed();else bPat();document.getElementById('gameScreen').classList.add('open');}
+function closeGame(){clrT();document.getElementById('gameScreen').classList.remove('open');}
+function clrT(){gT.forEach(t=>{clearInterval(t);clearTimeout(t);});gT=[];}
+const MEM=[['🗼','🌊','🌸','🎭','🏔️','🌺'],['✈️','🧭','🌍','🎒','🌅','⛵'],['🦋','🌻','🍀','🌙','⭐','🎯']];
+let MS={};
+function bMem(){const idx=(cLv.id-1)%3,cnt=Math.min(3+Math.floor(cLv.id/2.5),6),pairs=MEM[idx].slice(0,cnt),deck=[...pairs,...pairs].sort(()=>Math.random()-.5);MS={fl:[],matched:0,total:cnt,lock:false};document.getElementById('gBody').innerHTML=`<div class="dtag" style="color:var(--gold)">Working Memory</div><div class="instr">${cLv.desc}</div><div class="mem-grid" id="mg" style="grid-template-columns:repeat(4,1fr);"></div><div class="mem-pips" id="mPips"></div>`;const pips=document.getElementById('mPips');for(let i=0;i<cnt;i++){const p=document.createElement('div');p.className='mpip';p.id='mp'+i;pips.appendChild(p);}const g=document.getElementById('mg');deck.forEach((em,i)=>{const c=document.createElement('div');c.className='mem-card';c.innerHTML=`<div class="mf">?</div><div class="mb">${em}</div>`;c.dataset.val=em;c.onclick=()=>fMem(i,c);g.appendChild(c);});document.getElementById('gPill').textContent='0/'+cnt;}
+function fMem(idx,card){if(MS.lock||card.classList.contains('flipped')||card.classList.contains('matched'))return;card.classList.add('flipped');MS.fl.push({card,val:card.dataset.val});if(MS.fl.length===2){MS.lock=true;const[a,b]=MS.fl;if(a.val===b.val){setTimeout(()=>{a.card.classList.add('matched');b.card.classList.add('matched');document.getElementById('mp'+MS.matched)?.classList.add('lit');MS.matched++;MS.fl=[];MS.lock=false;document.getElementById('gPill').textContent=MS.matched+'/'+MS.total;if(MS.matched===MS.total)setTimeout(()=>showWin({emoji:'🎴',title:'Memory Sharp!',sub:'Your working memory is firing on all cylinders.',stats:[{num:MS.total,lbl:'Pairs found'},{num:'100%',lbl:'Accuracy'},{num:'+90',lbl:'Brain pts'}],insight:"Working memory is the brain's sticky notepad — training it helps you remember names, directions, and details in daily life."}),500);},350);}else{setTimeout(()=>{a.card.classList.remove('flipped');b.card.classList.remove('flipped');MS.fl=[];MS.lock=false;},900);}}}
+let WS={};
+function bWord(){const pool=WPOOL[(cLv.id-1)%WPOOL.length];WS={cur:[],used:[],found:[],score:0,pool};document.getElementById('gBody').innerHTML=`<div class="dtag" style="color:var(--purple)">Verbal Fluency</div><div class="instr">${cLv.desc}</div><div class="word-disp" id="wd"><span id="wds" style="letter-spacing:6px;color:var(--muted);">_ _ _</span></div><div class="ltiles" id="lt"></div><div class="wbtns"><button class="wbtn wbtn-clr" onclick="wClr()">Clear</button><button class="wbtn wbtn-sub" onclick="wSub()">Submit ✓</button></div><div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:7px;">Found (5 to win):</div><div class="found-chips" id="fc"></div>`;rTiles();}
+function rTiles(){const tc=document.getElementById('lt');tc.innerHTML='';WS.pool.letters.forEach((l,i)=>{const t=document.createElement('div');t.className='ltile'+(WS.used.includes(i)?' used':'');t.textContent=l;t.onclick=()=>{if(WS.used.includes(i))return;WS.cur.push({i,l});WS.used.push(i);updWD();rTiles();};tc.appendChild(t);});}
+function updWD(){const w=WS.cur.map(x=>x.l).join(''),el=document.getElementById('wds'),wd=document.getElementById('wd');if(w){el.textContent=w;el.style.color='var(--gold)';wd.className='word-disp has';}else{el.textContent='_ _ _';el.style.color='var(--muted)';wd.className='word-disp';}}
+function wClr(){WS.cur=[];WS.used=[];updWD();rTiles();}
+function wSub(){const w=WS.cur.map(x=>x.l).join(''),wd=document.getElementById('wd');if(w.length<3){wd.className='word-disp bad';setTimeout(()=>{wd.className='word-disp';wClr();},400);return;}if(WS.found.includes(w)){wClr();return;}if(WS.pool.words.includes(w)){WS.found.push(w);const pts=w.length*15;WS.score+=pts;wd.className='word-disp good';document.getElementById('wds').style.color='var(--teal)';const ch=document.createElement('div');ch.className='fchip';ch.textContent=w+' +'+pts;document.getElementById('fc').appendChild(ch);document.getElementById('gPill').textContent=WS.score;setTimeout(()=>{wd.className='word-disp';wClr();},500);if(WS.found.length>=5)setTimeout(()=>showWin({emoji:'🔤',title:'Wordsmith!',sub:'Your verbal fluency is impressive.',stats:[{num:WS.found.length,lbl:'Words found'},{num:WS.score,lbl:'Score'},{num:'+'+WS.score,lbl:'Brain pts'}],insight:'Verbal fluency — the ability to quickly retrieve words — is a key marker of cognitive health and slows mental aging significantly.'}),600);}else{wd.className='word-disp bad';setTimeout(()=>{wd.className='word-disp';wClr();},400);}}
+let SS={};
+function bSpeed(){SS={score:0,combo:0,maxCombo:0,correct:0,wrong:0,running:true};document.getElementById('gBody').innerHTML=`<div class="dtag" style="color:var(--coral)">Processing Speed</div><div class="instr">${cLv.desc}</div><div class="tbar-wrap"><div class="tbar-bg"><div class="tbar-fill" id="sBar" style="width:100%;background:var(--teal);"></div></div><div class="tbar-lbl" id="sTlbl">30s</div></div><div class="sp-prompt"><div class="sp-lbl">Find this →</div><div class="sp-target" id="sTgt">🌸</div><div class="sp-combo" id="sCmb"></div><div class="sp-grid" id="sGrid"></div></div>`;nxSpeed();const start=Date.now(),total=30000;const t=setInterval(()=>{if(!SS.running){clearInterval(t);return;}const el=Date.now()-start,pct=Math.max(0,100-(el/total*100)),s=Math.max(0,Math.ceil((total-el)/1000));const bar=document.getElementById('sBar');if(bar){bar.style.width=pct+'%';bar.style.background=pct>50?'var(--teal)':pct>25?'var(--gold)':'var(--coral)';}const lbl=document.getElementById('sTlbl');if(lbl)lbl.textContent=s+'s';if(el>=total){clearInterval(t);SS.running=false;endSpeed();}},100);gT.push(t);}
+function nxSpeed(){if(!SS.running)return;const pool=EMOJIS.slice(0,12),tgt=pool[Math.floor(Math.random()*pool.length)];SS.target=tgt;const el=document.getElementById('sTgt');if(!el)return;el.textContent=tgt;el.style.animation='none';void el.offsetWidth;el.style.animation='popIn .25s cubic-bezier(.34,1.56,.64,1)';const others=pool.filter(e=>e!==tgt).sort(()=>Math.random()-.5).slice(0,5);const opts=[...others,tgt].sort(()=>Math.random()-.5);const g=document.getElementById('sGrid');if(!g)return;g.innerHTML='';opts.forEach(o=>{const b=document.createElement('div');b.className='sp-opt';b.textContent=o;b.onclick=()=>hSpeed(o,b);g.appendChild(b);});}
+function hSpeed(opt,btn){if(!SS.running)return;if(opt===SS.target){btn.classList.add('c');SS.combo++;SS.correct++;if(SS.combo>SS.maxCombo)SS.maxCombo=SS.combo;const pts=10+(SS.combo>1?(SS.combo-1)*5:0);SS.score+=pts;const pill=document.getElementById('gPill');if(pill)pill.textContent=SS.score;const cmb=document.getElementById('sCmb');if(cmb)cmb.textContent=SS.combo>1?'🔥 x'+SS.combo+' +'+pts:'✓ +'+pts;setTimeout(nxSpeed,180);}else{btn.classList.add('w');SS.combo=0;SS.wrong++;const cmb=document.getElementById('sCmb');if(cmb)cmb.textContent='';setTimeout(()=>btn.classList.remove('w'),400);}}
+function endSpeed(){const acc=SS.correct+SS.wrong>0?Math.round(SS.correct/(SS.correct+SS.wrong)*100):0;showWin({emoji:SS.score>200?'⚡':SS.score>100?'🎯':'🌱',title:SS.score>200?'Blazing Fast!':SS.score>100?'Sharp Reflexes!':'Good Warm-Up!',sub:'Processing speed is a core marker of brain health.',stats:[{num:SS.score,lbl:'Score'},{num:acc+'%',lbl:'Accuracy'},{num:'x'+SS.maxCombo,lbl:'Best combo'}],insight:'Processing speed is one of the first cognitive abilities to slow with age. Regular Speed Match training keeps your brain reacting faster in real life.'});}
+let PS={};
+function bPat(){PS={rounds:PAT.slice().sort(()=>Math.random()-.5),cur:0,score:0};document.getElementById('gBody').innerHTML=`<div class="dtag" style="color:var(--teal)">Pattern Recognition</div><div class="instr">${cLv.desc}</div><div class="pat-pips" id="pPips"></div><div class="tbar-wrap" id="pTW" style="display:none;"><div class="tbar-bg"><div class="tbar-fill" id="pBar" style="width:100%;background:var(--teal);"></div></div></div><div class="pat-phase" id="pPhase"></div><div class="pat-seq" id="pSeq"></div><div class="pat-q" id="pQ"></div><div class="pat-choices" id="pCh"></div>`;const el=document.getElementById('pPips');PS.rounds.forEach((_,i)=>{const p=document.createElement('div');p.className='ppip';p.id='pp'+i;el.appendChild(p);});document.getElementById('gPill').textContent='0/'+PS.rounds.length;runPat();}
+function runPat(){const r=PS.rounds[PS.cur];const sa=document.getElementById('pSeq');if(!sa)return;sa.innerHTML='';r.seq.forEach((s,i)=>{const d=document.createElement('div');d.className='psym';d.textContent=s;d.id='ps'+i;sa.appendChild(d);});const qm=document.createElement('div');qm.className='psym';qm.style.borderColor='rgba(255,209,102,.4)';qm.style.background='rgba(255,209,102,.07)';qm.innerHTML='<span style="font-size:16px;color:var(--gold);font-weight:900;">?</span>';sa.appendChild(qm);const ph=document.getElementById('pPhase');if(ph){ph.textContent='👀 Watch the sequence...';ph.className='pat-phase watch';}const pq=document.getElementById('pQ');if(pq)pq.textContent='';const pc=document.getElementById('pCh');if(pc)pc.innerHTML='';const ptw=document.getElementById('pTW');if(ptw)ptw.style.display='none';let i=0;function nx(){const prev=document.getElementById('ps'+(i-1));if(prev)prev.classList.remove('lit');if(i<r.seq.length){const cur=document.getElementById('ps'+i);if(cur)cur.classList.add('lit');i++;const t=setTimeout(nx,550);gT.push(t);}else{const t=setTimeout(showPatQ,400);gT.push(t);}}nx();}
+function showPatQ(){const r=PS.rounds[PS.cur];document.querySelectorAll('.psym').forEach(s=>s.classList.add('dim'));const ph=document.getElementById('pPhase');if(ph){ph.textContent='🤔 What comes next?';ph.className='pat-phase recall';}const pq=document.getElementById('pQ');if(pq)pq.textContent='Choose the next symbol in the pattern:';const ch=document.getElementById('pCh');if(!ch)return;ch.innerHTML='';r.ch.forEach(c=>{const b=document.createElement('div');b.className='pchoice';b.textContent=c;b.onclick=()=>hPat(c,b);ch.appendChild(b);});const ptw=document.getElementById('pTW');if(ptw)ptw.style.display='block';const bar=document.getElementById('pBar');if(bar){bar.style.width='100%';bar.style.background='var(--teal)';}const start=Date.now(),total=8000;const t=setInterval(()=>{const pct=Math.max(0,100-((Date.now()-start)/total*100));if(bar){bar.style.width=pct+'%';bar.style.background=pct>50?'var(--teal)':pct>25?'var(--gold)':'var(--coral)';}if(pct<=0){clearInterval(t);hPat(null,null);}},80);gT.push(t);}
+function hPat(ans,btn){clrT();const ptw=document.getElementById('pTW');if(ptw)ptw.style.display='none';document.querySelectorAll('.pchoice').forEach(b=>b.style.pointerEvents='none');const r=PS.rounds[PS.cur],ok=ans===r.ans;const pip=document.getElementById('pp'+PS.cur);if(pip)pip.classList.add(ok?'ok':'err');if(ok){PS.score++;const pill=document.getElementById('gPill');if(pill)pill.textContent=PS.score+'/'+PS.rounds.length;}if(btn)btn.classList.add(ok?'ok':'err');if(!ok)document.querySelectorAll('.pchoice').forEach(b=>{if(b.textContent===r.ans)b.classList.add('ok');});document.querySelectorAll('.psym').forEach(s=>s.classList.remove('dim'));PS.cur++;if(PS.cur>=PS.rounds.length){setTimeout(endPat,900);}else{const t=setTimeout(runPat,1000);gT.push(t);}}
+function endPat(){const total=PS.rounds.length,pct=Math.round(PS.score/total*100);showWin({emoji:pct>=80?'🔮':pct>=50?'🧩':'🌱',title:pct>=80?'Pattern Master!':pct>=50?'Sharp Eye!':'Keep Practicing!',sub:'Pattern recognition sharpens how fast you read situations and make decisions.',stats:[{num:PS.score+'/'+total,lbl:'Correct'},{num:pct+'%',lbl:'Accuracy'},{num:'+'+PS.score*60,lbl:'Brain pts'}],insight:'Pattern recognition is deeply linked to problem-solving, planning ahead, and reading social situations — all key to staying sharp as we age.'});}
+function showWin(d){clrT();document.getElementById('wEmoji').textContent=d.emoji;document.getElementById('wTitle').textContent=d.title;document.getElementById('wSub').textContent=d.sub;document.getElementById('wInsight').textContent=d.insight;document.getElementById('wStats').innerHTML=d.stats.map(s=>`<div class="ws"><div class="ws-num">${s.num}</div><div class="ws-lbl">${s.lbl}</div></div>`).join('');bScore+=Math.floor(Math.random()*20+10);miles+=120;document.getElementById('hdr-score').textContent=bScore;document.getElementById('brain-score-pill').textContent=bScore;document.getElementById('brainScoreNum').textContent=bScore;const pct=Math.min(Math.round((miles/5000)*100),100);const mf=document.getElementById('milesFill');if(mf)mf.style.width=pct+'%';const ml=document.getElementById('milesLbl');if(ml)ml.textContent=miles.toLocaleString()+' / 5,000 miles · '+pct+'%';const mn=document.getElementById('milesNum');if(mn)mn.textContent=miles.toLocaleString()+' ✈️';document.getElementById('winScreen').classList.add('open');}
+function closeWin(){document.getElementById('winScreen').classList.remove('open');document.getElementById('gameScreen').classList.remove('open');}
+function replayGame(){document.getElementById('winScreen').classList.remove('open');launchGame();}
+window.addEventListener('load',()=>setTimeout(buildPath,60));
+</script>
+</body>
+</html>
