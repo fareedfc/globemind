@@ -29,15 +29,14 @@ const COACH_TIPS: Record<GameType, string> = {
 };
 
 export default function BrainScreen() {
-  const { score, streak } = usePlayerStore();
+  const { miles, streak } = usePlayerStore();
   const { domains, weeklyBaseline, snapshotWeekIfNeeded } = useBrainStore();
 
   useEffect(() => {
-    snapshotWeekIfNeeded(score);
+    snapshotWeekIfNeeded(miles);
   }, []);
 
-  const weeklyDelta = score - weeklyBaseline;
-  const percentile = Math.min(99, Math.max(1, Math.round(50 + (score - 700) / 15)));
+  const weeklyDelta = miles - weeklyBaseline;
 
   // Weakest of the 4 playable domains
   const weakestKey = (['memory', 'speed', 'logic', 'pattern'] as GameType[])
@@ -47,25 +46,24 @@ export default function BrainScreen() {
 
   return (
     <SafeAreaView style={s.container} edges={['top']}>
-      <TopBar right={<Pill variant="gold" label={`⚡ ${score}`} />} />
+      <TopBar right={<Pill variant="gold" label={`✈️ ${miles.toLocaleString()}`} />} />
       <ScrollView
         style={s.scroll}
         contentContainerStyle={s.content}
         showsVerticalScrollIndicator={false}
       >
-        {/* Score Hero */}
+        {/* Miles Hero */}
         <LinearGradient
           colors={['#1a3a5c', '#0d2137']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={s.scoreHero}
         >
-          <Text style={s.scoreNum}>{score}</Text>
+          <Text style={s.scoreNum}>{miles.toLocaleString()}</Text>
           <View>
-            <Text style={s.scoreLbl}>Brain Score</Text>
-            <Text style={s.scoreRank}>Sharper than {percentile}% your age</Text>
+            <Text style={s.scoreLbl}>Miles Traveled ✈️</Text>
             <Text style={s.scoreWeek}>
-              {weeklyDelta >= 0 ? `↑ +${weeklyDelta}` : `↓ ${weeklyDelta}`} pts this week
+              {weeklyDelta >= 0 ? `↑ +${weeklyDelta}` : `↓ ${weeklyDelta}`} miles this week
             </Text>
           </View>
         </LinearGradient>

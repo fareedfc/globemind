@@ -6,7 +6,7 @@ import { Colors } from '../../constants/colors';
 import { LEVELS } from '../../data/levels';
 import { PATTERN_SETS, type PatternRound } from '../../data/patternSets';
 import { WinScreen, type WinData } from '../../components/games/WinScreen';
-import { calcPatternStars } from '../../utils/scoring';
+import { calcPatternStars, MILES_PER_STAR } from '../../utils/scoring';
 import { pickInsight } from '../../data/brainInsights';
 
 const TOTAL_ROUNDS = 7;
@@ -163,7 +163,7 @@ export default function PatternGame() {
     stats: [
       { num: `${score}/${TOTAL_ROUNDS}`, lbl: 'Correct' },
       { num: `${winPct}%`, lbl: 'Accuracy' },
-      { num: `+${score * 60}`, lbl: 'Brain pts' },
+      { num: `+${MILES_PER_STAR[stars]}`, lbl: 'Miles' },
     ],
     insight: pickInsight('pattern'),
     stars,

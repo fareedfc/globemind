@@ -6,7 +6,7 @@ import { Colors } from '../../constants/colors';
 import { LEVELS } from '../../data/levels';
 import { ODD_ONE_SETS, type OddOneSet } from '../../data/oddOneSets';
 import { WinScreen, type WinData } from '../../components/games/WinScreen';
-import { calcPatternStars } from '../../utils/scoring';
+import { calcPatternStars, MILES_PER_STAR } from '../../utils/scoring';
 import { pickInsight } from '../../data/brainInsights';
 
 const TOTAL_ROUNDS = 7;
@@ -122,7 +122,7 @@ export default function LogicGame() {
     stats: [
       { num: `${score}/${TOTAL_ROUNDS}`, lbl: 'Correct' },
       { num: `${Math.round((score / TOTAL_ROUNDS) * 100)}%`, lbl: 'Accuracy' },
-      { num: `+${score * 60}`, lbl: 'Brain pts' },
+      { num: `+${MILES_PER_STAR[stars]}`, lbl: 'Miles' },
     ],
     insight: pickInsight('logic'),
     stars,

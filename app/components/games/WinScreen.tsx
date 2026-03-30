@@ -4,6 +4,7 @@ import { Colors } from '../../constants/colors';
 import { usePlayerStore } from '../../stores/playerStore';
 import { useProgressStore } from '../../stores/progressStore';
 import { useBrainStore, type GameType } from '../../stores/brainStore';
+import { MILES_PER_STAR } from '../../utils/scoring';
 
 export interface WinData {
   type: GameType;
@@ -23,12 +24,11 @@ interface Props {
 }
 
 export function WinScreen({ data, levelId, onPlayAgain, onExit }: Props) {
-  const { addScore, addMiles, recordPlay } = usePlayerStore();
+  const { addMiles, recordPlay } = usePlayerStore();
   const { completeLevel } = useProgressStore();
   const { recordGame } = useBrainStore();
 
-  // Score delta is fixed for the session
-  const scoreDelta = useRef(Math.floor(Math.random() * 20 + 10)).current;
+  const milesEarned = useRef(MILES_PER_STAR[data.stars] ?? 150).current;
   const rewarded = useRef(false);
 
   // Animated values
@@ -39,33 +39,32 @@ export function WinScreen({ data, levelId, onPlayAgain, onExit }: Props) {
     new Animated.Value(0),
   ]).current;
 
-  // Score counter display
-  const [displayScore, setDisplayScore] = useState(usePlayerStore.getState().score);
+  // Miles counter display
+  const [displayMiles, setDisplayMiles] = useState(usePlayerStore.getState().miles);
 
   useEffect(() => {
     if (!rewarded.current) {
       rewarded.current = true;
-      const oldScore = usePlayerStore.getState().score;
+      const oldMiles = usePlayerStore.getState().miles;
 
-      addScore(scoreDelta);
-      addMiles(120);
+      addMiles(milesEarned);
       completeLevel(levelId, data.stars);
       recordGame(data.type, data.stars);
       recordPlay();
 
-      // Animate score counter: old → old + delta over 1.2s
+      // Animate miles counter: old → old + earned over 1.2s
       const steps = 24;
-      const stepSize = scoreDelta / steps;
-      let current = oldScore;
+      const stepSize = milesEarned / steps;
+      let current = oldMiles;
       let step = 0;
       const interval = setInterval(() => {
         step++;
         current += stepSize;
         if (step >= steps) {
-          setDisplayScore(oldScore + scoreDelta);
+          setDisplayMiles(oldMiles + milesEarned);
           clearInterval(interval);
         } else {
-          setDisplayScore(Math.round(current));
+          setDisplayMiles(Math.round(current));
         }
       }, 1200 / steps);
     }
@@ -130,11 +129,11 @@ export function WinScreen({ data, levelId, onPlayAgain, onExit }: Props) {
 
       <Text style={s.title}>{data.title}</Text>
 
-      {/* Brain Score delta */}
+      {/* Miles counter */}
       <View style={s.scoreDelta}>
-        <Text style={s.scoreDeltaNum}>{displayScore}</Text>
+        <Text style={s.scoreDeltaNum}>{displayMiles.toLocaleString()}</Text>
         <View style={s.scoreDeltaBadge}>
-          <Text style={s.scoreDeltaBadgeTxt}>+{scoreDelta} Brain Score</Text>
+          <Text style={s.scoreDeltaBadgeTxt}>+{milesEarned} Miles ✈️</Text>
         </View>
       </View>
 
@@ -154,11 +153,6 @@ export function WinScreen({ data, levelId, onPlayAgain, onExit }: Props) {
       <View style={s.insight}>
         <Text style={s.insightLbl}>🧠 Brain insight</Text>
         <Text style={s.insightTxt}>{data.insight}</Text>
-      </View>
-
-      {/* +120 miles badge */}
-      <View style={s.milesBadge}>
-        <Text style={s.milesTxt}>✈️  +120 air miles earned</Text>
       </View>
 
       <TouchableOpacity style={s.btnPrimary} onPress={onPlayAgain} activeOpacity={0.85}>

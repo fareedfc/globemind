@@ -1,3 +1,5 @@
+export const MILES_PER_STAR: Record<number, number> = { 1: 150, 2: 300, 3: 500 };
+
 export function calcMemoryStars(wrongFlips: number, totalPairs: number): number {
   if (wrongFlips === 0) return 3;
   if (wrongFlips <= totalPairs) return 2;

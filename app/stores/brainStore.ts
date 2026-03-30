@@ -33,7 +33,7 @@ export const useBrainStore = create<BrainState>()(
   persist(
     (set) => ({
       domains: { memory: 62, logic: 55, speed: 40, pattern: 38 },
-      weeklyBaseline: 742,
+      weeklyBaseline: 0,
       weekStart: getWeekStart(),
 
       recordGame: (type, stars) =>

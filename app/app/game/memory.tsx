@@ -6,7 +6,7 @@ import { Colors } from '../../constants/colors';
 import { LEVELS } from '../../data/levels';
 import { MEMORY_SETS } from '../../data/memoryEmojis';
 import { WinScreen, type WinData } from '../../components/games/WinScreen';
-import { calcMemoryStars } from '../../utils/scoring';
+import { calcMemoryStars, MILES_PER_STAR } from '../../utils/scoring';
 import { pickInsight } from '../../data/brainInsights';
 
 interface Card {
@@ -149,7 +149,7 @@ export default function MemoryGame() {
     stats: [
       { num: totalPairs, lbl: 'Pairs found' },
       { num: wrongFlips, lbl: 'Wrong flips' },
-      { num: `+${totalPairs * 15}`, lbl: 'Brain pts' },
+      { num: `+${MILES_PER_STAR[stars]}`, lbl: 'Miles' },
     ],
     insight: pickInsight('memory'),
     stars,

@@ -46,7 +46,7 @@ const DOMAIN_COLORS: Record<string, string> = {
 };
 
 export default function JourneyScreen() {
-  const { score, streak, useLive } = usePlayerStore();
+  const { miles, streak, useLive } = usePlayerStore();
   const { currentLevelId, completions } = useProgressStore();
   const { lives, timeUntilNext } = useLives();
   const [pathWidth, setPathWidth] = useState(Dimensions.get('window').width - 40);
@@ -93,7 +93,7 @@ export default function JourneyScreen() {
       <TopBar
         right={
           <>
-            <Pill variant="gold" label={`⚡ ${score}`} />
+            <Pill variant="gold" label={`✈️ ${miles.toLocaleString()}`} />
             <Pill variant="red" label={`❤️ ${lives}${timeUntilNext ? ` · ${timeUntilNext}` : ''}`} />
             <Pill variant="teal" label={`🔥 ${streak}`} />
           </>

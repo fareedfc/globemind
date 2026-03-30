@@ -6,7 +6,6 @@ import {
   StyleSheet,
   Dimensions,
   FlatList,
-  Animated,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
@@ -27,14 +26,14 @@ const SLIDES = [
     emoji: '🧩',
     accent: Colors.teal,
     title: '4 games.\n4 brain powers.',
-    body: 'Memory Match, Word Builder, Speed Match, and Pattern Pulse — each level is designed to give your brain a great workout.',
+    body: 'Memory, Logic, Speed, Pattern — each level is designed to give your brain a great workout.',
     extras: ['🧩 Memory', '⚡ Speed', '🔮 Pattern', '🔤 Logic'],
   },
   {
-    emoji: '🧠',
-    accent: Colors.purple,
-    title: 'Your Brain Score\ngrows with you.',
-    body: 'Every session updates your Brain Score and domain breakdown. Watch yourself improve week by week.',
+    emoji: '✈️',
+    accent: Colors.teal,
+    title: 'Earn miles.\nTrack your journey.',
+    body: 'Every game earns you miles. The more you play — and the better you do — the further you travel.',
   },
 ];
 
@@ -58,11 +57,8 @@ function Slide({ item }: { item: typeof SLIDES[0] }) {
 }
 
 export default function OnboardingScreen() {
-  const [step, setStep] = useState(0); // 0-2 = slides, 3 = baseline
-  const [scoreDisplay, setScoreDisplay] = useState(0);
-  const [baselineDone, setBaselineDone] = useState(false);
+  const [step, setStep] = useState(0); // 0-2 = slides, 3 = ready screen
   const flatRef = useRef<FlatList>(null);
-  const scoreAnim = useRef(new Animated.Value(0)).current;
 
   const goNext = () => {
     if (step < SLIDES.length - 1) {
@@ -70,27 +66,8 @@ export default function OnboardingScreen() {
       setStep(next);
       flatRef.current?.scrollToIndex({ index: next, animated: true });
     } else {
-      // Move to baseline step
       setStep(3);
-      animateBaseline();
     }
-  };
-
-  const animateBaseline = () => {
-    const TARGET = 742;
-    const steps = 40;
-    let current = 0;
-    let i = 0;
-    const interval = setInterval(() => {
-      i++;
-      current = Math.round((TARGET / steps) * i);
-      setScoreDisplay(current);
-      if (i >= steps) {
-        setScoreDisplay(TARGET);
-        clearInterval(interval);
-        setBaselineDone(true);
-      }
-    }, 30);
   };
 
   const finish = async () => {
@@ -102,23 +79,18 @@ export default function OnboardingScreen() {
     return (
       <SafeAreaView style={s.container} edges={['top', 'bottom']}>
         <View style={s.baselineBody}>
-          <Text style={s.baselineLbl}>Calculating your baseline...</Text>
+          <Text style={s.readyEmoji}>✈️</Text>
           <LinearGradient
             colors={['#1a3a5c', '#0d2137']}
             style={s.scoreCard}
           >
-            <Text style={s.scoreCardLbl}>Brain Score</Text>
-            <Text style={s.scoreCardNum}>{scoreDisplay}</Text>
-            {baselineDone && (
-              <Text style={s.scoreCardSub}>Sharper than 50% your age group — let's change that.</Text>
-            )}
+            <Text style={s.scoreCardLbl}>Miles Traveled</Text>
+            <Text style={s.scoreCardNum}>0</Text>
+            <Text style={s.scoreCardSub}>Play your first game to earn miles and start your journey.</Text>
           </LinearGradient>
-
-          {baselineDone && (
-            <TouchableOpacity style={s.startBtn} onPress={finish} activeOpacity={0.85}>
-              <Text style={s.startBtnTxt}>Start Your Journey →</Text>
-            </TouchableOpacity>
-          )}
+          <TouchableOpacity style={s.startBtn} onPress={finish} activeOpacity={0.85}>
+            <Text style={s.startBtnTxt}>Start Your Journey →</Text>
+          </TouchableOpacity>
         </View>
       </SafeAreaView>
     );
@@ -243,12 +215,8 @@ const s = StyleSheet.create({
     paddingHorizontal: 28,
     gap: 24,
   },
-  baselineLbl: {
-    fontSize: 14,
-    fontFamily: 'Nunito_700Bold',
-    color: Colors.muted,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
+  readyEmoji: {
+    fontSize: 64,
   },
   scoreCard: {
     width: '100%',

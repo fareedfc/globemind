@@ -8,14 +8,12 @@ export const MAX_LIVES = 5;
 export const REFILL_MS = 30 * 60 * 1000; // 30 minutes
 
 interface PlayerState {
-  score: number;
+  miles: number;
   lives: number;
   streak: number;
-  miles: number;
   lastPlayedDate: string | null;
   nextRefillAt: number | null;
-  addScore: (pts: number) => void;
-  addMiles: (m: number) => void;
+  addMiles: (pts: number) => void;
   useLive: () => void;
   refillLive: () => void;
   recordPlay: () => void;
@@ -24,20 +22,17 @@ interface PlayerState {
 export const usePlayerStore = create<PlayerState>()(
   persist(
     (set) => ({
-      score: 742,
+      miles: 0,
       lives: 5,
-      streak: 14,
-      miles: 2840,
+      streak: 0,
       lastPlayedDate: null,
       nextRefillAt: null,
 
-      addScore: (pts) => set((s) => ({ score: s.score + pts })),
-      addMiles: (m) => set((s) => ({ miles: s.miles + m })),
+      addMiles: (pts) => set((s) => ({ miles: s.miles + pts })),
 
       useLive: () =>
         set((s) => {
           const newLives = Math.max(0, s.lives - 1);
-          // Start refill timer only if we weren't already counting down
           const nextRefillAt =
             s.nextRefillAt ?? (newLives < MAX_LIVES ? Date.now() + REFILL_MS : null);
           return { lives: newLives, nextRefillAt };
