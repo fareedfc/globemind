@@ -18,6 +18,25 @@ function buildRound(pool: string[]): { target: string; options: string[] } {
   return { target, options };
 }
 
+function SpeedOptionBtn({ emoji, style, onPress, disabled, txtStyle }: {
+  emoji: string; style: any; onPress: () => void; disabled: boolean; txtStyle: any;
+}) {
+  const scale = useRef(new Animated.Value(1)).current;
+  const handlePress = () => {
+    if (disabled) return;
+    scale.setValue(0.85);
+    Animated.spring(scale, { toValue: 1, tension: 200, friction: 8, useNativeDriver: true }).start();
+    onPress();
+  };
+  return (
+    <TouchableOpacity onPress={handlePress} disabled={disabled} activeOpacity={1}>
+      <Animated.View style={[style, { transform: [{ scale }] }]}>
+        <Text style={txtStyle}>{emoji}</Text>
+      </Animated.View>
+    </TouchableOpacity>
+  );
+}
+
 export default function SpeedGame() {
   const { levelId: rawId } = useLocalSearchParams<{ levelId: string }>();
   const levelId = parseInt(rawId ?? '4');
@@ -190,15 +209,14 @@ export default function SpeedGame() {
               const isCorrect = flash?.idx === idx && flash.correct;
               const isWrong = flash?.idx === idx && !flash.correct;
               return (
-                <TouchableOpacity
+                <SpeedOptionBtn
                   key={`${round.target}-${idx}`}
+                  emoji={emoji}
                   style={[s.opt, isCorrect && s.optCorrect, isWrong && s.optWrong]}
                   onPress={() => tapOption(emoji, idx)}
-                  activeOpacity={0.75}
                   disabled={!started || !running}
-                >
-                  <Text style={s.optTxt}>{emoji}</Text>
-                </TouchableOpacity>
+                  txtStyle={s.optTxt}
+                />
               );
             })}
           </View>

@@ -20,7 +20,7 @@ const SLIDES = [
     emoji: '✈️',
     accent: Colors.gold,
     title: 'Explore the world.\nSharpen your mind.',
-    body: 'GlobeMind is a beautiful journey game designed to keep your brain sharp — without it ever feeling like homework.',
+    body: 'ThinkPop is a beautiful journey game designed to keep your brain sharp — without it ever feeling like homework.',
   },
   {
     emoji: '🧩',
@@ -72,7 +72,7 @@ export default function OnboardingScreen() {
 
   const finish = async () => {
     await AsyncStorage.setItem('hasOnboarded', 'true');
-    router.replace('/(tabs)/journey');
+    router.replace('/landing');
   };
 
   if (step === 3) {
@@ -88,8 +88,10 @@ export default function OnboardingScreen() {
             <Text style={s.scoreCardNum}>0</Text>
             <Text style={s.scoreCardSub}>Play your first game to earn miles and start your journey.</Text>
           </LinearGradient>
-          <TouchableOpacity style={s.startBtn} onPress={finish} activeOpacity={0.85}>
-            <Text style={s.startBtnTxt}>Start Your Journey →</Text>
+          <TouchableOpacity onPress={finish} activeOpacity={0.85} style={{ width: '100%' }}>
+            <LinearGradient colors={['#FFAA00', '#FF8C00']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={s.startBtn}>
+              <Text style={s.startBtnTxt}>Start Your Journey →</Text>
+            </LinearGradient>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -123,10 +125,12 @@ export default function OnboardingScreen() {
 
       {/* CTA */}
       <View style={s.cta}>
-        <TouchableOpacity style={s.nextBtn} onPress={goNext} activeOpacity={0.85}>
-          <Text style={s.nextBtnTxt}>
-            {step < SLIDES.length - 1 ? 'Next →' : 'Set My Baseline'}
-          </Text>
+        <TouchableOpacity onPress={goNext} activeOpacity={0.85}>
+          <LinearGradient colors={['#FFAA00', '#FF8C00']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={s.nextBtn}>
+            <Text style={s.nextBtnTxt}>
+              {step < SLIDES.length - 1 ? 'Next →' : 'Set My Baseline'}
+            </Text>
+          </LinearGradient>
         </TouchableOpacity>
         {step === 0 && (
           <TouchableOpacity onPress={finish} activeOpacity={0.6} style={s.skipBtn}>
@@ -198,7 +202,6 @@ const s = StyleSheet.create({
 
   cta: { paddingHorizontal: 24, paddingBottom: 20, gap: 10 },
   nextBtn: {
-    backgroundColor: Colors.gold,
     paddingVertical: 17,
     borderRadius: 16,
     alignItems: 'center',
@@ -248,7 +251,6 @@ const s = StyleSheet.create({
   },
   startBtn: {
     width: '100%',
-    backgroundColor: Colors.gold,
     paddingVertical: 18,
     borderRadius: 16,
     alignItems: 'center',

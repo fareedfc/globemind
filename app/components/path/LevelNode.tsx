@@ -17,7 +17,7 @@ function Bubble({ level }: { level: Level }) {
   if (isLocked) {
     return (
       <View style={[s.bubble, s.bubbleLocked]}>
-        <Text style={{ fontSize: 28 }}>{level.e}</Text>
+        <Text style={{ fontSize: 34 }}>{level.e}</Text>
       </View>
     );
   }
@@ -41,7 +41,7 @@ function Bubble({ level }: { level: Level }) {
       end={{ x: 1, y: 1 }}
       style={[s.bubble, { borderColor }]}
     >
-      <Text style={{ fontSize: 28 }}>{level.e}</Text>
+      <Text style={{ fontSize: 34 }}>{level.e}</Text>
     </LinearGradient>
   );
 }
@@ -88,7 +88,7 @@ export function LevelNode({ level, x, y, onPress }: Props) {
 
   return (
     <TouchableOpacity
-      style={[s.node, { left: x - 32, top: y - 32 }]}
+      style={[s.node, { left: x - 40, top: y - 40 }]}
       onPress={() => isInteractive && onPress(level)}
       activeOpacity={isInteractive ? 0.8 : 1}
       disabled={!isInteractive}
@@ -114,17 +114,17 @@ const s = StyleSheet.create({
     alignItems: 'center',
   },
   bubble: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 3,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.35,
-    shadowRadius: 8,
-    elevation: 8,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.4,
+    shadowRadius: 10,
+    elevation: 10,
   },
   bubbleLocked: {
     backgroundColor: 'rgba(255,255,255,0.07)',
@@ -135,13 +135,13 @@ const s = StyleSheet.create({
   },
   ring: {
     position: 'absolute',
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: 100,
+    height: 100,
+    borderRadius: 50,
     borderWidth: 3,
     borderColor: 'rgba(6,214,160,0.35)',
-    top: -8,
-    left: -8,
+    top: -10,
+    left: -10,
   },
   stars: {
     flexDirection: 'row',

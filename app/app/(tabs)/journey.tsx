@@ -188,7 +188,6 @@ export default function JourneyScreen() {
               </Text>
               <Text style={s.modalDesc}>{selectedLevel?.desc}</Text>
               <TouchableOpacity
-                style={s.playBtn}
                 activeOpacity={0.85}
                 onPress={() => {
                   closeModal();
@@ -200,7 +199,14 @@ export default function JourneyScreen() {
                   }
                 }}
               >
-                <Text style={s.playBtnText}>▶  Play Now</Text>
+                <LinearGradient
+                  colors={['#FFAA00', '#FF8C00']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={s.playBtn}
+                >
+                  <Text style={s.playBtnText}>▶  Play Now</Text>
+                </LinearGradient>
               </TouchableOpacity>
               {timeUntilNext && (
                 <Text style={s.livesTimer}>❤️ Next life in {timeUntilNext}</Text>
@@ -356,7 +362,6 @@ const s = StyleSheet.create({
     width: '100%',
     paddingVertical: 17,
     borderRadius: 16,
-    backgroundColor: Colors.gold,
     alignItems: 'center',
     marginBottom: 0,
   },

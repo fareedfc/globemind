@@ -1,5 +1,60 @@
 import { useEffect, useRef, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Animated } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Animated, Dimensions } from 'react-native';
+
+const { width: SW, height: SH } = Dimensions.get('window');
+const PARTICLES = ['⭐', '🎉', '✨', '💫', '🌟', '🎊', '⭐', '✨', '💫', '🎉'];
+
+function Confetti() {
+  const anims = useRef(
+    PARTICLES.map(() => ({
+      x: new Animated.Value(0),
+      y: new Animated.Value(0),
+      opacity: new Animated.Value(1),
+      scale: new Animated.Value(0),
+    }))
+  ).current;
+
+  useEffect(() => {
+    anims.forEach((a, i) => {
+      const angle = (i / PARTICLES.length) * 2 * Math.PI;
+      const dist = 100 + Math.random() * 80;
+      const tx = Math.cos(angle) * dist;
+      const ty = Math.sin(angle) * dist - 60;
+      Animated.sequence([
+        Animated.delay(i * 40),
+        Animated.parallel([
+          Animated.spring(a.scale, { toValue: 1, tension: 120, friction: 6, useNativeDriver: true }),
+          Animated.timing(a.x, { toValue: tx, duration: 700, useNativeDriver: true }),
+          Animated.timing(a.y, { toValue: ty, duration: 700, useNativeDriver: true }),
+          Animated.sequence([
+            Animated.delay(400),
+            Animated.timing(a.opacity, { toValue: 0, duration: 300, useNativeDriver: true }),
+          ]),
+        ]),
+      ]).start();
+    });
+  }, []);
+
+  return (
+    <View style={StyleSheet.absoluteFill} pointerEvents="none">
+      {PARTICLES.map((p, i) => (
+        <Animated.Text
+          key={i}
+          style={{
+            position: 'absolute',
+            top: SH * 0.3,
+            left: SW / 2 - 12,
+            fontSize: 22,
+            transform: [{ translateX: anims[i].x }, { translateY: anims[i].y }, { scale: anims[i].scale }],
+            opacity: anims[i].opacity,
+          }}
+        >
+          {p}
+        </Animated.Text>
+      ))}
+    </View>
+  );
+}
 import { Colors } from '../../constants/colors';
 import { usePlayerStore } from '../../stores/playerStore';
 import { useProgressStore } from '../../stores/progressStore';
@@ -91,6 +146,8 @@ export function WinScreen({ data, levelId, onPlayAgain, onExit }: Props) {
   }, []);
 
   return (
+    <>
+    <Confetti />
     <ScrollView
       contentContainerStyle={s.container}
       showsVerticalScrollIndicator={false}
@@ -162,6 +219,7 @@ export function WinScreen({ data, levelId, onPlayAgain, onExit }: Props) {
         <Text style={s.btnSecondaryTxt}>Back to Journey</Text>
       </TouchableOpacity>
     </ScrollView>
+    </>
   );
 }
 

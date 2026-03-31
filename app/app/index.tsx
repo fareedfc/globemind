@@ -5,11 +5,11 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Colors } from '../constants/colors';
 
 export default function Index() {
-  const [target, setTarget] = useState<'/(tabs)/journey' | '/onboarding' | null>(null);
+  const [target, setTarget] = useState<'/landing' | '/onboarding' | null>(null);
 
   useEffect(() => {
     AsyncStorage.getItem('hasOnboarded').then((val) => {
-      setTarget(val ? '/(tabs)/journey' : '/onboarding');
+      setTarget(val ? '/landing' : '/onboarding');
     });
   }, []);
 

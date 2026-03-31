@@ -55,7 +55,7 @@ export const usePlayerStore = create<PlayerState>()(
         }),
     }),
     {
-      name: 'globemind-player',
+      name: 'thinkpop-player',
       storage: createJSONStorage(() => AsyncStorage),
     },
   ),

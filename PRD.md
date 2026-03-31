@@ -1,14 +1,14 @@
-# GlobeMind — Product Requirements Document
+# ThinkPop — Product Requirements Document
 
 ## Overview
-GlobeMind is a mobile brain training game disguised as a world travel experience. It targets adults aged 30–70 who want to stay mentally sharp but find existing brain training apps boring and clinical.
+ThinkPop is a mobile brain training game disguised as a world travel experience. It targets adults aged 30–70 who want to stay mentally sharp but find existing brain training apps boring and clinical.
 
 ---
 
 ## Problem Statement
-Brain training apps exist (Lumosity, BrainHQ, Elevate) but they feel like homework. Casual games exist (Candy Crush) but offer no mental value. GlobeMind sits in the gap: a game that is genuinely fun AND a great mental workout, designed specifically for an older demographic that is ignored by the gaming industry.
+Brain training apps exist (Lumosity, BrainHQ, Elevate) but they feel like homework. Casual games exist (Candy Crush) but offer no mental value. ThinkPop sits in the gap: a game that is genuinely fun AND a great mental workout, designed specifically for an older demographic that is ignored by the gaming industry.
 
-**Important positioning note:** GlobeMind is framed as a brain training / wellness tool, not a medical or clinical product. We avoid the term "cognitive" throughout the product — regulators and app stores scrutinise cognitive ability claims for computer games. Our language is warm, wellness-oriented and empowering ("sharpen your mind", "mental fitness", "brain workout").
+**Important positioning note:** ThinkPop is framed as a brain training / wellness tool, not a medical or clinical product. We avoid the term "cognitive" throughout the product — regulators and app stores scrutinise cognitive ability claims for computer games. Our language is warm, wellness-oriented and empowering ("sharpen your mind", "mental fitness", "brain workout").
 
 ---
 
@@ -31,7 +31,7 @@ Brain training apps exist (Lumosity, BrainHQ, Elevate) but they feel like homewo
 - As a player, I want to scroll a beautiful path and tap a level to play
 - As a player, I want a bottom sheet to appear with level info before I commit to playing
 - As a player, I want to complete a short game (2–5 min) and feel rewarded immediately
-- As a player, I want to see my brain score go up after each session
+- As a player, I want to see my miles go up after each session
 - As a player, I want to unlock new levels by completing current ones
 
 ### Brain Tracking
@@ -57,7 +57,7 @@ Brain training apps exist (Lumosity, BrainHQ, Elevate) but they feel like homewo
 
 ### FR-001: Level Path
 - Scrollable zigzag path with minimum 50 levels at launch (scale to 200+)
-- Each level node shows: emoji icon, star rating (0–3), locked/unlocked/current state
+- Each level node shows: emoji icon, star rating (0–3), locked/unlocked/current state — nodes are **80px** bubbles
 - Tapping unlocked node opens bottom sheet modal
 - Current level has pulsing glow animation
 - Locked levels are dimmed, non-interactive, show lock icon
@@ -88,6 +88,7 @@ Brain training apps exist (Lumosity, BrainHQ, Elevate) but they feel like homewo
 - Win condition: all 7 rounds complete
 - Score = correct_answers × 60
 - Stars: 3⭐ ≥ 6/7, 2⭐ ≥ 4/7, 1⭐ otherwise
+- Choice buttons have bouncy spring tap animations
 
 ### FR-005: Game Engine — Speed Match
 - Target symbol displayed prominently at top
@@ -99,6 +100,7 @@ Brain training apps exist (Lumosity, BrainHQ, Elevate) but they feel like homewo
 - Base score per correct: 10pts
 - Win condition: timer expires (game always completes)
 - New round auto-generates in 180ms after correct tap
+- Choice buttons have bouncy spring tap animations
 
 ### FR-006: Game Engine — Pattern Pulse
 - Sequence of 5–7 emoji lights up one at a time (550ms per symbol)
@@ -111,22 +113,25 @@ Brain training apps exist (Lumosity, BrainHQ, Elevate) but they feel like homewo
 - 7 rounds per game
 - Win condition: all 7 rounds complete (regardless of score)
 - Score = correct_answers × 60
+- Choice buttons have bouncy spring tap animations
 
 ### FR-007: Win Screen
 - Appears after any game completion
 - Shows: emoji celebration, title (score-dependent), subtitle, 3 stat cards, brain insight card
 - Brain insight: warm, accessible sentence about the training area (no clinical language)
 - Two buttons: Play Again (replays same level) / Back to Journey
-- Brain Score increments by 10–30 pts
-- Air miles increment by 120
+- **Confetti particles**: 10 emoji particles burst on win
+- **Miles counter animates** up to new total; "+N Miles ✈️" badge shown
+- Miles earned per star: 1⭐ = 150 miles, 2⭐ = 300 miles, 3⭐ = 500 miles
 
 ### FR-008: Brain Dashboard
-- Brain Score: large number, weekly delta, percentile rank vs age group
-- 4 active training area bars: Memory, Speed, Logic, Pattern
-- 1 coming soon bar: Focus
+- Miles total: large number, weekly delta, percentile rank vs age group
+- **4 active training area bars: Memory, Speed, Logic, Pattern** (Focus domain removed)
 - Each bar shows percentage fill
 - Coach Tip: one sentence targeting weakest area
 - Day streak card at bottom
+- **Guest users**: gradient sign-in banner "Save your progress · Sign In →" tapping goes to `/auth`
+- **Logged-in users**: account row showing "Signed in as [name]" + Log out link
 
 ### FR-009: Miles & Passport
 - Total air miles counter
@@ -153,6 +158,18 @@ Brain training apps exist (Lumosity, BrainHQ, Elevate) but they feel like homewo
 - Streak at risk: "Don't break your X day streak!"
 - New levels unlocked: "5 new adventures just dropped ✈️"
 - Lives refilled: "You're back to full health — ready to play?"
+
+### FR-013: Landing Screen
+- Shown after onboarding completes and on every app open (entry point)
+- Displays: animated globe, "Train your brain. Travel the world." headline, game chips (Memory, Speed, Logic, Pattern)
+- **Play** button → navigates to Journey tab
+- **Track Progress** button → navigates to `/auth` if guest, or Brain tab if logged in
+
+### FR-014: Auth Screen
+- Email login / signup with toggle between modes
+- Shake animation on error (wrong password, invalid email)
+- "Continue without account" option (guest mode)
+- Ready for Supabase swap-in (currently local auth via authStore)
 
 ---
 
@@ -208,14 +225,16 @@ Memory → Logic → Memory → Speed → Pattern → Logic → Memory → Speed
 |---|---|
 | Splash | Logo animation, loads user data |
 | Onboarding | 3-screen swipe intro + quick baseline test |
+| Landing | Entry lobby: animated globe, game chips, Play / Track Progress |
+| Auth | Email login/signup, shake on error, continue as guest |
 | Journey | Main scrolling path (home screen) |
 | Level Modal | Bottom sheet on level tap |
 | Game — Memory | Card flip matching game |
 | Game — Logic | Odd One Out game |
 | Game — Speed | Symbol match game |
 | Game — Pattern | Sequence memory game |
-| Win Screen | Post-game celebration |
-| Brain Dashboard | Scores and training areas |
+| Win Screen | Post-game celebration with confetti and miles counter |
+| Brain Dashboard | Scores and training areas (4 domains) |
 | Miles & Passport | Rewards and stamps |
 | Settings | Notifications, account, subscription |
 | Paywall | Premium upsell (lives gate / feature gate) |
@@ -254,11 +273,13 @@ Memory → Logic → Memory → Speed → Pattern → Logic → Memory → Speed
 ## File / Folder Structure (React Native + Expo)
 
 ```
-globemind/
+thinkpop/
 ├── CLAUDE.md                  ← AI context file (keep updated)
 ├── PRD.md                     ← This file
 ├── app/
-│   ├── index.tsx              ← Entry point (onboarding gate)
+│   ├── index.tsx              ← Entry point → routes to /landing after onboarding
+│   ├── landing.tsx            ← Entry lobby screen (animated globe, game chips)
+│   ├── auth.tsx               ← Email login/signup screen
 │   ├── (tabs)/
 │   │   ├── journey.tsx        ← Main path screen
 │   │   ├── brain.tsx          ← Brain dashboard
@@ -270,21 +291,22 @@ globemind/
 │   │   └── pattern.tsx        ← Pattern pulse game
 │   ├── paywall.tsx
 │   └── onboarding/
-│       └── index.tsx          ← Onboarding flow
+│       └── index.tsx          ← Onboarding flow → finish goes to /landing
 ├── components/
 │   ├── path/
-│   │   ├── LevelNode.tsx      ← Individual bubble node
+│   │   ├── LevelNode.tsx      ← Individual bubble node (80px)
 │   │   └── PathSVG.tsx        ← Wavy path line
 │   ├── games/
-│   │   └── WinScreen.tsx
+│   │   └── WinScreen.tsx      ← Confetti particles, miles counter animation
 │   ├── ui/
 │   │   └── Pill.tsx
 │   └── layout/
 │       └── TopBar.tsx
 ├── stores/
-│   ├── playerStore.ts         ← Zustand: score, lives, streak
-│   ├── progressStore.ts       ← Zustand: level completion, stars
-│   └── brainStore.ts          ← Zustand: domain scores
+│   ├── playerStore.ts         ← Zustand: score, lives, streak (key: thinkpop-player)
+│   ├── progressStore.ts       ← Zustand: level completion, stars (key: thinkpop-progress)
+│   ├── brainStore.ts          ← Zustand: domain scores (key: thinkpop-brain)
+│   └── authStore.ts           ← Zustand: auth state, isLoggedIn, email, name (key: thinkpop-auth)
 ├── data/
 │   ├── levels.ts              ← Level definitions (type, domain, desc)
 │   ├── oddOneSets.ts          ← Odd One Out puzzle data
@@ -294,10 +316,10 @@ globemind/
 ├── hooks/
 │   └── useLives.ts            ← Lives timer logic
 ├── utils/
-│   └── scoring.ts             ← Score / star calculation
+│   └── scoring.ts             ← Score / star / miles calculation
 ├── constants/
-│   ├── colors.ts              ← Design tokens
-│   └── config.ts              ← Game config (timer lengths etc)
+│   ├── colors.ts              ← Design tokens (#0B1D3A, #1A3A5C, #FFD166, #06D6A0)
+│   └── config.ts              ← Game config (timer lengths, MILES_PER_STAR etc)
 └── assets/
     └── fonts/
 ```
@@ -309,15 +331,19 @@ globemind/
 ### Phase 1 MVP — COMPLETE ✅
 
 **Built and working:**
-- [x] Onboarding (3 slides + animated baseline score reveal)
-- [x] Journey path (15 levels built; zigzag path, level modal, decorative emoji)
+- [x] Onboarding (3 slides + animated baseline score reveal → lands on Landing screen)
+- [x] Landing screen (`app/landing.tsx`) — animated globe, game chips, Play / Track Progress buttons
+- [x] Auth screen (`app/auth.tsx`) — email login/signup, shake on error, continue as guest
+- [x] Journey path (15 levels built; zigzag path, level modal, decorative emoji; 80px nodes)
 - [x] All 4 game modes fully playable (Memory Match, Odd One Out, Speed Match, Pattern Pulse)
-- [x] Win screen + brain insight (stars animation, score counter, randomised insights)
-- [x] Brain dashboard (live training area scores, weekly delta, dynamic coach tip, percentile rank)
+- [x] Bouncy spring tap animations on all choice buttons (Logic, Speed, Pattern games)
+- [x] Win screen + confetti particles + miles counter animation + "+N Miles ✈️" badge
+- [x] Brain dashboard (live training area scores — 4 domains, Focus removed; weekly delta; dynamic coach tip; percentile rank; guest sign-in banner; logged-in account row)
 - [x] Lives system (5 hearts, 30-min timer refill, deduct on play, gate when empty)
 - [x] Day streak (date-based tracking, resets on missed day, increments on win)
-- [x] Local persistence (AsyncStorage via Zustand persist — player, progress, brain stores)
+- [x] Local persistence (AsyncStorage via Zustand persist — keys: thinkpop-player, thinkpop-progress, thinkpop-brain, thinkpop-auth)
 - [x] Basic paywall (lives gate screen with countdown timer and premium CTA placeholder)
+- [x] Auth store (`stores/authStore.ts`) — local auth, Supabase-ready
 
 **Nice to have (Phase 2):**
 - [ ] Cloud sync (Supabase)
@@ -326,7 +352,7 @@ globemind/
 - [ ] RevenueCat subscription (paywall CTA is placeholder — needs wiring)
 
 **Out of scope for MVP:**
-- [ ] Focus game mode (5th training area)
+- [ ] Focus game mode (removed from Brain dashboard; no game built)
 - [ ] Detailed weekly reports
 - [ ] Leaderboards
 - [ ] Multiplayer / friends
@@ -338,23 +364,26 @@ globemind/
 ### Screens
 | Screen | File | Status |
 |---|---|---|
-| Onboarding | `app/onboarding/index.tsx` | ✅ 3 slides + baseline animation |
-| Journey (main path) | `app/(tabs)/journey.tsx` | ✅ Live level state from progressStore |
-| Brain Dashboard | `app/(tabs)/brain.tsx` | ✅ Wired to live brainStore |
+| Onboarding | `app/onboarding/index.tsx` | ✅ 3 slides + baseline animation → /landing |
+| Landing | `app/landing.tsx` | ✅ Animated globe, game chips, Play / Track Progress |
+| Auth | `app/auth.tsx` | ✅ Login/signup, shake on error, continue as guest |
+| Journey (main path) | `app/(tabs)/journey.tsx` | ✅ Live level state from progressStore; 80px nodes |
+| Brain Dashboard | `app/(tabs)/brain.tsx` | ✅ 4 domains, guest banner, account row |
 | Miles & Passport | `app/(tabs)/miles.tsx` | ✅ UI complete (static stamps) |
 | Memory Match | `app/game/memory.tsx` | ✅ Fully playable, star rating |
-| Odd One Out | `app/game/logic.tsx` | ✅ Fully playable, star rating |
-| Speed Match | `app/game/speed.tsx` | ✅ Fully playable, star rating |
-| Pattern Pulse | `app/game/pattern.tsx` | ✅ Fully playable, star rating |
-| Win Screen | `components/games/WinScreen.tsx` | ✅ Stars anim, score counter, brain insight |
+| Odd One Out | `app/game/logic.tsx` | ✅ Fully playable, star rating, spring animations |
+| Speed Match | `app/game/speed.tsx` | ✅ Fully playable, star rating, spring animations |
+| Pattern Pulse | `app/game/pattern.tsx` | ✅ Fully playable, star rating, spring animations |
+| Win Screen | `components/games/WinScreen.tsx` | ✅ Confetti particles, miles counter, "+N Miles ✈️" badge |
 | Paywall | `app/paywall.tsx` | ✅ Lives gate, countdown, premium CTA |
 
 ### State / Data
 | Store | File | Status |
 |---|---|---|
-| Player (score, lives, streak, miles) | `stores/playerStore.ts` | ✅ Persisted, lives timer, streak date logic |
-| Progress (level completions, stars) | `stores/progressStore.ts` | ✅ Persisted, best-stars logic |
-| Brain (domain scores, weekly delta) | `stores/brainStore.ts` | ✅ Persisted, domain nudge per win |
+| Player (score, lives, streak, miles) | `stores/playerStore.ts` | ✅ Persisted (thinkpop-player), lives timer, streak date logic |
+| Progress (level completions, stars) | `stores/progressStore.ts` | ✅ Persisted (thinkpop-progress), best-stars logic |
+| Brain (domain scores, weekly delta) | `stores/brainStore.ts` | ✅ Persisted (thinkpop-brain), domain nudge per win |
+| Auth (isLoggedIn, email, name) | `stores/authStore.ts` | ✅ Persisted (thinkpop-auth), Supabase-ready |
 
 ### Known Gaps / Tech Debt
 - Journey path has **15 levels** — PRD target is 50. Need to expand `data/levels.ts` and `POS` coordinates.
@@ -362,7 +391,6 @@ globemind/
 - Paywall premium CTA is a **placeholder** — RevenueCat not integrated.
 - Streak displayed in Brain tab is live but **no streak shield IAP** yet.
 - No **failure state** in games — lives deducted on play start, not on fail. Needs per-game fail conditions in Phase 2.
-- Focus training area shows "Coming soon" in Brain tab — **no game built yet**.
 
 ---
 
@@ -377,8 +405,7 @@ globemind/
 1. **RevenueCat** — wire the paywall "Get Premium" button to an actual subscription. This is the single highest-impact revenue action.
 2. **Push notifications** — daily reminder + streak-at-risk + lives-refilled. Use Expo Notifications (no extra backend needed).
 3. **Onboarding paywall** — add a premium upsell screen at the end of onboarding (post-baseline reveal). High conversion window.
-4. **Supabase cloud sync** — auth + Postgres for cross-device continuity. Required before wide launch.
-5. **Focus game mode** — 5th training area, completes the brain dashboard.
+4. **Supabase cloud sync** — swap authStore local logic for real Supabase auth + Postgres for cross-device continuity. Required before wide launch.
 
 ### Phase 3 — Growth (months 6–12)
 - Leaderboards, daily challenges, seasonal events

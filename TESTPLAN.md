@@ -1,5 +1,5 @@
-# GlobeMind — Test Plan
-Last updated: 2026-03-29
+# ThinkPop — Test Plan
+Last updated: 2026-03-30
 
 Run these tests on a physical device (iOS or Android) via Expo Go or a dev build. Each test has a **Steps** section and an **Expected** result. Mark ✅ Pass or ❌ Fail.
 
@@ -10,32 +10,70 @@ Run these tests on a physical device (iOS or Android) via Expo Go or a dev build
 ### OB-01 — First launch shows onboarding
 **Precondition:** Fresh install or AsyncStorage cleared (`hasOnboarded` key absent)
 1. Launch the app
-**Expected:** Onboarding screen appears (not the Journey tab)
+**Expected:** Onboarding screen appears (not the Landing screen)
 
 ### OB-02 — Slide navigation
 1. On slide 1, tap **Next →**
 2. Tap **Next →** again
 **Expected:** Slides advance to 2, then 3. Dot indicator updates. Slide 2 shows the 4 domain chips (🎴 ⚡ 🔤 🔮).
 
-### OB-03 — Skip goes straight to Journey
+### OB-03 — Skip goes straight to Landing
 1. On slide 1, tap **Skip**
-**Expected:** Navigates directly to the Journey tab. `hasOnboarded` is set — restarting the app skips onboarding.
+**Expected:** Navigates directly to the Landing screen. `hasOnboarded` is set — restarting the app skips onboarding.
 
 ### OB-04 — Baseline animation
 1. Advance through all 3 slides, tap **Set My Baseline**
 **Expected:** Score counter animates from 0 → 742 over ~1.2s. "Start Your Journey →" button appears after animation completes.
 
-### OB-05 — Completing onboarding lands on Journey
+### OB-05 — Completing onboarding lands on Landing
 1. Complete the baseline step, tap **Start Your Journey →**
-**Expected:** Navigates to Journey tab. Reopening the app does NOT show onboarding again.
+**Expected:** Navigates to the Landing screen. Reopening the app does NOT show onboarding again.
 
 ---
 
-## 2. Journey Tab
+## 2. Landing & Auth
+
+### LA-01 — Landing screen shows on app open
+**Precondition:** Onboarding already completed
+1. Open the app
+**Expected:** Landing screen appears with animated globe, "Train your brain. Travel the world." headline, and game chips (Memory, Speed, Logic, Pattern).
+
+### LA-02 — Play button goes to Journey
+1. On the Landing screen, tap **Play**
+**Expected:** Navigates to the Journey tab.
+
+### LA-03 — Track Progress goes to auth when not logged in
+**Precondition:** User is not logged in (guest)
+1. On the Landing screen, tap **Track Progress**
+**Expected:** Navigates to the Auth screen (`/auth`).
+
+### LA-04 — Track Progress goes to Brain tab when logged in
+**Precondition:** User is logged in (authStore.isLoggedIn = true)
+1. On the Landing screen, tap **Track Progress**
+**Expected:** Navigates directly to the Brain tab, not the Auth screen.
+
+### LA-05 — Sign up creates account and goes to Brain tab
+1. On the Auth screen, select **Sign Up** mode
+2. Enter a valid email and password, tap **Sign Up**
+**Expected:** Account created (stored in authStore). Navigates to the Brain tab. "Signed in as [name/email]" visible in account row.
+
+### LA-06 — Login with correct credentials goes to Brain tab
+**Precondition:** Account exists
+1. On the Auth screen, select **Log In** mode
+2. Enter correct email and password, tap **Log In**
+**Expected:** Navigates to the Brain tab. Account row shows correct name/email.
+
+### LA-07 — Login with wrong password shows error
+1. On the Auth screen, enter a valid email but wrong password, tap **Log In**
+**Expected:** Shake animation plays on the form. Error message shown. No navigation occurs.
+
+---
+
+## 3. Journey Tab
 
 ### JO-01 — Path renders correctly
 1. Open the Journey tab
-**Expected:** Zigzag path visible with level nodes. Top bar shows Brain Score pill (⚡), lives pill (❤️), streak pill (🔥). Vibe banner shows current level number.
+**Expected:** Zigzag path visible with level nodes (80px bubbles). Top bar shows miles pill (✈️), lives pill (❤️), streak pill (🔥). Vibe banner shows current level number.
 
 ### JO-02 — Completed levels show stars
 **Precondition:** At least one level completed
@@ -78,7 +116,7 @@ Run these tests on a physical device (iOS or Android) via Expo Go or a dev build
 
 ---
 
-## 3. Memory Match Game
+## 4. Memory Match Game
 
 ### MM-01 — Game loads correctly
 1. Start a Memory Match level
@@ -107,39 +145,35 @@ Run these tests on a physical device (iOS or Android) via Expo Go or a dev build
 
 ---
 
-## 4. Word Builder Game
+## 5. Odd One Out Game (Logic)
 
-### WB-01 — Game loads correctly
-1. Start a Word Builder level
-**Expected:** 7 letter tiles shown. Word display shows `_ _ _`. Found words counter shows 0/5.
+### LG-01 — Game loads correctly
+1. Start an Odd One Out (Logic) level
+**Expected:** 4 emoji shown in a 2×2 grid. Round counter shows 1/7. Answer timer bar visible. Pip row shows 7 empty circles.
 
-### WB-02 — Tapping letters builds word
-1. Tap 3+ letter tiles in sequence
-**Expected:** Letters appear in the word display. Tapped tiles dim (used state). Word display border turns gold.
+### LG-02 — Answer timer starts immediately
+1. Start an Odd One Out level
+**Expected:** The 8-second timer bar begins shrinking as soon as the round loads. No tap required to start.
 
-### WB-03 — Valid word accepted
-1. Build a valid word from the tile set and tap **Submit ✓**
-**Expected:** Word display flashes green (teal border). Word added to found list with points chip. Tiles reset.
+### LG-03 — Correct tap scores and advances
+1. Tap the emoji that is the odd one out
+**Expected:** Tapped cell highlights teal. Pip for this round lights green. Brief hint shown (e.g. "Not a fruit"). Next round loads after ~1s.
 
-### WB-04 — Invalid word shakes and clears
-1. Build an invalid sequence (e.g. random consonants) and tap **Submit ✓**
-**Expected:** Word display shakes with red border, then clears automatically.
+### LG-04 — Wrong tap shows correct answer
+1. Tap an emoji that is NOT the odd one out
+**Expected:** Tapped cell highlights coral/red. Pip lights red. The actual odd one out is highlighted teal. Hint shown. Next round loads after ~1s.
 
-### WB-05 — Duplicate word silently clears
-1. Submit the same valid word twice
-**Expected:** Second submission clears without adding to found list or showing error.
+### LG-05 — Timer timeout counts as wrong
+1. Let the 8-second timer expire without tapping
+**Expected:** Treated as wrong answer. Pip lights red. Correct answer highlighted. Round advances.
 
-### WB-06 — Clear button resets attempt
-1. Select 3+ letters, tap **Clear**
-**Expected:** Word display resets to `_ _ _`, all tiles become active again.
-
-### WB-07 — Win at 5 words
-1. Find 5 valid words
-**Expected:** Win screen appears. Stars reflect score (3⭐ ≥ 350pts, 2⭐ ≥ 200pts, 1⭐ otherwise).
+### LG-06 — 7 rounds complete triggers win screen
+1. Complete all 7 rounds
+**Expected:** Win screen appears. Stars reflect correct count (3⭐ ≥ 6/7, 2⭐ ≥ 4/7, 1⭐ otherwise).
 
 ---
 
-## 5. Speed Match Game
+## 6. Speed Match Game
 
 ### SM-01 — Game loads with Start button
 1. Start a Speed Match level
@@ -167,7 +201,7 @@ Run these tests on a physical device (iOS or Android) via Expo Go or a dev build
 
 ---
 
-## 6. Pattern Pulse Game
+## 7. Pattern Pulse Game
 
 ### PP-01 — Sequence plays automatically
 1. Start a Pattern Pulse level
@@ -195,24 +229,24 @@ Run these tests on a physical device (iOS or Android) via Expo Go or a dev build
 
 ---
 
-## 7. Win Screen
+## 8. Win Screen
 
 ### WS-01 — Stars animate in
 1. Complete any game
 **Expected:** Win screen appears. 3 star positions animate in one by one with a spring + rotation effect. Filled stars (⭐) vs empty (☆) match the performance.
 
-### WS-02 — Brain Score counter animates
+### WS-02 — Miles counter animates
 1. Complete any game
-**Expected:** Large number counts up from the previous score to the new score over ~1.2s. Gold "+N Brain Score" badge visible.
+**Expected:** Large miles number counts up from the previous total to the new total over ~1.2s. "+N Miles ✈️" badge visible.
 
 ### WS-03 — Brain insight is domain-relevant
 1. Complete a Memory Match game — check the insight card
 2. Complete a Speed Match game — check the insight card
-**Expected:** Insight text is relevant to the game's cognitive domain. Should vary between plays (4 possible insights per domain, randomly selected).
+**Expected:** Insight text is relevant to the game's brain training area. Should vary between plays (4 possible insights per domain, randomly selected).
 
-### WS-04 — +120 miles badge shown
+### WS-04 — "+N Miles" badge shown
 1. Complete any game
-**Expected:** "✈️ +120 air miles earned" badge visible below stat cards.
+**Expected:** "+N Miles ✈️" badge visible below stat cards, showing the exact miles earned for that performance (150, 300, or 500 depending on stars).
 
 ### WS-05 — Play Again replays the same level
 1. On the win screen, tap **Play Again ↺**
@@ -223,24 +257,28 @@ Run these tests on a physical device (iOS or Android) via Expo Go or a dev build
 **Expected:** Navigates back to Journey tab. The completed level now shows stars on its node. The next level is now current (pulsing).
 
 ### WS-07 — Rewards fire exactly once
-1. Note the Brain Score before completing a level
+1. Note the miles total before completing a level
 2. Complete the level, view win screen
 3. Navigate back to Journey
-4. Return to Brain tab — check score
-**Expected:** Score increased exactly once. Playing Again and returning should NOT double-count.
+4. Return to Brain tab — check miles
+**Expected:** Miles increased exactly once. Playing Again and returning should NOT double-count.
+
+### WS-08 — Confetti particles burst on win
+1. Complete any game
+**Expected:** 10 emoji confetti particles animate outward/downward from the centre of the win screen on arrival.
 
 ---
 
-## 8. Brain Dashboard
+## 9. Brain Dashboard
 
-### BD-01 — Brain Score shows live value
-1. Note score before playing
+### BD-01 — Miles total shows live value
+1. Note miles total before playing
 2. Complete a game
 3. Open the Brain tab
-**Expected:** Score matches the updated value shown on the win screen.
+**Expected:** Miles total matches the updated value shown on the win screen.
 
 ### BD-02 — Domain bars update after a game
-1. Note the relevant domain % before playing (e.g. Working Memory before a Memory game)
+1. Note the relevant domain % before playing (e.g. Memory before a Memory game)
 2. Complete the game
 3. Open the Brain tab
 **Expected:** The matching domain bar has increased (+3/+6/+10 depending on stars earned).
@@ -255,9 +293,10 @@ Run these tests on a physical device (iOS or Android) via Expo Go or a dev build
 1. Open the Brain tab
 **Expected:** Coach Tip text references the domain with the lowest % bar. As you improve a domain, the tip should shift to the next weakest.
 
-### BD-05 — Attention & Focus shown as coming soon
+### BD-05 — Sign-in banner shown for guest users
+**Precondition:** User is not logged in (authStore.isLoggedIn = false)
 1. Open the Brain tab
-**Expected:** Attention & Focus row is dimmed with "Coming soon" label. No % shown.
+**Expected:** Gradient "Save your progress · Sign In →" banner visible. Tapping it navigates to `/auth`.
 
 ### BD-06 — Streak card shows live streak
 1. Complete a game (increments streak)
@@ -266,7 +305,7 @@ Run these tests on a physical device (iOS or Android) via Expo Go or a dev build
 
 ---
 
-## 9. Lives System
+## 10. Lives System
 
 ### LV-01 — Lives deducted on play
 1. Note lives count in the Journey top bar
@@ -296,7 +335,7 @@ Run these tests on a physical device (iOS or Android) via Expo Go or a dev build
 
 ---
 
-## 10. Streak System
+## 11. Streak System
 
 ### ST-01 — Streak increments on first play of the day
 **Precondition:** `lastPlayedDate` is yesterday (or null)
@@ -320,7 +359,7 @@ Run these tests on a physical device (iOS or Android) via Expo Go or a dev build
 
 ---
 
-## 11. Paywall Screen
+## 12. Paywall Screen
 
 ### PW-01 — Hearts display correctly
 1. Navigate to the Paywall screen
@@ -347,12 +386,12 @@ Run these tests on a physical device (iOS or Android) via Expo Go or a dev build
 
 ---
 
-## 12. Persistence (AsyncStorage)
+## 13. Persistence (AsyncStorage)
 
-### PS-01 — Score persists across restarts
-1. Complete a game, note the new Brain Score
+### PS-01 — Miles persist across restarts
+1. Complete a game, note the new miles total
 2. Force-close and reopen the app
-**Expected:** Brain Score on Journey top bar and Brain tab matches what was shown before close.
+**Expected:** Miles total on Journey top bar and Brain tab matches what was shown before close.
 
 ### PS-02 — Level progress persists
 1. Complete a level, note which level is now "current" on the path
@@ -366,13 +405,13 @@ Run these tests on a physical device (iOS or Android) via Expo Go or a dev build
 
 ### PS-04 — Miles persist
 1. Note air miles on Miles tab
-2. Complete a game (+120 miles)
+2. Complete a game
 3. Force-close and reopen
 **Expected:** Miles tab shows the incremented total.
 
 ---
 
-## 13. Navigation & General
+## 14. Navigation & General
 
 ### NA-01 — Tab switching works
 1. Tap each of the 3 tabs (Journey 🗺️, Brain 🧠, Miles ✈️)
@@ -392,7 +431,7 @@ Run these tests on a physical device (iOS or Android) via Expo Go or a dev build
 
 ### NA-05 — Dark theme consistent across all screens
 1. Open every screen
-**Expected:** All backgrounds are deep navy (#1a1a2e / #16213e). Gold, teal, coral accents used consistently. No white backgrounds.
+**Expected:** All backgrounds are deep ocean blue (#0B1D3A / #1A3A5C). Gold gradient, teal, coral accents used consistently. No white backgrounds.
 
 ---
 
@@ -402,9 +441,16 @@ Run these tests on a physical device (iOS or Android) via Expo Go or a dev build
 |---|---|---|---|
 | OB-01 | First launch shows onboarding | | |
 | OB-02 | Slide navigation | | |
-| OB-03 | Skip goes to Journey | | |
+| OB-03 | Skip goes to Landing | | |
 | OB-04 | Baseline animation | | |
-| OB-05 | Completing onboarding | | |
+| OB-05 | Completing onboarding lands on Landing | | |
+| LA-01 | Landing screen shows on app open | | |
+| LA-02 | Play button goes to Journey | | |
+| LA-03 | Track Progress → auth when guest | | |
+| LA-04 | Track Progress → Brain tab when logged in | | |
+| LA-05 | Sign up creates account → Brain tab | | |
+| LA-06 | Login with correct credentials → Brain tab | | |
+| LA-07 | Login with wrong password shows error | | |
 | JO-01 | Path renders | | |
 | JO-02 | Completed levels show stars | | |
 | JO-03 | Current level pulses | | |
@@ -420,13 +466,12 @@ Run these tests on a physical device (iOS or Android) via Expo Go or a dev build
 | MM-04 | Mismatch flips back | | |
 | MM-05 | Win condition | | |
 | MM-06 | Difficulty scales | | |
-| WB-01 | Word game loads | | |
-| WB-02 | Building a word | | |
-| WB-03 | Valid word accepted | | |
-| WB-04 | Invalid word shakes | | |
-| WB-05 | Duplicate clears | | |
-| WB-06 | Clear button | | |
-| WB-07 | Win at 5 words | | |
+| LG-01 | Odd One Out game loads | | |
+| LG-02 | Answer timer starts immediately | | |
+| LG-03 | Correct tap scores and advances | | |
+| LG-04 | Wrong tap shows correct answer | | |
+| LG-05 | Timer timeout = wrong | | |
+| LG-06 | 7 rounds wins | | |
 | SM-01 | Speed game loads | | |
 | SM-02 | Timer counts down | | |
 | SM-03 | Correct tap scores | | |
@@ -440,17 +485,18 @@ Run these tests on a physical device (iOS or Android) via Expo Go or a dev build
 | PP-05 | Timeout = wrong | | |
 | PP-06 | 7 rounds wins | | |
 | WS-01 | Stars animate | | |
-| WS-02 | Score counter animates | | |
+| WS-02 | Miles counter animates | | |
 | WS-03 | Brain insight is relevant | | |
-| WS-04 | +120 miles badge | | |
+| WS-04 | +N Miles badge shown | | |
 | WS-05 | Play Again replays | | |
 | WS-06 | Back to Journey | | |
 | WS-07 | Rewards fire once only | | |
-| BD-01 | Brain Score live | | |
+| WS-08 | Confetti particles burst | | |
+| BD-01 | Miles total live | | |
 | BD-02 | Domain bars update | | |
 | BD-03 | Weekly delta accurate | | |
 | BD-04 | Coach tip targets weakest | | |
-| BD-05 | Focus domain coming soon | | |
+| BD-05 | Sign-in banner shown for guests | | |
 | BD-06 | Streak card live | | |
 | LV-01 | Lives deducted on play | | |
 | LV-02 | Refill timer starts | | |
@@ -466,7 +512,7 @@ Run these tests on a physical device (iOS or Android) via Expo Go or a dev build
 | PW-03 | Premium CTA tappable | | |
 | PW-04 | Back button | | |
 | PW-05 | Go play on refill | | |
-| PS-01 | Score persists | | |
+| PS-01 | Miles persist across restarts | | |
 | PS-02 | Level progress persists | | |
 | PS-03 | Domain scores persist | | |
 | PS-04 | Miles persist | | |

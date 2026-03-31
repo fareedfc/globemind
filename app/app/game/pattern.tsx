@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Animated } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Colors } from '../../constants/colors';
@@ -16,6 +16,25 @@ type Phase = 'watching' | 'answering' | 'feedback';
 type PipState = 'none' | 'ok' | 'err';
 
 const delay = (ms: number) => new Promise<void>(r => setTimeout(r, ms));
+
+function PatternChoiceBtn({ choice, style, onPress, disabled, txtStyle }: {
+  choice: string; style: any; onPress: () => void; disabled: boolean; txtStyle: any;
+}) {
+  const scale = useRef(new Animated.Value(1)).current;
+  const handlePress = () => {
+    if (disabled) return;
+    scale.setValue(0.85);
+    Animated.spring(scale, { toValue: 1, tension: 200, friction: 8, useNativeDriver: true }).start();
+    onPress();
+  };
+  return (
+    <TouchableOpacity onPress={handlePress} disabled={disabled} activeOpacity={1} style={{ flex: 1 }}>
+      <Animated.View style={[style, { transform: [{ scale }] }]}>
+        <Text style={txtStyle}>{choice}</Text>
+      </Animated.View>
+    </TouchableOpacity>
+  );
+}
 
 export default function PatternGame() {
   const { levelId: rawId } = useLocalSearchParams<{ levelId: string }>();
@@ -270,15 +289,14 @@ export default function PatternGame() {
             const showCorrect = phase === 'feedback' && isCorrectAnswer;
             const showWrong = phase === 'feedback' && isSelected && !isCorrectAnswer;
             return (
-              <TouchableOpacity
+              <PatternChoiceBtn
                 key={i}
+                choice={choice}
                 style={[s.choice, showCorrect && s.choiceOk, showWrong && s.choiceErr]}
                 onPress={() => phase === 'answering' && handleAnswer(choice)}
                 disabled={phase !== 'answering'}
-                activeOpacity={0.75}
-              >
-                <Text style={s.choiceTxt}>{choice}</Text>
-              </TouchableOpacity>
+                txtStyle={s.choiceTxt}
+              />
             );
           })}
         </View>

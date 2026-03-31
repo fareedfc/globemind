@@ -1,15 +1,17 @@
 import { useEffect } from 'react';
-import { ScrollView, View, Text, StyleSheet, DimensionValue } from 'react-native';
+import { ScrollView, View, Text, StyleSheet, DimensionValue, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import { router } from 'expo-router';
 import { TopBar } from '../../components/layout/TopBar';
 import { Pill } from '../../components/ui/Pill';
 import { Colors } from '../../constants/colors';
 import { usePlayerStore } from '../../stores/playerStore';
 import { useBrainStore, type GameType } from '../../stores/brainStore';
+import { useAuthStore } from '../../stores/authStore';
 
 const DOMAIN_META: Array<{
-  key: GameType | 'focus';
+  key: GameType;
   icon: string;
   label: string;
   color: string;
@@ -18,7 +20,6 @@ const DOMAIN_META: Array<{
   { key: 'speed',   icon: '⚡', label: 'Speed',   color: Colors.coral },
   { key: 'logic',   icon: '🔤', label: 'Logic',   color: Colors.teal },
   { key: 'pattern', icon: '🔮', label: 'Pattern', color: Colors.purple },
-  { key: 'focus',   icon: '🎯', label: 'Focus',   color: Colors.blue },
 ];
 
 const COACH_TIPS: Record<GameType, string> = {
@@ -31,6 +32,7 @@ const COACH_TIPS: Record<GameType, string> = {
 export default function BrainScreen() {
   const { miles, streak } = usePlayerStore();
   const { domains, weeklyBaseline, snapshotWeekIfNeeded } = useBrainStore();
+  const { isLoggedIn, name, logout } = useAuthStore();
 
   useEffect(() => {
     snapshotWeekIfNeeded(miles);
@@ -52,6 +54,37 @@ export default function BrainScreen() {
         contentContainerStyle={s.content}
         showsVerticalScrollIndicator={false}
       >
+        {/* Sign-in banner (guest users) */}
+        {!isLoggedIn && (
+          <TouchableOpacity onPress={() => router.push('/auth')} activeOpacity={0.88} style={s.signInBannerWrap}>
+            <LinearGradient
+              colors={['rgba(0,200,255,0.12)', 'rgba(177,108,234,0.12)']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={s.signInBanner}
+            >
+              <View style={s.signInLeft}>
+                <Text style={s.signInEmoji}>🔒</Text>
+                <View>
+                  <Text style={s.signInTitle}>Save your progress</Text>
+                  <Text style={s.signInSub}>Sign in to keep your miles & stats across devices</Text>
+                </View>
+              </View>
+              <Text style={s.signInCta}>Sign In →</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+        )}
+
+        {/* Logged-in account row */}
+        {isLoggedIn && name && (
+          <View style={s.accountRow}>
+            <Text style={s.accountTxt}>Signed in as <Text style={{ color: Colors.teal }}>{name}</Text></Text>
+            <TouchableOpacity onPress={logout} activeOpacity={0.7}>
+              <Text style={s.logoutTxt}>Log out</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
         {/* Miles Hero */}
         <LinearGradient
           colors={['#1a3a5c', '#0d2137']}
@@ -72,29 +105,20 @@ export default function BrainScreen() {
         <Text style={s.sectionLbl}>Brain Training Areas</Text>
         <View style={s.domainList}>
           {DOMAIN_META.map(d => {
-            const pct = d.key === 'focus' ? 0 : domains[d.key as GameType];
-            const isLocked = d.key === 'focus';
+            const pct = domains[d.key];
             return (
               <View key={d.label} style={s.drow}>
-                <Text style={[s.dico, isLocked && { opacity: 0.35 }]}>{d.icon}</Text>
-                <Text style={[s.dlbl, isLocked && { opacity: 0.35 }]}>{d.label}</Text>
+                <Text style={s.dico}>{d.icon}</Text>
+                <Text style={s.dlbl}>{d.label}</Text>
                 <View style={s.dtrack}>
-                  {isLocked ? (
-                    <View style={s.dlockedOverlay}>
-                      <Text style={s.dlockedTxt}>Coming soon</Text>
-                    </View>
-                  ) : (
-                    <View
-                      style={[s.dfill, {
-                        width: `${pct}%` as DimensionValue,
-                        backgroundColor: d.color,
-                      }]}
-                    />
-                  )}
+                  <View
+                    style={[s.dfill, {
+                      width: `${pct}%` as DimensionValue,
+                      backgroundColor: d.color,
+                    }]}
+                  />
                 </View>
-                <Text style={[s.dpct, isLocked && { opacity: 0.35 }]}>
-                  {isLocked ? '—' : `${pct}%`}
-                </Text>
+                <Text style={s.dpct}>{pct}%</Text>
               </View>
             );
           })}
@@ -128,6 +152,32 @@ const s = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.bg },
   scroll: { flex: 1 },
   content: { paddingHorizontal: 20, paddingBottom: 40 },
+
+  signInBannerWrap: { marginBottom: 14 },
+  signInBanner: {
+    borderRadius: 16,
+    padding: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderWidth: 1,
+    borderColor: 'rgba(0,200,255,0.2)',
+  },
+  signInLeft: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 },
+  signInEmoji: { fontSize: 22 },
+  signInTitle: { fontSize: 14, fontFamily: 'Nunito_700Bold', color: Colors.white },
+  signInSub: { fontSize: 11, fontFamily: 'Nunito_400Regular', color: Colors.muted, marginTop: 1 },
+  signInCta: { fontSize: 13, fontFamily: 'Nunito_800ExtraBold', color: Colors.blue },
+
+  accountRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 14,
+    paddingHorizontal: 2,
+  },
+  accountTxt: { fontSize: 13, fontFamily: 'Nunito_400Regular', color: Colors.muted },
+  logoutTxt: { fontSize: 13, fontFamily: 'Nunito_700Bold', color: Colors.coral },
 
   scoreHero: {
     borderRadius: 20,
@@ -202,20 +252,7 @@ const s = StyleSheet.create({
     height: '100%',
     borderRadius: 4,
   },
-  dlockedOverlay: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  dlockedTxt: {
-    fontSize: 9,
-    fontFamily: 'Nunito_700Bold',
-    color: Colors.muted,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    opacity: 0.5,
-  },
-  dpct: {
+dpct: {
     fontSize: 13,
     fontFamily: 'Nunito_800ExtraBold',
     color: Colors.gold,

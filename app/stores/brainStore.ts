@@ -52,7 +52,7 @@ export const useBrainStore = create<BrainState>()(
         }),
     }),
     {
-      name: 'globemind-brain',
+      name: 'thinkpop-brain',
       storage: createJSONStorage(() => AsyncStorage),
     },
   ),

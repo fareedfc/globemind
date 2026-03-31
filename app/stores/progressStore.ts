@@ -23,7 +23,7 @@ export const useProgressStore = create<ProgressState>()(
         })),
     }),
     {
-      name: 'globemind-progress',
+      name: 'thinkpop-progress',
       storage: createJSONStorage(() => AsyncStorage),
     },
   ),

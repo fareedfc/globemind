@@ -1,7 +1,7 @@
-# GlobeMind — Claude Code Context
+# ThinkPop — Claude Code Context
 
-## What is GlobeMind?
-A mobile-first cognitive training game targeting **30–70 year olds**. Think Candy Crush meets brain training — but without the patronising "homework" feel of Lumosity or BrainHQ. The game is free-flowing, visually beautiful, and emotionally engaging. Players feel like world travellers, not students.
+## What is ThinkPop?
+A mobile-first brain training game targeting **30–70 year olds**. Think Candy Crush meets brain training — but without the patronising "homework" feel of Lumosity or BrainHQ. The game is free-flowing, visually beautiful, and emotionally engaging. Players feel like world travellers, not students.
 
 ## The Core Insight
 The 30–70 demographic is massively underserved in mobile gaming. They have:
@@ -10,25 +10,31 @@ The 30–70 demographic is massively underserved in mobile gaming. They have:
 - Daily phone habits but few games made *for* them
 - Willingness to pay if the value feels legitimate
 
-Existing brain training apps (Lumosity, BrainHQ) feel like homework. GlobeMind feels like Candy Crush but makes you smarter.
+Existing brain training apps (Lumosity, BrainHQ) feel like homework. ThinkPop feels like Candy Crush but makes you smarter.
 
 ## Theme & Aesthetic
 - **World travel** — the visual backdrop is a beautiful illustrated world map / journey
 - The theme is **loose and atmospheric**, NOT rigid city-to-lesson mapping
 - Players are on a "journey" — not enrolled in a geography class
-- Dark, premium aesthetic: deep navy background (#1a1a2e), gold accents (#FFD166), teal highlights (#06D6A0)
+- Dark, premium aesthetic: deep ocean blue background (#0B1D3A), secondary bg (#1A3A5C), gold accents (#FFD166), teal highlights (#06D6A0)
+- Primary buttons use LinearGradient (#FFAA00 → #FF8C00) instead of flat gold
 - Font: Nunito (rounded, friendly, readable for older users)
 - NO flashing, NO chaos, NO EDM music — calm but engaging
 
 ## Navigation Structure
 3 tabs:
 1. **Journey** (🗺️) — The main Candy Crush-style scrolling path with level nodes
-2. **Brain** (🧠) — Cognitive domain scores and weekly report
+2. **Brain** (🧠) — Brain training domain scores and weekly report
 3. **Miles** (✈️) — Passport stamps and air miles rewards
+
+## Entry Flow
+- New users see **Onboarding** → then land on **Landing screen** (`/landing`)
+- Returning users open directly to **Landing screen** (`/landing`)
+- Landing screen shows animated globe, "Train your brain. Travel the world." headline, game chips (Memory/Speed/Logic/Pattern), **Play** button → Journey tab, **Track Progress** button → auth screen (or brain tab if already logged in)
 
 ## The Level Path
 - Zigzag scrolling path (like Candy Crush), NOT a world map with pinned cities
-- Level nodes are colourful bubbles with emoji
+- Level nodes are colourful bubbles with emoji — **80px** diameter
 - Tapping a node opens a bottom sheet modal with level info + Play button
 - Levels rotate across all 4 game types — no rigid topic locking per level
 - Stars (1–3) shown under completed nodes
@@ -51,6 +57,7 @@ Existing brain training apps (Lumosity, BrainHQ) feel like homework. GlobeMind f
 - Brief hint shown after each round ("Not a fruit")
 - 7 rounds per game
 - Win: complete all 7 rounds (score = correct answers)
+- Choice buttons have bouncy spring tap animations
 
 ### 3. Speed Match — Speed
 - Target symbol shown at top
@@ -58,6 +65,7 @@ Existing brain training apps (Lumosity, BrainHQ) feel like homework. GlobeMind f
 - Tap the matching symbol as fast as possible
 - 30 second timer with colour-shifting bar (teal→gold→coral)
 - Combo multiplier for consecutive correct answers
+- Choice buttons have bouncy spring tap animations
 - Win: timer runs out (score based)
 
 ### 4. Pattern Pulse — Pattern
@@ -66,6 +74,7 @@ Existing brain training apps (Lumosity, BrainHQ) feel like homework. GlobeMind f
 - 4 choices shown: pick what comes next
 - 8 second answer timer
 - 7 rounds per game, various pattern types (AB, AAB, ABC repeat)
+- Choice buttons have bouncy spring tap animations
 - Win: complete all 7 rounds (score = correct answers)
 
 ## Brain Training Areas Tracked
@@ -73,23 +82,34 @@ Existing brain training apps (Lumosity, BrainHQ) feel like homework. GlobeMind f
 2. ⚡ Speed
 3. 🔤 Logic
 4. 🔮 Pattern
-5. 🎯 Focus (planned, not yet built)
 
-Each completed game updates the player's Brain Score and training area percentages.
+Each completed game updates the player's Miles total and training area percentages.
 
-**Important:** We never use the word "cognitive" in the product. We frame GlobeMind as a brain training / wellness tool. Regulators scrutinise cognitive ability claims for computer games — our language stays warm and wellness-oriented ("sharpen your mind", "mental fitness", "brain workout").
+**Important:** We never use the word "cognitive" in the product. We frame ThinkPop as a brain training / wellness tool. Regulators scrutinise cognitive ability claims for computer games — our language stays warm and wellness-oriented ("sharpen your mind", "mental fitness", "brain workout").
 
-## Brain Score System
-- Composite score across all 5 domains
-- Shown as a single number (e.g. 742)
-- Radar/bar breakdown per domain
+## Miles / Score System
+- Score metric is **Miles** (not "Brain Score")
+- Miles earned per star: 1⭐ = 150 miles, 2⭐ = 300 miles, 3⭐ = 500 miles
+- Win screen shows miles counter animating up with a "+N Miles ✈️" badge
+- Brain tab shows overall miles total and domain breakdowns
+
+## Brain Dashboard
+- Composite miles total shown as a single number
+- Bar breakdown per domain (Memory, Speed, Logic, Pattern)
+- **Focus domain removed** — no longer shown
 - Weekly delta shown ("↑ +38 pts this week")
 - Percentile rank vs age group ("Sharper than 71% your age")
 - Coach Tip: personalised advice based on weakest domain
+- **Guest users** see a gradient sign-in banner "Save your progress · Sign In →" that taps to `/auth`
+- **Logged-in users** see an account row showing "Signed in as [name]" + Log out link
+
+## Win Screen
+- Confetti particles: 10 emoji particles burst on win
+- Miles counter animates up to the new total
+- "+N Miles ✈️" badge shown
 
 ## Rewards & Progression
-- **Air Miles**: earned per completed level (+120 miles)
-- **Brain Points**: earned per game (+varies by performance)
+- **Air Miles**: earned per completed level (varies by stars: 150/300/500)
 - **Passport Stamps**: milestone rewards (Explorer, Wordsmith, Speedster etc.)
 - **Day Streak**: daily play tracked with fire emoji counter
 - Lives system (5 hearts, refill over time) — Candy Crush monetisation hook
@@ -112,14 +132,17 @@ A fully working React Native (Expo) app exists in `app/` with:
 - All 4 games playable end-to-end (Memory Match, Odd One Out, Speed Match, Pattern Pulse)
 - Scrolling zigzag level path (15 levels)
 - Bottom sheet level modal
-- Win screen with brain insight
-- Brain tab with training area bars
+- Win screen with confetti particles and miles counter animation
+- Brain tab with training area bars (4 domains, no Focus)
+- Brain tab sign-in banner for guests / account row for logged-in users
 - Miles tab with passport stamps
-- Brain score updates live after each game
+- Miles total updates live after each game
 - Lives system with refill timer
 - Day streak tracking
-- Local persistence via AsyncStorage (Zustand)
-- Onboarding flow with animated baseline reveal
+- Local persistence via AsyncStorage (Zustand) — persist keys: `thinkpop-player`, `thinkpop-progress`, `thinkpop-brain`, `thinkpop-auth`
+- Onboarding flow with animated baseline reveal → lands on Landing screen
+- Landing screen (`/landing`) — entry lobby with animated globe and game chips
+- Auth screen (`/auth`) — email login/signup with shake on error and "Continue without account"
 
 A legacy HTML prototype also exists (`globemind_prototype.html`) — single file, vanilla JS, for reference only.
 
@@ -141,7 +164,7 @@ A legacy HTML prototype also exists (`globemind_prototype.html`) — single file
 
 ## Target User
 - Age 30–70, skewing 40–60
-- Motivated by cognitive health / fear of decline
+- Motivated by brain health / fear of decline
 - Has disposable income
 - Uses Facebook/Instagram (not TikTok)
 - Plays games casually during commutes, coffee breaks, evenings
@@ -153,7 +176,7 @@ A legacy HTML prototype also exists (`globemind_prototype.html`) — single file
 - App Store category: Health & Fitness (not Games)
 - Facebook/Instagram ads targeting 38–65 with travel + brain health interests
 - Tagline options:
-  - "Explore the world. Sharpen your mind."
+  - "Train your brain. Travel the world."
   - "10 minutes a day keeps cognitive decline away."
   - "The travel app for your brain."
 - Partner with neurologists, senior wellness influencers

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Animated } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Colors } from '../../constants/colors';
@@ -11,6 +11,31 @@ import { pickInsight } from '../../data/brainInsights';
 
 const TOTAL_ROUNDS = 7;
 const ANSWER_MS = 8_000;
+
+function CellButton({ item, style, onPress, disabled, emojiStyle }: {
+  item: string;
+  style: any;
+  onPress: () => void;
+  disabled: boolean;
+  emojiStyle: any;
+}) {
+  const scale = useRef(new Animated.Value(1)).current;
+
+  const handlePress = () => {
+    if (disabled) return;
+    scale.setValue(0.88);
+    Animated.spring(scale, { toValue: 1, tension: 200, friction: 8, useNativeDriver: true }).start();
+    onPress();
+  };
+
+  return (
+    <TouchableOpacity onPress={handlePress} disabled={disabled} activeOpacity={1}>
+      <Animated.View style={[style, { transform: [{ scale }] }]}>
+        <Text style={emojiStyle}>{item}</Text>
+      </Animated.View>
+    </TouchableOpacity>
+  );
+}
 
 type Phase = 'answering' | 'feedback';
 type PipState = 'none' | 'ok' | 'err';
@@ -198,8 +223,9 @@ export default function LogicGame() {
             const showCorrect = phase === 'feedback' && isOdd;
             const showWrong = phase === 'feedback' && isSelected && !isOdd;
             return (
-              <TouchableOpacity
-                key={i}
+              <CellButton
+                key={`${currentRound}-${i}`}
+                item={item}
                 style={[
                   s.cell,
                   showCorrect && s.cellOk,
@@ -208,10 +234,8 @@ export default function LogicGame() {
                 ]}
                 onPress={() => phase === 'answering' && handleAnswer(item)}
                 disabled={phase !== 'answering'}
-                activeOpacity={0.75}
-              >
-                <Text style={s.cellEmoji}>{item}</Text>
-              </TouchableOpacity>
+                emojiStyle={s.cellEmoji}
+              />
             );
           })}
         </View>

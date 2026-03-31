@@ -1,10 +1,10 @@
 {
   "expo": {
-    "name": "GlobeMind",
-    "slug": "globemind",
+    "name": "ThinkPop",
+    "slug": "thinkpop",
     "version": "1.0.0",
     "orientation": "portrait",
-    "scheme": "globemind",
+    "scheme": "thinkpop",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
     "newArchEnabled": true,
