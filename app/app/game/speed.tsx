@@ -174,7 +174,7 @@ export default function SpeedGame() {
           <Text style={s.backTxt}>←</Text>
         </TouchableOpacity>
         <Text style={s.headerTitle} numberOfLines={1}>Level {level.id} · {level.domain}</Text>
-        <View style={[s.scorePill, { backgroundColor: 'rgba(239,71,111,0.2)' }]}>
+        <View style={[s.scorePill, { backgroundColor: 'rgba(255,92,53,0.15)' }]}>
           <Text style={[s.scoreTxt, { color: Colors.coral }]}>{score}</Text>
         </View>
       </View>
@@ -242,21 +242,33 @@ const s = StyleSheet.create({
     paddingVertical: 14,
     gap: 12,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.07)',
+    borderBottomColor: Colors.border,
   },
-  backBtn: { width: 38, height: 38, borderRadius: 19, backgroundColor: 'rgba(255,255,255,0.08)', alignItems: 'center', justifyContent: 'center' },
-  backTxt: { fontSize: 17, color: Colors.white, fontFamily: 'Nunito_700Bold' },
-  headerTitle: { flex: 1, fontSize: 13, fontFamily: 'Nunito_800ExtraBold', color: Colors.white, lineHeight: 18 },
+  backBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  backTxt: { fontSize: 17, color: Colors.text, fontFamily: 'Nunito_700Bold' },
+  headerTitle: { flex: 1, fontSize: 13, fontFamily: 'Nunito_800ExtraBold', color: Colors.text, lineHeight: 18 },
   scorePill: { paddingVertical: 5, paddingHorizontal: 12, borderRadius: 20 },
   scoreTxt: { fontSize: 13, fontFamily: 'Nunito_800ExtraBold' },
 
   body: { flex: 1, paddingHorizontal: 16, paddingTop: 14 },
   domainTag: { fontSize: 11, fontFamily: 'Nunito_700Bold', textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 8 },
-  instr: { backgroundColor: 'rgba(255,255,255,0.04)', borderRadius: 11, padding: 10, marginBottom: 14 },
+  instr: { backgroundColor: 'rgba(0,0,0,0.03)', borderRadius: 11, padding: 10, marginBottom: 14 },
   instrTxt: { fontSize: 13, fontFamily: 'Nunito_400Regular', color: Colors.muted, lineHeight: 20 },
 
   timerWrap: { marginBottom: 12 },
-  timerTrack: { height: 7, backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 4, overflow: 'hidden' },
+  timerTrack: { height: 7, backgroundColor: 'rgba(0,0,0,0.08)', borderRadius: 4, overflow: 'hidden' },
   timerFill: { height: '100%', borderRadius: 4 },
   timerLbl: { fontSize: 11, fontFamily: 'Nunito_700Bold', color: Colors.muted, textAlign: 'right', marginTop: 3 },
 
@@ -277,9 +289,14 @@ const s = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 15,
     borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.1)',
-    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderColor: Colors.border,
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
   },
   optCorrect: { borderColor: Colors.teal, backgroundColor: 'rgba(6,214,160,0.15)' },
   optWrong: { borderColor: Colors.coral, backgroundColor: 'rgba(239,71,111,0.15)' },
@@ -293,5 +310,5 @@ const s = StyleSheet.create({
     borderRadius: 16,
     alignItems: 'center',
   },
-  startBtnTxt: { fontSize: 17, fontFamily: 'Nunito_900Black', color: '#1a1a2e' },
+  startBtnTxt: { fontSize: 17, fontFamily: 'Nunito_900Black', color: '#FFFFFF' },
 });

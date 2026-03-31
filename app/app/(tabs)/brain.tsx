@@ -87,7 +87,7 @@ export default function BrainScreen() {
 
         {/* Miles Hero */}
         <LinearGradient
-          colors={['#1a3a5c', '#0d2137']}
+          colors={['#ECFDF5', '#D1FAE5']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={s.scoreHero}
@@ -165,7 +165,7 @@ const s = StyleSheet.create({
   },
   signInLeft: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 },
   signInEmoji: { fontSize: 22 },
-  signInTitle: { fontSize: 14, fontFamily: 'Nunito_700Bold', color: Colors.white },
+  signInTitle: { fontSize: 14, fontFamily: 'Nunito_700Bold', color: Colors.text },
   signInSub: { fontSize: 11, fontFamily: 'Nunito_400Regular', color: Colors.muted, marginTop: 1 },
   signInCta: { fontSize: 13, fontFamily: 'Nunito_800ExtraBold', color: Colors.blue },
 
@@ -238,13 +238,13 @@ const s = StyleSheet.create({
   dlbl: {
     fontSize: 13,
     fontFamily: 'Nunito_700Bold',
-    color: Colors.white,
+    color: Colors.text,
     width: 130,
   },
   dtrack: {
     flex: 1,
     height: 8,
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: 'rgba(0,0,0,0.08)',
     borderRadius: 4,
     overflow: 'hidden',
   },
@@ -252,7 +252,7 @@ const s = StyleSheet.create({
     height: '100%',
     borderRadius: 4,
   },
-dpct: {
+  dpct: {
     fontSize: 13,
     fontFamily: 'Nunito_800ExtraBold',
     color: Colors.gold,
@@ -261,9 +261,9 @@ dpct: {
   },
 
   tipCard: {
-    backgroundColor: 'rgba(255,209,102,0.08)',
+    backgroundColor: 'rgba(245,158,11,0.08)',
     borderWidth: 1,
-    borderColor: 'rgba(255,209,102,0.2)',
+    borderColor: 'rgba(245,158,11,0.2)',
     borderRadius: 14,
     padding: 14,
     marginBottom: 16,
@@ -279,7 +279,7 @@ dpct: {
   tipTxt: {
     fontSize: 13,
     fontFamily: 'Nunito_400Regular',
-    color: Colors.white,
+    color: Colors.text,
     lineHeight: 20,
   },
 

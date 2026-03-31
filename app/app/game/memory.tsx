@@ -171,7 +171,7 @@ export default function MemoryGame() {
           <Text style={s.backTxt}>←</Text>
         </TouchableOpacity>
         <Text style={s.headerTitle} numberOfLines={1}>Level {level.id} · {level.domain}</Text>
-        <View style={[s.scorePill, { backgroundColor: 'rgba(255,209,102,0.2)' }]}>
+        <View style={[s.scorePill, { backgroundColor: 'rgba(245,158,11,0.15)' }]}>
           <Text style={[s.scoreTxt, { color: Colors.gold }]}>{matchedCount}/{totalPairs}</Text>
         </View>
       </View>
@@ -222,37 +222,42 @@ const s = StyleSheet.create({
     paddingVertical: 14,
     gap: 12,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.07)',
+    borderBottomColor: Colors.border,
   },
   backBtn: {
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
   },
-  backTxt: { fontSize: 17, color: Colors.white, fontFamily: 'Nunito_700Bold' },
-  headerTitle: { flex: 1, fontSize: 13, fontFamily: 'Nunito_800ExtraBold', color: Colors.white, lineHeight: 18 },
+  backTxt: { fontSize: 17, color: Colors.text, fontFamily: 'Nunito_700Bold' },
+  headerTitle: { flex: 1, fontSize: 13, fontFamily: 'Nunito_800ExtraBold', color: Colors.text, lineHeight: 18 },
   scorePill: { paddingVertical: 5, paddingHorizontal: 12, borderRadius: 20 },
   scoreTxt: { fontSize: 13, fontFamily: 'Nunito_800ExtraBold' },
 
   body: { padding: 16, paddingBottom: 40 },
   domainTag: { fontSize: 11, fontFamily: 'Nunito_700Bold', textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 8 },
-  instr: { backgroundColor: 'rgba(255,255,255,0.04)', borderRadius: 11, padding: 10, marginBottom: 14 },
+  instr: { backgroundColor: 'rgba(0,0,0,0.03)', borderRadius: 11, padding: 10, marginBottom: 14 },
   instrTxt: { fontSize: 13, fontFamily: 'Nunito_400Regular', color: Colors.muted, lineHeight: 20 },
 
   grid: { gap: 8, marginBottom: 8 },
   row: { flexDirection: 'row', gap: 8 },
   cardTouch: { flex: 1, aspectRatio: 1 },
   card: { flex: 1, borderRadius: 13, alignItems: 'center', justifyContent: 'center', minHeight: 64 },
-  cardDown: { backgroundColor: 'rgba(255,255,255,0.08)', borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.1)' },
+  cardDown: { backgroundColor: 'rgba(0,0,0,0.06)', borderWidth: 1.5, borderColor: Colors.border },
   cardUp: { backgroundColor: 'rgba(6,214,160,0.15)', borderWidth: 2, borderColor: Colors.teal },
   cardMatched: { opacity: 0.55 },
-  emojiDown: { fontSize: 20, color: 'rgba(255,255,255,0.25)', fontFamily: 'Nunito_900Black' },
+  emojiDown: { fontSize: 20, color: 'rgba(31,41,55,0.3)', fontFamily: 'Nunito_900Black' },
   emojiUp: { fontSize: 26 },
 
   pips: { flexDirection: 'row', justifyContent: 'center', gap: 7, paddingVertical: 8 },
-  pip: { width: 10, height: 10, borderRadius: 5, backgroundColor: 'rgba(255,255,255,0.12)' },
+  pip: { width: 10, height: 10, borderRadius: 5, backgroundColor: 'rgba(0,0,0,0.1)' },
   pipLit: { backgroundColor: Colors.teal },
 });

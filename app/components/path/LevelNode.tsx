@@ -122,13 +122,13 @@ const s = StyleSheet.create({
     borderWidth: 3,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.4,
+    shadowOpacity: 0.15,
     shadowRadius: 10,
     elevation: 10,
   },
   bubbleLocked: {
-    backgroundColor: 'rgba(255,255,255,0.07)',
-    borderColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: 'rgba(0,0,0,0.06)',
+    borderColor: Colors.border,
   },
   dimmed: {
     opacity: 0.45,

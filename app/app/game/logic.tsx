@@ -174,7 +174,7 @@ export default function LogicGame() {
           <Text style={s.backTxt}>←</Text>
         </TouchableOpacity>
         <Text style={s.headerTitle} numberOfLines={1}>Level {level.id} · {level.domain}</Text>
-        <View style={[s.scorePill, { backgroundColor: 'rgba(6,214,160,0.2)' }]}>
+        <View style={[s.scorePill, { backgroundColor: 'rgba(0,201,167,0.15)' }]}>
           <Text style={[s.scoreTxt, { color: Colors.teal }]}>{score}/{TOTAL_ROUNDS}</Text>
         </View>
       </View>
@@ -256,11 +256,23 @@ const s = StyleSheet.create({
     paddingVertical: 14,
     gap: 12,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.07)',
+    borderBottomColor: Colors.border,
   },
-  backBtn: { width: 38, height: 38, borderRadius: 19, backgroundColor: 'rgba(255,255,255,0.08)', alignItems: 'center', justifyContent: 'center' },
-  backTxt: { fontSize: 17, color: Colors.white, fontFamily: 'Nunito_700Bold' },
-  headerTitle: { flex: 1, fontSize: 13, fontFamily: 'Nunito_800ExtraBold', color: Colors.white, lineHeight: 18 },
+  backBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  backTxt: { fontSize: 17, color: Colors.text, fontFamily: 'Nunito_700Bold' },
+  headerTitle: { flex: 1, fontSize: 13, fontFamily: 'Nunito_800ExtraBold', color: Colors.text, lineHeight: 18 },
   scorePill: { paddingVertical: 5, paddingHorizontal: 12, borderRadius: 20 },
   scoreTxt: { fontSize: 13, fontFamily: 'Nunito_800ExtraBold' },
 
@@ -268,28 +280,33 @@ const s = StyleSheet.create({
   domainTag: { fontSize: 11, fontFamily: 'Nunito_700Bold', textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 16 },
 
   pips: { flexDirection: 'row', gap: 5, marginBottom: 14 },
-  pip: { width: 28, height: 6, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.1)' },
+  pip: { width: 28, height: 6, borderRadius: 3, backgroundColor: 'rgba(0,0,0,0.08)' },
   pipOk: { backgroundColor: Colors.teal },
   pipErr: { backgroundColor: Colors.coral },
-  pipActive: { backgroundColor: 'rgba(255,255,255,0.3)' },
+  pipActive: { backgroundColor: 'rgba(0,0,0,0.2)' },
 
   timerWrap: { width: '100%', marginBottom: 20 },
-  timerTrack: { height: 6, backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 3, overflow: 'hidden' },
+  timerTrack: { height: 6, backgroundColor: 'rgba(0,0,0,0.08)', borderRadius: 3, overflow: 'hidden' },
   timerFill: { height: '100%', borderRadius: 3 },
 
   promptWrap: { marginBottom: 32, minHeight: 28 },
-  promptTxt: { fontSize: 16, fontFamily: 'Nunito_800ExtraBold', color: Colors.white, textAlign: 'center' },
+  promptTxt: { fontSize: 16, fontFamily: 'Nunito_800ExtraBold', color: Colors.text, textAlign: 'center' },
 
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 14, justifyContent: 'center', width: '100%' },
   cell: {
     width: '44%',
     aspectRatio: 1,
     borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.07)',
+    backgroundColor: '#FFFFFF',
     borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.1)',
+    borderColor: Colors.border,
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
   },
   cellOk: { borderColor: Colors.teal, backgroundColor: 'rgba(6,214,160,0.2)' },
   cellErr: { borderColor: Colors.coral, backgroundColor: 'rgba(239,71,111,0.15)' },

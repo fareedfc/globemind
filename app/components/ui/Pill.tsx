@@ -4,9 +4,9 @@ import { Colors } from '../../constants/colors';
 type Variant = 'gold' | 'red' | 'teal';
 
 const VARIANTS: Record<Variant, { bg: string; color: string }> = {
-  gold: { bg: 'rgba(255,209,102,0.15)', color: Colors.gold },
-  red: { bg: 'rgba(239,71,111,0.15)', color: Colors.coral },
-  teal: { bg: 'rgba(6,214,160,0.12)', color: Colors.teal },
+  gold: { bg: 'rgba(245,158,11,0.15)', color: Colors.gold },
+  red: { bg: 'rgba(255,92,53,0.15)', color: Colors.coral },
+  teal: { bg: 'rgba(0,201,167,0.15)', color: Colors.teal },
 };
 
 export function Pill({ variant, label }: { variant: Variant; label: string }) {

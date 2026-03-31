@@ -190,7 +190,7 @@ export default function AuthScreen() {
                 style={s.submitBtn}
               >
                 {loading ? (
-                  <ActivityIndicator color="#1a1a2e" />
+                  <ActivityIndicator color="#FFFFFF" />
                 ) : (
                   <Text style={s.submitTxt}>
                     {isSignup ? 'Create Account →' : 'Log In →'}
@@ -234,7 +234,7 @@ const s = StyleSheet.create({
   headerTitle: {
     fontSize: 26,
     fontFamily: 'Nunito_900Black',
-    color: Colors.white,
+    color: Colors.text,
     textAlign: 'center',
   },
   headerSub: {
@@ -248,7 +248,7 @@ const s = StyleSheet.create({
 
   toggle: {
     flexDirection: 'row',
-    backgroundColor: 'rgba(255,255,255,0.06)',
+    backgroundColor: 'rgba(0,0,0,0.05)',
     borderRadius: 14,
     padding: 4,
     marginBottom: 24,
@@ -261,6 +261,11 @@ const s = StyleSheet.create({
   },
   toggleTabActive: {
     backgroundColor: Colors.bg2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
   },
   toggleTxt: {
     fontSize: 14,
@@ -268,7 +273,7 @@ const s = StyleSheet.create({
     color: Colors.muted,
   },
   toggleTxtActive: {
-    color: Colors.white,
+    color: Colors.text,
   },
 
   form: { gap: 16 },
@@ -281,15 +286,20 @@ const s = StyleSheet.create({
     letterSpacing: 0.8,
   },
   input: {
-    backgroundColor: 'rgba(255,255,255,0.07)',
+    backgroundColor: '#FFFFFF',
     borderWidth: 1.5,
-    borderColor: 'rgba(255,255,255,0.1)',
+    borderColor: Colors.border,
     borderRadius: 13,
     paddingVertical: 14,
     paddingHorizontal: 16,
     fontSize: 15,
     fontFamily: 'Nunito_400Regular',
-    color: Colors.white,
+    color: Colors.text,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
   },
   passwordWrap: { position: 'relative' },
   passwordInput: { paddingRight: 50 },
@@ -325,7 +335,7 @@ const s = StyleSheet.create({
   submitTxt: {
     fontSize: 17,
     fontFamily: 'Nunito_900Black',
-    color: '#1a1a2e',
+    color: '#FFFFFF',
   },
 
   guestBtn: {
@@ -343,7 +353,8 @@ const s = StyleSheet.create({
   privacyNote: {
     fontSize: 11,
     fontFamily: 'Nunito_400Regular',
-    color: 'rgba(248,249,250,0.25)',
+    color: Colors.muted,
     textAlign: 'center',
+    opacity: 0.6,
   },
 });

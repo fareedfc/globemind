@@ -89,7 +89,7 @@ export default function JourneyScreen() {
 
   return (
     <SafeAreaView style={s.container} edges={['top']}>
-      <StatusBar barStyle="light-content" backgroundColor={Colors.bg} />
+      <StatusBar barStyle="dark-content" backgroundColor={Colors.bg} />
       <TopBar
         right={
           <>
@@ -107,7 +107,7 @@ export default function JourneyScreen() {
       >
         {/* Vibe Banner */}
         <LinearGradient
-          colors={['#1a3a5c', '#0d2137']}
+          colors={['#ECFDF5', '#D1FAE5']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={s.vibeBanner}
@@ -183,7 +183,7 @@ export default function JourneyScreen() {
                 <Text style={s.modalIco}>{selectedLevel?.e}</Text>
                 <Text style={s.modalTitle}>Level {selectedLevel?.id}</Text>
               </View>
-              <Text style={[s.modalDomain, { color: DOMAIN_COLORS[selectedLevel?.type ?? ''] ?? Colors.white }]}>
+              <Text style={[s.modalDomain, { color: DOMAIN_COLORS[selectedLevel?.type ?? ''] ?? Colors.text }]}>
                 🧠 {selectedLevel?.domain}
               </Text>
               <Text style={s.modalDesc}>{selectedLevel?.desc}</Text>
@@ -254,7 +254,7 @@ const s = StyleSheet.create({
   vibeTitle: {
     fontSize: 20,
     fontFamily: 'Nunito_900Black',
-    color: Colors.white,
+    color: Colors.text,
     marginTop: 2,
   },
 
@@ -267,7 +267,7 @@ const s = StyleSheet.create({
   },
   deco: {
     fontSize: 18,
-    opacity: 0.1,
+    opacity: 0.15,
   },
 
   // Milestone
@@ -279,10 +279,10 @@ const s = StyleSheet.create({
     marginBottom: 0,
     paddingVertical: 11,
     paddingHorizontal: 16,
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: 'rgba(0,0,0,0.03)',
     borderRadius: 50,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
+    borderColor: 'rgba(0,0,0,0.12)',
     borderStyle: 'dashed',
   },
   milestoneText: {
@@ -301,7 +301,7 @@ const s = StyleSheet.create({
   lockedHintText: {
     fontSize: 13,
     fontFamily: 'Nunito_700Bold',
-    color: Colors.white,
+    color: Colors.text,
     opacity: 0.25,
   },
 
@@ -325,7 +325,7 @@ const s = StyleSheet.create({
   dragHandle: {
     width: 40,
     height: 4,
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    backgroundColor: 'rgba(0,0,0,0.12)',
     borderRadius: 2,
     alignSelf: 'center',
     marginBottom: 18,
@@ -342,7 +342,7 @@ const s = StyleSheet.create({
   modalTitle: {
     fontSize: 22,
     fontFamily: 'Nunito_900Black',
-    color: Colors.white,
+    color: Colors.text,
   },
   modalDomain: {
     fontSize: 12,
@@ -368,7 +368,7 @@ const s = StyleSheet.create({
   playBtnText: {
     fontSize: 17,
     fontFamily: 'Nunito_900Black',
-    color: '#1a1a2e',
+    color: '#FFFFFF',
   },
   livesTimer: {
     textAlign: 'center',
@@ -382,13 +382,13 @@ const s = StyleSheet.create({
     width: '100%',
     paddingVertical: 13,
     borderRadius: 13,
-    backgroundColor: 'rgba(255,255,255,0.07)',
+    backgroundColor: 'rgba(0,0,0,0.05)',
     alignItems: 'center',
     marginTop: 10,
   },
   skipBtnText: {
     fontSize: 14,
     fontFamily: 'Nunito_700Bold',
-    color: Colors.white,
+    color: Colors.text,
   },
 });

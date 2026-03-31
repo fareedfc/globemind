@@ -250,7 +250,7 @@ const s = StyleSheet.create({
   title: {
     fontSize: 28,
     fontFamily: 'Nunito_900Black',
-    color: Colors.white,
+    color: Colors.text,
     textAlign: 'center',
     marginBottom: 10,
   },
@@ -267,7 +267,7 @@ const s = StyleSheet.create({
     color: Colors.gold,
   },
   scoreDeltaBadge: {
-    backgroundColor: 'rgba(255,209,102,0.15)',
+    backgroundColor: 'rgba(245,158,11,0.15)',
     borderRadius: 20,
     paddingVertical: 4,
     paddingHorizontal: 10,
@@ -296,13 +296,18 @@ const s = StyleSheet.create({
   },
   statCard: {
     flex: 1,
-    backgroundColor: 'rgba(255,255,255,0.06)',
+    backgroundColor: '#FFFFFF',
     borderRadius: 13,
     paddingVertical: 13,
     paddingHorizontal: 6,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.07)',
+    borderColor: Colors.border,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
   },
   statNum: {
     fontSize: 20,
@@ -339,7 +344,7 @@ const s = StyleSheet.create({
   insightTxt: {
     fontSize: 13,
     fontFamily: 'Nunito_400Regular',
-    color: Colors.white,
+    color: Colors.text,
     lineHeight: 20,
   },
 
@@ -367,18 +372,18 @@ const s = StyleSheet.create({
   btnPrimaryTxt: {
     fontSize: 16,
     fontFamily: 'Nunito_900Black',
-    color: '#1a1a2e',
+    color: '#FFFFFF',
   },
   btnSecondary: {
     width: '100%',
     paddingVertical: 13,
-    backgroundColor: 'rgba(255,255,255,0.07)',
+    backgroundColor: 'rgba(0,0,0,0.05)',
     borderRadius: 13,
     alignItems: 'center',
   },
   btnSecondaryTxt: {
     fontSize: 14,
     fontFamily: 'Nunito_700Bold',
-    color: Colors.white,
+    color: Colors.text,
   },
 });

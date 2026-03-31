@@ -9,7 +9,7 @@ export function TopBar({ right }: Props) {
   return (
     <View style={s.bar}>
       <Text style={s.logo}>
-        Globe<Text style={s.logoGold}>Mind</Text>
+        Think<Text style={s.logoCoral}>Pop</Text>
       </Text>
       {right ? <View style={s.right}>{right}</View> : null}
     </View>
@@ -28,11 +28,11 @@ const s = StyleSheet.create({
   logo: {
     fontSize: 22,
     fontFamily: 'Nunito_900Black',
-    color: Colors.white,
+    color: Colors.text,
     letterSpacing: -0.5,
   },
-  logoGold: {
-    color: Colors.gold,
+  logoCoral: {
+    color: Colors.coral,
     fontFamily: 'Nunito_900Black',
   },
   right: {

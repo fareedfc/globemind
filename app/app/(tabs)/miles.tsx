@@ -143,11 +143,11 @@ const s = StyleSheet.create({
   },
   stampEarned: {
     borderColor: Colors.gold,
-    backgroundColor: 'rgba(255,209,102,0.1)',
+    backgroundColor: 'rgba(245,158,11,0.1)',
   },
   stampLocked: {
-    borderColor: 'rgba(255,255,255,0.1)',
-    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderColor: Colors.border,
+    backgroundColor: 'rgba(0,0,0,0.03)',
     opacity: 0.4,
   },
   stampIco: { fontSize: 22 },
@@ -162,13 +162,18 @@ const s = StyleSheet.create({
   stampLblEarned: { color: Colors.gold },
 
   milesHero: {
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: '#FFFFFF',
     borderRadius: 14,
     padding: 16,
     marginBottom: 16,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
   },
   milesLblSmall: {
     fontSize: 12,
@@ -190,12 +195,12 @@ const s = StyleSheet.create({
   progressTitle: {
     fontSize: 13,
     fontFamily: 'Nunito_700Bold',
-    color: Colors.white,
+    color: Colors.text,
     marginBottom: 6,
   },
   ptnBar: {
     height: 8,
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: 'rgba(0,0,0,0.08)',
     borderRadius: 4,
     overflow: 'hidden',
   },

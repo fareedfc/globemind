@@ -41,7 +41,7 @@ function Slide({ item }: { item: typeof SLIDES[0] }) {
   return (
     <View style={[s.slide, { width: SCREEN_W }]}>
       <Text style={s.slideEmoji}>{item.emoji}</Text>
-      <Text style={[s.slideTitle, { color: Colors.white }]}>{item.title}</Text>
+      <Text style={[s.slideTitle, { color: Colors.text }]}>{item.title}</Text>
       <Text style={s.slideBody}>{item.body}</Text>
       {item.extras && (
         <View style={s.extrasGrid}>
@@ -81,7 +81,7 @@ export default function OnboardingScreen() {
         <View style={s.baselineBody}>
           <Text style={s.readyEmoji}>✈️</Text>
           <LinearGradient
-            colors={['#1a3a5c', '#0d2137']}
+            colors={['#ECFDF5', '#D1FAE5']}
             style={s.scoreCard}
           >
             <Text style={s.scoreCardLbl}>Miles Traveled</Text>
@@ -179,7 +179,7 @@ const s = StyleSheet.create({
     borderRadius: 20,
     paddingVertical: 6,
     paddingHorizontal: 14,
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: 'rgba(0,0,0,0.03)',
   },
   extraTxt: { fontSize: 13, fontFamily: 'Nunito_700Bold' },
 
@@ -193,7 +193,7 @@ const s = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    backgroundColor: 'rgba(0,0,0,0.15)',
   },
   dotActive: {
     backgroundColor: Colors.gold,
@@ -206,7 +206,7 @@ const s = StyleSheet.create({
     borderRadius: 16,
     alignItems: 'center',
   },
-  nextBtnTxt: { fontSize: 17, fontFamily: 'Nunito_900Black', color: '#1a1a2e' },
+  nextBtnTxt: { fontSize: 17, fontFamily: 'Nunito_900Black', color: '#FFFFFF' },
   skipBtn: { alignItems: 'center', paddingVertical: 4 },
   skipBtnTxt: { fontSize: 13, fontFamily: 'Nunito_700Bold', color: Colors.muted },
 
@@ -255,5 +255,5 @@ const s = StyleSheet.create({
     borderRadius: 16,
     alignItems: 'center',
   },
-  startBtnTxt: { fontSize: 17, fontFamily: 'Nunito_900Black', color: '#1a1a2e' },
+  startBtnTxt: { fontSize: 17, fontFamily: 'Nunito_900Black', color: '#FFFFFF' },
 });

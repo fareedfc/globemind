@@ -1,12 +1,14 @@
 export const Colors = {
-  bg:     '#0B1D3A',   // deep ocean blue
-  bg2:    '#1A3A5C',   // lighter navy for cards/modals
-  gold:   '#FFAA00',   // warmer, more saturated gold
-  gold2:  '#FF8C00',   // deep amber for gradients
-  teal:   '#00E5A0',   // brighter green-teal
-  coral:  '#FF4E8B',   // hot pink (was muted coral)
-  purple: '#B16CEA',   // brighter purple for accents
-  blue:   '#00C8FF',   // electric blue
-  white:  '#F8F9FA',
-  muted:  'rgba(248,249,250,0.5)',
+  bg:     '#F0FDF9',              // soft mint background
+  bg2:    '#FFFFFF',              // white — cards, modals
+  gold:   '#F59E0B',              // amber
+  gold2:  '#D97706',              // deeper amber
+  teal:   '#10B981',              // mint green
+  coral:  '#F97316',              // bright orange (primary CTA)
+  purple: '#EC4899',              // hot pink
+  blue:   '#3B82F6',              // sky blue
+  white:  '#FFFFFF',              // pure white
+  text:   '#134E4A',              // deep teal text
+  muted:  'rgba(19,78,74,0.5)',  // muted deep teal
+  border: 'rgba(0,0,0,0.08)',    // subtle borders
 } as const;

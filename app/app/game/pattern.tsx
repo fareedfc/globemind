@@ -206,7 +206,7 @@ export default function PatternGame() {
           <Text style={s.backTxt}>←</Text>
         </TouchableOpacity>
         <Text style={s.headerTitle} numberOfLines={1}>Level {level.id} · {level.domain}</Text>
-        <View style={[s.scorePill, { backgroundColor: 'rgba(6,214,160,0.2)' }]}>
+        <View style={[s.scorePill, { backgroundColor: 'rgba(0,201,167,0.15)' }]}>
           <Text style={[s.scoreTxt, { color: Colors.teal }]}>{score}/{TOTAL_ROUNDS}</Text>
         </View>
       </View>
@@ -315,27 +315,39 @@ const s = StyleSheet.create({
     paddingVertical: 14,
     gap: 12,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.07)',
+    borderBottomColor: Colors.border,
   },
-  backBtn: { width: 38, height: 38, borderRadius: 19, backgroundColor: 'rgba(255,255,255,0.08)', alignItems: 'center', justifyContent: 'center' },
-  backTxt: { fontSize: 17, color: Colors.white, fontFamily: 'Nunito_700Bold' },
-  headerTitle: { flex: 1, fontSize: 13, fontFamily: 'Nunito_800ExtraBold', color: Colors.white, lineHeight: 18 },
+  backBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  backTxt: { fontSize: 17, color: Colors.text, fontFamily: 'Nunito_700Bold' },
+  headerTitle: { flex: 1, fontSize: 13, fontFamily: 'Nunito_800ExtraBold', color: Colors.text, lineHeight: 18 },
   scorePill: { paddingVertical: 5, paddingHorizontal: 12, borderRadius: 20 },
   scoreTxt: { fontSize: 13, fontFamily: 'Nunito_800ExtraBold' },
 
   body: { flex: 1, paddingHorizontal: 16, paddingTop: 14 },
   domainTag: { fontSize: 11, fontFamily: 'Nunito_700Bold', textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 8 },
-  instr: { backgroundColor: 'rgba(255,255,255,0.04)', borderRadius: 11, padding: 10, marginBottom: 14 },
+  instr: { backgroundColor: 'rgba(0,0,0,0.03)', borderRadius: 11, padding: 10, marginBottom: 14 },
   instrTxt: { fontSize: 13, fontFamily: 'Nunito_400Regular', color: Colors.muted, lineHeight: 20 },
 
   pips: { flexDirection: 'row', gap: 5, justifyContent: 'center', marginBottom: 12 },
-  pip: { width: 28, height: 6, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.1)' },
+  pip: { width: 28, height: 6, borderRadius: 3, backgroundColor: 'rgba(0,0,0,0.08)' },
   pipOk: { backgroundColor: Colors.teal },
   pipErr: { backgroundColor: Colors.coral },
-  pipActive: { backgroundColor: 'rgba(255,255,255,0.3)' },
+  pipActive: { backgroundColor: 'rgba(0,0,0,0.2)' },
 
   timerWrap: { marginBottom: 10 },
-  timerTrack: { height: 6, backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 3, overflow: 'hidden' },
+  timerTrack: { height: 6, backgroundColor: 'rgba(0,0,0,0.08)', borderRadius: 3, overflow: 'hidden' },
   timerFill: { height: '100%', borderRadius: 3 },
 
   phaseLabel: { fontSize: 13, fontFamily: 'Nunito_800ExtraBold', textAlign: 'center', minHeight: 22, marginBottom: 12 },
@@ -343,19 +355,46 @@ const s = StyleSheet.create({
   phaseRecall: { color: Colors.gold },
 
   seq: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, marginBottom: 14, flexWrap: 'wrap', minHeight: 52 },
-  sym: { width: 42, height: 42, borderRadius: 11, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: 'rgba(255,255,255,0.1)', backgroundColor: 'rgba(255,255,255,0.06)' },
+  sym: {
+    width: 42,
+    height: 42,
+    borderRadius: 11,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: Colors.border,
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
+  },
   symLit: { borderColor: Colors.teal, backgroundColor: 'rgba(6,214,160,0.2)', transform: [{ scale: 1.15 }] },
   symDim: { opacity: 0.15 },
   symOk: { borderColor: Colors.teal, backgroundColor: 'rgba(6,214,160,0.2)' },
   symErr: { borderColor: Colors.coral, backgroundColor: 'rgba(239,71,111,0.2)' },
   symTxt: { fontSize: 20 },
-  symQuestion: { borderColor: 'rgba(255,209,102,0.4)', backgroundColor: 'rgba(255,209,102,0.07)' },
+  symQuestion: { borderColor: 'rgba(245,158,11,0.4)', backgroundColor: 'rgba(245,158,11,0.07)' },
   symQuestionTxt: { fontSize: 16, fontFamily: 'Nunito_900Black', color: Colors.gold },
 
   question: { textAlign: 'center', minHeight: 26, marginBottom: 12, fontSize: 13, fontFamily: 'Nunito_700Bold', color: Colors.muted },
 
   choices: { flexDirection: 'row', gap: 7 },
-  choice: { flex: 1, paddingVertical: 18, borderRadius: 13, borderWidth: 2, borderColor: 'rgba(255,255,255,0.1)', backgroundColor: 'rgba(255,255,255,0.06)', alignItems: 'center' },
+  choice: {
+    flex: 1,
+    paddingVertical: 18,
+    borderRadius: 13,
+    borderWidth: 2,
+    borderColor: Colors.border,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
+  },
   choiceOk: { borderColor: Colors.teal, backgroundColor: 'rgba(6,214,160,0.2)' },
   choiceErr: { borderColor: Colors.coral, backgroundColor: 'rgba(239,71,111,0.15)' },
   choiceTxt: { fontSize: 26 },
