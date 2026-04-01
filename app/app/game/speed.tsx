@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Animated } from 'react-native';
+import * as Haptics from 'expo-haptics';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Colors } from '../../constants/colors';
@@ -8,7 +9,9 @@ import { WinScreen, type WinData } from '../../components/games/WinScreen';
 import { calcSpeedStars } from '../../utils/scoring';
 import { pickInsight } from '../../data/brainInsights';
 
-const EMOJIS = ['🌸', '🌊', '🏔️', '🌺', '⭐', '🎯', '🌍', '✈️', '🎭', '🦋', '🌙', '🎪'];
+const GRID_GAP = 9;
+
+const EMOJIS = ['🌸', '🌊', '🏔️', '🌺', '⭐', '🎯', '🌍', '🎭', '🦋', '🌙', '🎪', '🍀'];
 const TOTAL_MS = 30_000;
 
 function buildRound(pool: string[]): { target: string; options: string[] } {
@@ -18,19 +21,32 @@ function buildRound(pool: string[]): { target: string; options: string[] } {
   return { target, options };
 }
 
-function SpeedOptionBtn({ emoji, style, onPress, disabled, txtStyle }: {
-  emoji: string; style: any; onPress: () => void; disabled: boolean; txtStyle: any;
+function SpeedOptionBtn({ emoji, style, onPress, disabled, txtStyle, isCorrect }: {
+  emoji: string; style: any; onPress: () => void; disabled: boolean; txtStyle: any; isCorrect?: boolean;
 }) {
   const scale = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    if (isCorrect) {
+      Animated.sequence([
+        Animated.spring(scale, { toValue: 1.22, tension: 300, friction: 5, useNativeDriver: true }),
+        Animated.spring(scale, { toValue: 1, tension: 200, friction: 8, useNativeDriver: true }),
+      ]).start();
+    }
+  }, [isCorrect]);
+
   const handlePress = () => {
     if (disabled) return;
     scale.setValue(0.85);
     Animated.spring(scale, { toValue: 1, tension: 200, friction: 8, useNativeDriver: true }).start();
     onPress();
   };
+
+  // TouchableOpacity is the direct flex child (flex: 1 from style).
+  // Animated.View sits inside purely for the scale transform.
   return (
-    <TouchableOpacity onPress={handlePress} disabled={disabled} activeOpacity={1}>
-      <Animated.View style={[style, { transform: [{ scale }] }]}>
+    <TouchableOpacity onPress={handlePress} disabled={disabled} activeOpacity={1} style={style}>
+      <Animated.View style={[s.optInner, { transform: [{ scale }] }]}>
         <Text style={txtStyle}>{emoji}</Text>
       </Animated.View>
     </TouchableOpacity>
@@ -93,6 +109,7 @@ export default function SpeedGame() {
     if (!runningRef.current) return;
 
     if (emoji === round.target) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       setFlash({ idx, correct: true });
       setCorrect(p => p + 1);
       setCombo(p => {
@@ -109,6 +126,7 @@ export default function SpeedGame() {
         setComboText('');
       }, 180);
     } else {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       setFlash({ idx, correct: false });
       setWrong(p => p + 1);
       setCombo(0);
@@ -161,7 +179,7 @@ export default function SpeedGame() {
   if (won) {
     return (
       <SafeAreaView style={s.container} edges={['top', 'bottom']}>
-        <WinScreen data={winData} levelId={levelId} onPlayAgain={resetGame} onExit={() => router.replace('/(tabs)/journey')} />
+        <WinScreen data={winData} levelId={levelId} onExit={() => router.replace('/(tabs)/journey')} />
       </SafeAreaView>
     );
   }
@@ -205,20 +223,26 @@ export default function SpeedGame() {
           <Text style={s.comboTxt}>{comboText}</Text>
 
           <View style={s.grid}>
-            {round.options.map((emoji, idx) => {
-              const isCorrect = flash?.idx === idx && flash.correct;
-              const isWrong = flash?.idx === idx && !flash.correct;
-              return (
-                <SpeedOptionBtn
-                  key={`${round.target}-${idx}`}
-                  emoji={emoji}
-                  style={[s.opt, isCorrect && s.optCorrect, isWrong && s.optWrong]}
-                  onPress={() => tapOption(emoji, idx)}
-                  disabled={!started || !running}
-                  txtStyle={s.optTxt}
-                />
-              );
-            })}
+            {[0, 1].map(row => (
+              <View key={row} style={s.gridRow}>
+                {round.options.slice(row * 3, row * 3 + 3).map((emoji, col) => {
+                  const idx = row * 3 + col;
+                  const isCorrect = flash?.idx === idx && flash.correct;
+                  const isWrong = flash?.idx === idx && !flash.correct;
+                  return (
+                    <SpeedOptionBtn
+                      key={`${round.target}-${idx}`}
+                      emoji={emoji}
+                      style={[s.opt, isCorrect && s.optCorrect, isWrong && s.optWrong]}
+                      onPress={() => tapOption(emoji, idx)}
+                      disabled={!started || !running}
+                      txtStyle={s.optTxt}
+                      isCorrect={isCorrect}
+                    />
+                  );
+                })}
+              </View>
+            ))}
           </View>
         </View>
 
@@ -272,32 +296,34 @@ const s = StyleSheet.create({
   timerFill: { height: '100%', borderRadius: 4 },
   timerLbl: { fontSize: 11, fontFamily: 'Nunito_700Bold', color: Colors.muted, textAlign: 'right', marginTop: 3 },
 
-  prompt: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 14 },
-  findLbl: { fontSize: 12, fontFamily: 'Nunito_700Bold', textTransform: 'uppercase', letterSpacing: 1.5, color: Colors.muted },
-  target: { fontSize: 62, lineHeight: 72 },
-  comboTxt: { fontSize: 13, fontFamily: 'Nunito_700Bold', color: Colors.gold, height: 20 },
+  prompt: { flex: 1, justifyContent: 'center', gap: 14 },
+  findLbl: { fontSize: 12, fontFamily: 'Nunito_700Bold', textTransform: 'uppercase', letterSpacing: 1.5, color: Colors.muted, alignSelf: 'center' },
+  target: { fontSize: 62, lineHeight: 72, alignSelf: 'center' },
+  comboTxt: { fontSize: 13, fontFamily: 'Nunito_700Bold', color: Colors.gold, height: 20, alignSelf: 'center' },
 
   grid: {
+    gap: GRID_GAP,
+  },
+  gridRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 9,
-    justifyContent: 'center',
-    width: '100%',
+    gap: GRID_GAP,
   },
   opt: {
-    width: '30%',
+    flex: 1,
     paddingVertical: 14,
     borderRadius: 15,
     borderWidth: 2,
     borderColor: Colors.border,
     backgroundColor: '#FFFFFF',
     alignItems: 'center',
+    justifyContent: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.06,
     shadowRadius: 8,
     elevation: 2,
   },
+  optInner: { alignItems: 'center', justifyContent: 'center' },
   optCorrect: { borderColor: Colors.teal, backgroundColor: 'rgba(6,214,160,0.15)' },
   optWrong: { borderColor: Colors.coral, backgroundColor: 'rgba(239,71,111,0.15)' },
   optTxt: { fontSize: 30 },

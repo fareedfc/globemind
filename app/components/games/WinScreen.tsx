@@ -55,11 +55,14 @@ function Confetti() {
     </View>
   );
 }
+import { router } from 'expo-router';
 import { Colors } from '../../constants/colors';
+import { LEVELS } from '../../data/levels';
 import { usePlayerStore } from '../../stores/playerStore';
 import { useProgressStore } from '../../stores/progressStore';
 import { useBrainStore, type GameType } from '../../stores/brainStore';
 import { MILES_PER_STAR } from '../../utils/scoring';
+import * as Haptics from 'expo-haptics';
 
 export interface WinData {
   type: GameType;
@@ -74,17 +77,21 @@ export interface WinData {
 interface Props {
   data: WinData;
   levelId: number;
-  onPlayAgain: () => void;
   onExit: () => void;
 }
 
-export function WinScreen({ data, levelId, onPlayAgain, onExit }: Props) {
-  const { addMiles, recordPlay } = usePlayerStore();
+export function WinScreen({ data, levelId, onExit }: Props) {
+  const { addScore, recordPlay } = usePlayerStore();
   const { completeLevel } = useProgressStore();
   const { recordGame } = useBrainStore();
 
-  const milesEarned = useRef(MILES_PER_STAR[data.stars] ?? 150).current;
+  const pointsEarned = useRef(MILES_PER_STAR[data.stars] ?? 150).current;
   const rewarded = useRef(false);
+
+  // POP! moment
+  const [popGone, setPopGone] = useState(false);
+  const popScale = useRef(new Animated.Value(0)).current;
+  const popOpacity = useRef(new Animated.Value(1)).current;
 
   // Animated values
   const burstAnim = useRef(new Animated.Value(0)).current;
@@ -94,59 +101,106 @@ export function WinScreen({ data, levelId, onPlayAgain, onExit }: Props) {
     new Animated.Value(0),
   ]).current;
 
-  // Miles counter display
-  const [displayMiles, setDisplayMiles] = useState(usePlayerStore.getState().miles);
+  // Auto-continue progress bar (runs after POP! fades)
+  const progressAnim = useRef(new Animated.Value(0)).current;
+
+  // Score counter display
+  const [displayScore, setDisplayScore] = useState(usePlayerStore.getState().score);
+
+  const navigateNext = () => {
+    const hasNext = LEVELS.some(l => l.id === levelId + 1);
+    if (hasNext) {
+      router.replace(`/transition?levelId=${levelId}` as any);
+    } else {
+      router.replace('/(tabs)/journey');
+    }
+  };
 
   useEffect(() => {
+    // Win haptic
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+
+    // POP! splash — runs first, content reveals after
+    Animated.sequence([
+      Animated.spring(popScale, { toValue: 1, tension: 180, friction: 7, useNativeDriver: true }),
+      Animated.delay(380),
+      Animated.timing(popOpacity, { toValue: 0, duration: 260, useNativeDriver: true }),
+    ]).start(() => {
+      setPopGone(true);
+      // Start progress bar after a short pause so content has landed
+      setTimeout(() => {
+        Animated.timing(progressAnim, {
+          toValue: 1,
+          duration: 2000,
+          useNativeDriver: false,
+        }).start(({ finished }) => {
+          if (finished) navigateNext();
+        });
+      }, 500);
+    });
+
     if (!rewarded.current) {
       rewarded.current = true;
-      const oldMiles = usePlayerStore.getState().miles;
+      const oldScore = usePlayerStore.getState().score;
 
-      addMiles(milesEarned);
+      addScore(pointsEarned);
       completeLevel(levelId, data.stars);
       recordGame(data.type, data.stars);
       recordPlay();
 
-      // Animate miles counter: old → old + earned over 1.2s
+      // Animate score counter: old → old + earned over 1.2s
       const steps = 24;
-      const stepSize = milesEarned / steps;
-      let current = oldMiles;
+      const stepSize = pointsEarned / steps;
+      let current = oldScore;
       let step = 0;
       const interval = setInterval(() => {
         step++;
         current += stepSize;
         if (step >= steps) {
-          setDisplayMiles(oldMiles + milesEarned);
+          setDisplayScore(oldScore + pointsEarned);
           clearInterval(interval);
         } else {
-          setDisplayMiles(Math.round(current));
+          setDisplayScore(Math.round(current));
         }
       }, 1200 / steps);
     }
 
-    // Emoji burst
-    Animated.spring(burstAnim, {
-      toValue: 1,
-      tension: 50,
-      friction: 6,
-      useNativeDriver: true,
-    }).start();
+    // Emoji burst — slight delay so it lands after POP!
+    setTimeout(() => {
+      Animated.spring(burstAnim, {
+        toValue: 1,
+        tension: 50,
+        friction: 6,
+        useNativeDriver: true,
+      }).start();
+    }, 500);
 
-    // Stars pop in one by one
+    // Stars pop in one by one — after POP! fades
     starAnims.forEach((anim, i) => {
       setTimeout(() => {
         Animated.spring(anim, {
           toValue: 1,
-          tension: 120,
-          friction: 6,
+          tension: 140,
+          friction: 5,
           useNativeDriver: true,
         }).start();
-      }, 350 + i * 180);
+      }, 600 + i * 200);
     });
   }, []);
 
   return (
     <>
+    {/* POP! splash overlay */}
+    {!popGone && (
+      <Animated.View
+        pointerEvents="none"
+        style={[s.popOverlay, { opacity: popOpacity }]}
+      >
+        <Animated.Text style={[s.popText, { transform: [{ scale: popScale }] }]}>
+          POP! 🎉
+        </Animated.Text>
+      </Animated.View>
+    )}
     <Confetti />
     <ScrollView
       contentContainerStyle={s.container}
@@ -186,11 +240,11 @@ export function WinScreen({ data, levelId, onPlayAgain, onExit }: Props) {
 
       <Text style={s.title}>{data.title}</Text>
 
-      {/* Miles counter */}
+      {/* Score counter */}
       <View style={s.scoreDelta}>
-        <Text style={s.scoreDeltaNum}>{displayMiles.toLocaleString()}</Text>
+        <Text style={s.scoreDeltaNum}>{displayScore.toLocaleString()}</Text>
         <View style={s.scoreDeltaBadge}>
-          <Text style={s.scoreDeltaBadgeTxt}>+{milesEarned} Miles ✈️</Text>
+          <Text style={s.scoreDeltaBadgeTxt}>+{pointsEarned} pts ⭐</Text>
         </View>
       </View>
 
@@ -212,18 +266,43 @@ export function WinScreen({ data, levelId, onPlayAgain, onExit }: Props) {
         <Text style={s.insightTxt}>{data.insight}</Text>
       </View>
 
-      <TouchableOpacity style={s.btnPrimary} onPress={onPlayAgain} activeOpacity={0.85}>
-        <Text style={s.btnPrimaryTxt}>Play Again ↺</Text>
-      </TouchableOpacity>
-      <TouchableOpacity style={s.btnSecondary} onPress={onExit} activeOpacity={0.7}>
-        <Text style={s.btnSecondaryTxt}>Back to Journey</Text>
-      </TouchableOpacity>
+      {/* Auto-continue bar */}
+      <View style={s.progressWrap}>
+        <Animated.View
+          style={[
+            s.progressBar,
+            {
+              width: progressAnim.interpolate({
+                inputRange: [0, 1],
+                outputRange: ['0%', '100%'],
+              }),
+            },
+          ]}
+        />
+      </View>
+      <Text style={s.progressLbl}>Continuing to Journey...</Text>
     </ScrollView>
     </>
   );
 }
 
 const s = StyleSheet.create({
+  popOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: Colors.bg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 99,
+  },
+  popText: {
+    fontSize: 64,
+    fontFamily: 'Nunito_900Black',
+    color: '#EC4899',
+    textShadowColor: 'rgba(249,115,22,0.3)',
+    textShadowOffset: { width: 0, height: 4 },
+    textShadowRadius: 12,
+  },
+
   container: {
     flexGrow: 1,
     alignItems: 'center',
@@ -348,42 +427,26 @@ const s = StyleSheet.create({
     lineHeight: 20,
   },
 
-  milesBadge: {
-    backgroundColor: 'rgba(6,214,160,0.08)',
-    borderRadius: 20,
-    paddingVertical: 6,
-    paddingHorizontal: 14,
-    marginBottom: 18,
-  },
-  milesTxt: {
-    fontSize: 13,
-    fontFamily: 'Nunito_700Bold',
-    color: Colors.teal,
-  },
-
-  btnPrimary: {
+  progressWrap: {
     width: '100%',
-    paddingVertical: 17,
-    backgroundColor: Colors.gold,
-    borderRadius: 15,
-    alignItems: 'center',
-    marginBottom: 9,
+    height: 7,
+    backgroundColor: 'rgba(0,0,0,0.07)',
+    borderRadius: 4,
+    overflow: 'hidden',
+    marginTop: 24,
+    marginBottom: 8,
   },
-  btnPrimaryTxt: {
-    fontSize: 16,
-    fontFamily: 'Nunito_900Black',
-    color: '#FFFFFF',
+  progressBar: {
+    height: '100%',
+    borderRadius: 4,
+    backgroundColor: Colors.teal,
   },
-  btnSecondary: {
-    width: '100%',
-    paddingVertical: 13,
-    backgroundColor: 'rgba(0,0,0,0.05)',
-    borderRadius: 13,
-    alignItems: 'center',
-  },
-  btnSecondaryTxt: {
-    fontSize: 14,
+  progressLbl: {
+    fontSize: 12,
     fontFamily: 'Nunito_700Bold',
-    color: Colors.text,
+    color: Colors.muted,
+    textAlign: 'center',
+    letterSpacing: 0.3,
+    marginBottom: 16,
   },
 });

@@ -1,7 +1,7 @@
 # ThinkPop — Product Requirements Document
 
 ## Overview
-ThinkPop is a mobile brain training game disguised as a world travel experience. It targets adults aged 30–70 who want to stay mentally sharp but find existing brain training apps boring and clinical.
+ThinkPop is a mobile brain training game designed for adults aged 30–70 who want to stay mentally sharp but find existing brain training apps boring and clinical. The name "ThinkPop" drives the product theme: satisfying pop moments, spring animations, and instant gratification on every correct answer.
 
 ---
 
@@ -31,8 +31,8 @@ Brain training apps exist (Lumosity, BrainHQ, Elevate) but they feel like homewo
 - As a player, I want to scroll a beautiful path and tap a level to play
 - As a player, I want a bottom sheet to appear with level info before I commit to playing
 - As a player, I want to complete a short game (2–5 min) and feel rewarded immediately
-- As a player, I want to see my miles go up after each session
-- As a player, I want to unlock new levels by completing current ones
+- As a player, I want to see my score go up after each session
+- As a player, I want a satisfying animation of my player moving to the next level after completing one
 
 ### Brain Tracking
 - As a player, I want to see a breakdown of my performance across brain training areas
@@ -41,10 +41,8 @@ Brain training apps exist (Lumosity, BrainHQ, Elevate) but they feel like homewo
 - As a player, I want to feel like my progress is meaningful and real
 
 ### Rewards & Retention
-- As a player, I want to earn air miles and passport stamps as I progress
 - As a player, I want a daily streak that motivates me to play every day
 - As a player, I want to feel a sense of progression even on short sessions
-- As a player, I want to share my passport stamps on social media
 
 ### Monetisation
 - As a free player, I want enough content to evaluate the app before paying
@@ -56,12 +54,15 @@ Brain training apps exist (Lumosity, BrainHQ, Elevate) but they feel like homewo
 ## Functional Requirements
 
 ### FR-001: Level Path
-- Scrollable zigzag path with minimum 50 levels at launch (scale to 200+)
-- Each level node shows: emoji icon, star rating (0–3), locked/unlocked/current state — nodes are **80px** bubbles
+- Scrollable zigzag path with **50 levels at launch** (scale to 200+)
+- PATH_HEIGHT = 6000px; node positions stored as fractions of (pathWidth, PATH_HEIGHT)
+- Each level node shows: emoji icon, star rating (0–3), locked/unlocked/current state — nodes are **64px** bubbles
 - Tapping unlocked node opens bottom sheet modal
-- Current level has pulsing glow animation
-- Locked levels are dimmed, non-interactive, show lock icon
-- Path has decorative scattered travel emoji in the background
+- Current level has pulsing glow + bob animation
+- New current level springs into view on mount (scale 0 → 1.3 → 1)
+- Locked levels are dimmed, non-interactive
+- Path has decorative scattered emoji in the background
+- **5 worlds** of 10 levels each; boss levels at 10, 20, 30, 40, 50
 
 ### FR-002: Level Modal
 - Slides up from bottom on level tap
@@ -72,104 +73,91 @@ Brain training apps exist (Lumosity, BrainHQ, Elevate) but they feel like homewo
 - Grid of face-down cards (emoji on reveal)
 - Flip two cards: match = stay revealed, no match = flip back after 900ms delay
 - Lock input during flip-back animation
-- Difficulty scales: Level 1 = 3 pairs (6 cards), max = 6 pairs (12 cards)
+- Difficulty scales with level: Level 1 = 3 pairs (6 cards), Final Boss (Level 50) = 9 pairs (18 cards)
 - Pip indicators show pairs found
 - Win condition: all pairs matched
-- Score = pairs × 15 + time bonus
+- **Pop animation + haptic** on matched pair
 
 ### FR-004: Game Engine — Odd One Out (Logic)
 - 4 emoji shown in a 2×2 grid
 - 3 belong to a group, 1 doesn't — player taps the odd one out
 - 8 second answer timer per round
-- Correct: pip lights green, brief hint shown ("Not a fruit")
-- Wrong: pip lights red, correct answer highlighted, hint shown
+- Correct: pip lights green, brief hint shown ("Not a fruit") + Light haptic
+- Wrong: pip lights red, correct answer highlighted, hint shown + Medium haptic
 - Time out = treated as wrong answer
-- 7 rounds per game
-- Win condition: all 7 rounds complete
-- Score = correct_answers × 60
-- Stars: 3⭐ ≥ 6/7, 2⭐ ≥ 4/7, 1⭐ otherwise
-- Choice buttons have bouncy spring tap animations
+- 7 rounds per game; win condition: all 7 rounds complete
+- Score = correct_answers × 60; Stars: 3⭐ ≥ 6/7, 2⭐ ≥ 4/7, 1⭐ otherwise
+- **Bouncy spring pop animation** on choice button tap
 
 ### FR-005: Game Engine — Speed Match
 - Target symbol displayed prominently at top
 - 6 option symbols in 3×2 grid
-- Tap correct symbol: brief green flash, next round immediately
-- Tap wrong symbol: brief red flash, combo resets
-- Timer: 30 seconds, bar shrinks and shifts teal→gold→coral
-- Combo multiplier: consecutive correct = +5pts per streak level
-- Base score per correct: 10pts
-- Win condition: timer expires (game always completes)
-- New round auto-generates in 180ms after correct tap
-- Choice buttons have bouncy spring tap animations
+- Correct tap: brief green flash, next round in 180ms + Light haptic
+- Wrong tap: brief red flash, combo resets + Medium haptic
+- Timer: 30 seconds, bar shifts teal → gold → coral
+- Combo multiplier: consecutive correct = +5pts per streak level; base = 10pts
+- Win condition: timer expires (always completes)
+- **Bouncy spring pop animation** on choice button tap
+- Card layout uses `Animated.View` as flex child (wraps `TouchableOpacity`) to fix percentage width resolution
 
 ### FR-006: Game Engine — Pattern Pulse
 - Sequence of 5–7 emoji lights up one at a time (550ms per symbol)
-- After sequence: symbols dim, "What comes next?" prompt appears
-- 4 choice buttons shown
-- 8 second answer timer
-- Correct: pip lights green, brief reveal of full sequence
-- Wrong: pip lights red, correct answer highlighted
-- Time out = treated as wrong answer
-- 7 rounds per game
-- Win condition: all 7 rounds complete (regardless of score)
-- Score = correct_answers × 60
-- Choice buttons have bouncy spring tap animations
+- After sequence: symbols dim, "What comes next?" prompt, 4 choice buttons, 8s timer
+- Correct: pip green + Light haptic; Wrong: pip red + Medium haptic; Timeout = wrong
+- 7 rounds per game; win condition: all 7 rounds complete
+- Score = correct_answers × 60; same star thresholds as Logic
+- **Bouncy spring pop animation** on choice button tap
 
 ### FR-007: Win Screen
-- Appears after any game completion
-- Shows: emoji celebration, title (score-dependent), subtitle, 3 stat cards, brain insight card
-- Brain insight: warm, accessible sentence about the training area (no clinical language)
-- Two buttons: Play Again (replays same level) / Back to Journey
-- **Confetti particles**: 10 emoji particles burst on win
-- **Miles counter animates** up to new total; "+N Miles ✈️" badge shown
-- Miles earned per star: 1⭐ = 150 miles, 2⭐ = 300 miles, 3⭐ = 500 miles
+- **POP! splash** fires immediately: "POP! 🎉" springs in (scale 0→1), holds 380ms, fades out 260ms
+- Success haptic fires on win; content (stars, score, stats) reveals after POP! fades
+- Stars pop in one by one with spring + rotation
+- Score counter animates from old total → new total over 1.2s; "+N pts ⭐" badge shown
+- Score earned: 1⭐ = 150 pts, 2⭐ = 300 pts, 3⭐ = 500 pts
+- 10 emoji confetti particles burst on win
+- Brain insight card (domain-relevant, wellness language)
+- Stat cards: 3 game-specific metrics
+- **Play Again** → replays same level; **Back to Journey** → routes through FR-015 (or Journey if last level)
 
 ### FR-008: Brain Dashboard
-- Miles total: large number, weekly delta, percentile rank vs age group
-- **4 active training area bars: Memory, Speed, Logic, Pattern** (Focus domain removed)
-- Each bar shows percentage fill
+- Score total: large number, weekly delta ("↑ +N pts this week"), percentile rank vs age group
+- **4 training area bars: Memory, Speed, Logic, Pattern**
 - Coach Tip: one sentence targeting weakest area
-- Day streak card at bottom
-- **Guest users**: gradient sign-in banner "Save your progress · Sign In →" tapping goes to `/auth`
-- **Logged-in users**: account row showing "Signed in as [name]" + Log out link
+- Day streak card
+- **Guest users**: gradient "Save your progress · Sign In →" banner → `/auth`
+- **Logged-in users**: account row "Signed in as [name]" + Log out
 
-### FR-009: Miles & Passport
-- Total air miles counter
-- Progress bar to next stamp milestone
-- Passport stamp grid (8 stamps, earned by milestones)
-- Stamp names: Explorer, Wordsmith, Speedster, Pathfinder, Horizon, Luminary, Voyager, Legend
-- Stamps animate when newly earned (stamp-press animation)
-
-### FR-010: Lives System
-- 5 lives max
-- Lose a life on: tapping Play Now
-- Lives refill at 1 per 30 minutes
+### FR-009: Lives System
+- 5 lives max; lose 1 on Play Now; refill 1 per 30 min
 - 0 lives = soft paywall (wait or purchase)
-- Premium users: 8 lives max, faster refill
 
-### FR-011: Streak System
-- Daily streak increments when player completes ≥1 level per calendar day
-- Streak shown in top bar and Brain tab
-- Streak breaks if no play for 24+ hours
-- "Streak Shield" purchasable IAP to protect streak
+### FR-010: Streak System
+- Daily streak increments on ≥1 level completed per calendar day
+- Breaks if no play for 24+ hours; shown in top bar and Brain tab
 
-### FR-012: Notifications
-- Daily reminder: "Your brain is waiting — 5 minutes today keeps you sharp 🧠"
-- Streak at risk: "Don't break your X day streak!"
-- New levels unlocked: "5 new adventures just dropped ✈️"
-- Lives refilled: "You're back to full health — ready to play?"
+### FR-011: Notifications
+- Daily reminder, streak-at-risk, lives-refilled (Expo Notifications — not yet wired)
 
-### FR-013: Landing Screen
-- Shown after onboarding completes and on every app open (entry point)
-- Displays: animated globe, "Train your brain. Travel the world." headline, game chips (Memory, Speed, Logic, Pattern)
-- **Play** button → navigates to Journey tab
-- **Track Progress** button → navigates to `/auth` if guest, or Brain tab if logged in
+### FR-012: Landing Screen
+- Entry point shown after onboarding and on every app open
+- **Centred ThinkPop logo** — dark teal "Think" + coral "Pop", Nunito_900Black, fontSize 58
+- Light mint gradient: `['#F0FDF9', '#E8FBF5', '#D4F5EB']`; three decorative blobs
+- 4 SVG category cards (Pattern/Memory/Logic/Speed) in loose 2×2 grid; light pastel tints; slow 24s drift rotation + glow pulse
+- **Play Now →** (orange gradient) → Journey tab
+- **Track Progress** (white semi-transparent) → `/auth` if guest, Brain tab if logged in
 
-### FR-014: Auth Screen
-- Email login / signup with toggle between modes
-- Shake animation on error (wrong password, invalid email)
-- "Continue without account" option (guest mode)
-- Ready for Supabase swap-in (currently local auth via authStore)
+### FR-013: Auth Screen
+- Email login / signup with toggle; shake animation on error; "Continue without account" (guest)
+- Supabase swap-in ready (currently local via authStore)
+
+### FR-014: Level Transition Screen (`app/transition.tsx`)
+- Triggered by "Back to Journey" on win screen when next level exists
+- Mini path scene: completed level node (gold) + next level node (teal), dashed bezier between them
+- Node positions use real POS fractions from `data/levels.ts`
+- **⭐ marker** travels from node A to node B (1.1s cubic easing, `useNativeDriver: true`)
+- Haptic fires on arrival; next node springs in (0 → 1.3 → 1 scale) + continuous glow pulse
+- "Level N Unlocked!" + domain + description animate in; "Continue to Journey →" button springs last
+- On last level (50): `onExit()` routes directly to Journey (no transition)
 
 ---
 
@@ -177,241 +165,167 @@ Brain training apps exist (Lumosity, BrainHQ, Elevate) but they feel like homewo
 
 ### NFR-001: Performance
 - Level path renders within 500ms on mid-range Android
-- Game transitions < 200ms
-- No frame drops during card flip animations
+- All animations use `useNativeDriver: true`
+- No frame drops during card flip or pop animations
 
 ### NFR-002: Accessibility
 - Minimum font size: 14px body, 18px headings
-- High contrast mode support
 - Touch targets minimum 44×44px
-- No colour-only information encoding (always paired with shape/text)
+- No colour-only information encoding
 
 ### NFR-003: Offline
-- Free tier: online required
-- Premium tier: full offline play (levels cached locally)
+- Free tier: online required; Premium: full offline play
 
 ### NFR-004: Data
-- Brain scores and progress synced to cloud
-- Cross-device continuity for premium users
+- Brain scores and progress synced to cloud (Phase 2)
 - GDPR compliant data handling
 
 ---
 
-## Game Content Plan
+## Game Content
 
-### Level Rotation Pattern (repeating)
+### Level Rotation
+Levels cycle through game types; boss levels fixed at 10/20/30/40/50.
 ```
-Memory → Logic → Memory → Speed → Pattern → Logic → Memory → Speed → Pattern → Memory (Boss) → ...
+World 1 (1–10):   memory, logic, memory, speed, pattern, logic, memory, speed, pattern, memory*
+World 2 (11–20):  logic, speed, pattern, memory, logic, speed, pattern, memory, logic, speed*
+World 3 (21–30):  pattern, memory, logic, speed, pattern, memory, logic, speed, pattern, memory*
+World 4 (31–40):  logic, speed, pattern, memory, logic, speed, pattern, memory, logic, speed*
+World 5 (41–50):  pattern, memory, logic, speed, pattern, memory, logic, speed, pattern, memory*
+* = boss
 ```
 
-### Odd One Out Sets (expand to 50+ sets)
-- Currently 20 sets covering: animals, transport, food, nature, landmarks, colours, sports, instruments, space, flags
-- Expand with: travel, culture, numbers, shapes, flags, seasons, professions
+### Odd One Out Sets — 55 sets ✅
+Categories: fruits, animals, transport, landmarks, sea creatures, flowers, instruments, vehicles, sky/space, food, insects, mountains, colours, sweet treats, flags, holidays, physical activity, planets, pets, winter, plants, gaming, drinks, dog family, buildings, natural elements, citrus, hats, water sports, birds, emergency vehicles, body parts, beach, study tools, exercise, cooking, cold things, reptiles, Asian countries, furniture, and more.
 
-### Pattern Types (expand to 10+)
-- AB repeat, AAB repeat, ABC repeat, ABBA, odd-one-out, growing sequence, mirror sequence
+### Pattern Types — 60+ rounds ✅
+AB repeat, AAB repeat, ABC repeat, ABBA, growing sequence, longer ABC(7) — across nature, food, animals, weather, space, sports, ocean, and more.
 
-### Memory Emoji Sets (expand to 10+ sets)
-- Travel: 🗼🌊🌸🎭🏔️🌺
-- Nature: 🦋🌻🍀🌙⭐🎯
-- Journey: ✈️🧭🌍🎒🌅⛵
-- Night: 🌙🌟🦉🔮🌌🕯️
+### Memory Emoji Sets — 18 themed sets ✅
+Landmarks, Travel, Nature, Ocean, Forest, Fruits, Space, Jungle, Food, Weather, Sports, Music, Architecture, Birds, Vehicles, Gems, Insects, Vegetables — each set has 9 emoji (supports up to 9 pairs on boss levels).
 
 ---
 
 ## Screens / Views
 
-| Screen | Description |
-|---|---|
-| Splash | Logo animation, loads user data |
-| Onboarding | 3-screen swipe intro + quick baseline test |
-| Landing | Entry lobby: animated globe, game chips, Play / Track Progress |
-| Auth | Email login/signup, shake on error, continue as guest |
-| Journey | Main scrolling path (home screen) |
-| Level Modal | Bottom sheet on level tap |
-| Game — Memory | Card flip matching game |
-| Game — Logic | Odd One Out game |
-| Game — Speed | Symbol match game |
-| Game — Pattern | Sequence memory game |
-| Win Screen | Post-game celebration with confetti and miles counter |
-| Brain Dashboard | Scores and training areas (4 domains) |
-| Miles & Passport | Rewards and stamps |
-| Settings | Notifications, account, subscription |
-| Paywall | Premium upsell (lives gate / feature gate) |
-| Onboarding Paywall | Post-onboarding premium offer |
+| Screen | File | Status |
+|---|---|---|
+| Onboarding | `app/onboarding/index.tsx` | ✅ |
+| Landing | `app/landing.tsx` | ✅ Centred logo, SVG cards |
+| Auth | `app/auth.tsx` | ✅ |
+| Journey | `app/(tabs)/journey.tsx` | ✅ 50 levels |
+| Level Transition | `app/transition.tsx` | ✅ Marker + unlock animation |
+| Game — Memory | `app/game/memory.tsx` | ✅ |
+| Game — Logic | `app/game/logic.tsx` | ✅ |
+| Game — Speed | `app/game/speed.tsx` | ✅ Card width fix |
+| Game — Pattern | `app/game/pattern.tsx` | ✅ |
+| Win Screen | `components/games/WinScreen.tsx` | ✅ POP! + score counter |
+| Brain Dashboard | `app/(tabs)/brain.tsx` | ✅ |
+| Paywall | `app/paywall.tsx` | ✅ Placeholder |
 
 ---
 
-## Recommended Tech Stack
+## Tech Stack
 
-### Option A — React Native + Expo (Recommended)
-- Single codebase for iOS and Android
-- Expo Go for rapid prototyping
-- React Native built-in `Animated` API for animations (no Reanimated dependency)
-- AsyncStorage + Supabase for persistence
-- Expo Notifications for push
+### Current — React Native + Expo (SDK 54)
+- React Native built-in `Animated` API, `useNativeDriver: true` throughout
+- Zustand + AsyncStorage for local persistence (4 stores)
+- expo-haptics for tactile feedback
 
-### Option B — Capacitor + React
-- Web-first, wrap in native shell
-- Faster initial development if team knows React
-- Slightly worse performance for animations
-- Good for PWA fallback
-
-### Option C — Flutter
-- Best performance
-- Steeper learning curve
-- Excellent for polished animations
-
-### Backend (all options)
-- **Supabase**: Auth, Postgres DB, real-time sync
-- **RevenueCat**: Subscription management (iOS + Android IAP)
-- **Expo Notifications** or **OneSignal**: Push notifications
-- **PostHog** or **Mixpanel**: Analytics
+### Backend (planned)
+- **Supabase**: Auth + Postgres; **RevenueCat**: subscriptions; **Expo Notifications**: push; **PostHog**: analytics
 
 ---
 
-## File / Folder Structure (React Native + Expo)
+## File / Folder Structure
 
 ```
 thinkpop/
-├── CLAUDE.md                  ← AI context file (keep updated)
-├── PRD.md                     ← This file
+├── CLAUDE.md / PRD.md / HANDOFF.md / TESTPLAN.md
 ├── app/
-│   ├── index.tsx              ← Entry point → routes to /landing after onboarding
-│   ├── landing.tsx            ← Entry lobby screen (animated globe, game chips)
-│   ├── auth.tsx               ← Email login/signup screen
+│   ├── index.tsx              ← Entry → /landing after onboarding check
+│   ├── landing.tsx            ← Entry lobby
+│   ├── auth.tsx               ← Login/signup
+│   ├── transition.tsx         ← Level transition screen ← NEW
 │   ├── (tabs)/
-│   │   ├── journey.tsx        ← Main path screen
-│   │   ├── brain.tsx          ← Brain dashboard
-│   │   └── miles.tsx          ← Passport & miles
+│   │   ├── _layout.tsx        ← Journey + Brain tabs
+│   │   ├── journey.tsx        ← 50-level path
+│   │   └── brain.tsx          ← Brain dashboard
 │   ├── game/
-│   │   ├── memory.tsx         ← Memory match game
-│   │   ├── logic.tsx          ← Odd One Out game
-│   │   ├── speed.tsx          ← Speed match game
-│   │   └── pattern.tsx        ← Pattern pulse game
+│   │   ├── memory.tsx / logic.tsx / speed.tsx / pattern.tsx
 │   ├── paywall.tsx
-│   └── onboarding/
-│       └── index.tsx          ← Onboarding flow → finish goes to /landing
+│   └── onboarding/index.tsx
 ├── components/
-│   ├── path/
-│   │   ├── LevelNode.tsx      ← Individual bubble node (80px)
-│   │   └── PathSVG.tsx        ← Wavy path line
-│   ├── games/
-│   │   └── WinScreen.tsx      ← Confetti particles, miles counter animation
-│   ├── ui/
-│   │   └── Pill.tsx
-│   └── layout/
-│       └── TopBar.tsx
+│   ├── path/LevelNode.tsx / PathSVG.tsx
+│   ├── games/WinScreen.tsx
+│   ├── ui/Pill.tsx
+│   └── layout/TopBar.tsx
 ├── stores/
-│   ├── playerStore.ts         ← Zustand: score, lives, streak (key: thinkpop-player)
-│   ├── progressStore.ts       ← Zustand: level completion, stars (key: thinkpop-progress)
-│   ├── brainStore.ts          ← Zustand: domain scores (key: thinkpop-brain)
-│   └── authStore.ts           ← Zustand: auth state, isLoggedIn, email, name (key: thinkpop-auth)
+│   ├── playerStore.ts         ← score, lives, streak
+│   ├── progressStore.ts       ← level completions, stars
+│   ├── brainStore.ts          ← domain scores
+│   └── authStore.ts           ← auth state
 ├── data/
-│   ├── levels.ts              ← Level definitions (type, domain, desc)
-│   ├── oddOneSets.ts          ← Odd One Out puzzle data
-│   ├── patternSets.ts         ← All pattern rounds
-│   ├── memoryEmojis.ts        ← All emoji sets
-│   └── brainInsights.ts       ← Post-game insight copy
-├── hooks/
-│   └── useLives.ts            ← Lives timer logic
-├── utils/
-│   └── scoring.ts             ← Score / star / miles calculation
-├── constants/
-│   ├── colors.ts              ← Design tokens (#0B1D3A, #1A3A5C, #FFD166, #06D6A0)
-│   └── config.ts              ← Game config (timer lengths, MILES_PER_STAR etc)
-└── assets/
-    └── fonts/
+│   ├── levels.ts              ← 50 levels + 50 POS entries (PATH_HEIGHT=6000)
+│   ├── oddOneSets.ts          ← 55 puzzle sets
+│   ├── patternSets.ts / memoryEmojis.ts / brainInsights.ts
+├── hooks/useLives.ts
+├── utils/scoring.ts
+└── constants/
+    ├── colors.ts
+    └── config.ts              ← PATH_HEIGHT=6000, NODE_SIZE=64, MAX_LIVES=5
 ```
 
 ---
 
-## Build Status — Last Updated 2026-03-30
+## Build Status — Last Updated 2026-04-01
 
 ### Phase 1 MVP — COMPLETE ✅
+- [x] Onboarding (3 slides + baseline reveal → Landing)
+- [x] Landing — centred ThinkPop logo, SVG category cards, drift/glow animation
+- [x] Auth — email login/signup, shake on error, guest mode
+- [x] Journey — 50 levels, 5 worlds, boss nodes, zigzag path (PATH_HEIGHT=6000)
+- [x] All 4 games — Memory, Logic, Speed, Pattern — fully playable
+- [x] POP! theme — correct answer spring + haptic in all games; POP! splash on win screen
+- [x] Level transition screen — ⭐ marker travel + next level unlock animation
+- [x] Win screen — POP! splash, confetti, score counter, "+N pts ⭐" badge
+- [x] Brain dashboard — 4 domains, guest banner, account row, coach tip, percentile
+- [x] Lives system, streak system, local persistence (4 Zustand stores)
+- [x] 55 Odd One Out puzzle sets
+- [x] Score metric (replaced miles/✈️ branding throughout)
+- [x] Speed game card width bug fixed
+- [x] Pattern sets expanded to 60+ rounds
+- [x] Memory emoji sets expanded to 18 themed sets (9 emoji each)
 
-**Built and working:**
-- [x] Onboarding (3 slides + animated baseline score reveal → lands on Landing screen)
-- [x] Landing screen (`app/landing.tsx`) — animated globe, game chips, Play / Track Progress buttons
-- [x] Auth screen (`app/auth.tsx`) — email login/signup, shake on error, continue as guest
-- [x] Journey path (15 levels built; zigzag path, level modal, decorative emoji; 80px nodes)
-- [x] All 4 game modes fully playable (Memory Match, Odd One Out, Speed Match, Pattern Pulse)
-- [x] Bouncy spring tap animations on all choice buttons (Logic, Speed, Pattern games)
-- [x] Win screen + confetti particles + miles counter animation + "+N Miles ✈️" badge
-- [x] Brain dashboard (live training area scores — 4 domains, Focus removed; weekly delta; dynamic coach tip; percentile rank; guest sign-in banner; logged-in account row)
-- [x] Lives system (5 hearts, 30-min timer refill, deduct on play, gate when empty)
-- [x] Day streak (date-based tracking, resets on missed day, increments on win)
-- [x] Local persistence (AsyncStorage via Zustand persist — keys: thinkpop-player, thinkpop-progress, thinkpop-brain, thinkpop-auth)
-- [x] Basic paywall (lives gate screen with countdown timer and premium CTA placeholder)
-- [x] Auth store (`stores/authStore.ts`) — local auth, Supabase-ready
-
-**Nice to have (Phase 2):**
-- [ ] Cloud sync (Supabase)
+### Phase 2 (planned)
+- [ ] Supabase cloud sync + real auth
+- [ ] RevenueCat subscription
 - [ ] Push notifications
-- [ ] Social sharing (passport stamps)
-- [ ] RevenueCat subscription (paywall CTA is placeholder — needs wiring)
-
-**Out of scope for MVP:**
-- [ ] Focus game mode (removed from Brain dashboard; no game built)
-- [ ] Detailed weekly reports
-- [ ] Leaderboards
-- [ ] Multiplayer / friends
 
 ---
 
-## What Was Built (Technical Detail)
-
-### Screens
-| Screen | File | Status |
-|---|---|---|
-| Onboarding | `app/onboarding/index.tsx` | ✅ 3 slides + baseline animation → /landing |
-| Landing | `app/landing.tsx` | ✅ Animated globe, game chips, Play / Track Progress |
-| Auth | `app/auth.tsx` | ✅ Login/signup, shake on error, continue as guest |
-| Journey (main path) | `app/(tabs)/journey.tsx` | ✅ Live level state from progressStore; 80px nodes |
-| Brain Dashboard | `app/(tabs)/brain.tsx` | ✅ 4 domains, guest banner, account row |
-| Miles & Passport | `app/(tabs)/miles.tsx` | ✅ UI complete (static stamps) |
-| Memory Match | `app/game/memory.tsx` | ✅ Fully playable, star rating |
-| Odd One Out | `app/game/logic.tsx` | ✅ Fully playable, star rating, spring animations |
-| Speed Match | `app/game/speed.tsx` | ✅ Fully playable, star rating, spring animations |
-| Pattern Pulse | `app/game/pattern.tsx` | ✅ Fully playable, star rating, spring animations |
-| Win Screen | `components/games/WinScreen.tsx` | ✅ Confetti particles, miles counter, "+N Miles ✈️" badge |
-| Paywall | `app/paywall.tsx` | ✅ Lives gate, countdown, premium CTA |
-
-### State / Data
-| Store | File | Status |
-|---|---|---|
-| Player (score, lives, streak, miles) | `stores/playerStore.ts` | ✅ Persisted (thinkpop-player), lives timer, streak date logic |
-| Progress (level completions, stars) | `stores/progressStore.ts` | ✅ Persisted (thinkpop-progress), best-stars logic |
-| Brain (domain scores, weekly delta) | `stores/brainStore.ts` | ✅ Persisted (thinkpop-brain), domain nudge per win |
-| Auth (isLoggedIn, email, name) | `stores/authStore.ts` | ✅ Persisted (thinkpop-auth), Supabase-ready |
-
-### Known Gaps / Tech Debt
-- Journey path has **15 levels** — PRD target is 50. Need to expand `data/levels.ts` and `POS` coordinates.
-- Miles tab stamps are **static** — not yet wired to real milestone milestones from playerStore.miles.
-- Paywall premium CTA is a **placeholder** — RevenueCat not integrated.
-- Streak displayed in Brain tab is live but **no streak shield IAP** yet.
-- No **failure state** in games — lives deducted on play start, not on fail. Needs per-game fail conditions in Phase 2.
+## Known Gaps / Tech Debt
+- Paywall premium CTA **placeholder** — RevenueCat not integrated
+- No per-game **failure state** — lives deducted on play start only
+- `word.tsx` in `app/game/` is dead code — safe to delete
+- Auth is local only — no cross-device continuity until Supabase
 
 ---
 
 ## Recommended Next Priorities
 
-### Immediate (before any user testing / TestFlight)
-1. **Expand to 50 levels** — extend `data/levels.ts` with 35 more levels and matching `POS` zigzag coordinates. No new code, just data.
-2. **Wire Miles stamps to real milestones** — connect passport stamps to `playerStore.miles` thresholds so they unlock dynamically.
-3. **Expand Odd One Out sets** — currently 20 sets, grow to 50+ for variety across 15 Logic levels.
+### Immediate (before TestFlight)
+1. **Lives-on-failure** — deduct a life when the player loses/exits mid-game, not only on Play Now
+2. **Revise difficulty curve** — verify pair counts and game variety feel right across all 50 levels
 
-### Phase 2 — Revenue & Retention (months 4–6)
-1. **RevenueCat** — wire the paywall "Get Premium" button to an actual subscription. This is the single highest-impact revenue action.
-2. **Push notifications** — daily reminder + streak-at-risk + lives-refilled. Use Expo Notifications (no extra backend needed).
-3. **Onboarding paywall** — add a premium upsell screen at the end of onboarding (post-baseline reveal). High conversion window.
-4. **Supabase cloud sync** — swap authStore local logic for real Supabase auth + Postgres for cross-device continuity. Required before wide launch.
+### Phase 2 — Revenue & Retention
+1. RevenueCat — wire paywall "Get Premium" button
+2. Push notifications — Expo Notifications
+3. Onboarding paywall — premium upsell post-baseline
+4. Supabase — real auth + cloud sync
 
-### Phase 3 — Growth (months 6–12)
-- Leaderboards, daily challenges, seasonal events
-- Social sharing of passport stamps
-- Friend comparison / referral loop
-- Premium level packs (Continent Packs IAP)
+### Phase 3 — Growth
+- Leaderboards, daily challenges, social sharing, referral loop, premium level packs IAP
 
 ---
 
@@ -423,7 +337,6 @@ thinkpop/
 | D7 Retention | 35% | 45% |
 | D30 Retention | 15% | 25% |
 | Avg session length | 8 min | 10 min |
-| Sessions per DAU | 3.5 | 4+ |
 | Conversion to premium | 4% | 6% |
 | ARPU (monthly) | $0.80 | $1.20 |
 
@@ -431,8 +344,8 @@ thinkpop/
 
 ## Open Questions
 1. ~~React Native vs Capacitor~~ — **Decided: React Native + Expo**
-2. Do we launch on both stores simultaneously or iOS first?
-3. Should the Brain Score algorithm be proprietary / clinically validated?
+2. iOS first or both stores simultaneously?
+3. Should the Brain Score algorithm be clinically validated?
 4. Partnership with a neuroscientist / university for credibility?
-5. Should we A/B test "brain training" vs "travel game" framing in ads?
-6. When should RevenueCat be integrated — before or after TestFlight?
+5. A/B test "brain training" vs "wellness game" framing in ads?
+6. RevenueCat before or after TestFlight?

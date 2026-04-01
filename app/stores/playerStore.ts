@@ -8,12 +8,12 @@ export const MAX_LIVES = 5;
 export const REFILL_MS = 30 * 60 * 1000; // 30 minutes
 
 interface PlayerState {
-  miles: number;
+  score: number;
   lives: number;
   streak: number;
   lastPlayedDate: string | null;
   nextRefillAt: number | null;
-  addMiles: (pts: number) => void;
+  addScore: (pts: number) => void;
   useLive: () => void;
   refillLive: () => void;
   recordPlay: () => void;
@@ -22,13 +22,13 @@ interface PlayerState {
 export const usePlayerStore = create<PlayerState>()(
   persist(
     (set) => ({
-      miles: 0,
+      score: 0,
       lives: 5,
       streak: 0,
       lastPlayedDate: null,
       nextRefillAt: null,
 
-      addMiles: (pts) => set((s) => ({ miles: s.miles + pts })),
+      addScore: (pts) => set((s) => ({ score: s.score + pts })),
 
       useLive: () =>
         set((s) => {

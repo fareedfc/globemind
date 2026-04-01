@@ -53,6 +53,17 @@ export function LevelNode({ level, x, y, onPress }: Props) {
 
   const bob = useRef(new Animated.Value(0)).current;
   const ring = useRef(new Animated.Value(0)).current;
+  const unlockScale = useRef(new Animated.Value(isCurr ? 0 : 1)).current;
+
+  useEffect(() => {
+    if (isCurr) {
+      // Pop-in unlock animation
+      Animated.sequence([
+        Animated.spring(unlockScale, { toValue: 1.25, tension: 200, friction: 5, useNativeDriver: true }),
+        Animated.spring(unlockScale, { toValue: 1, tension: 200, friction: 8, useNativeDriver: true }),
+      ]).start();
+    }
+  }, []);
 
   useEffect(() => {
     if (!isCurr) return;
@@ -97,7 +108,9 @@ export function LevelNode({ level, x, y, onPress }: Props) {
         <Animated.View style={[s.ring, ringStyle]} />
       )}
       <Animated.View style={[isLocked && s.dimmed, isCurr && bobStyle]}>
-        <Bubble level={level} />
+        <Animated.View style={{ transform: [{ scale: unlockScale }] }}>
+          <Bubble level={level} />
+        </Animated.View>
       </Animated.View>
       <View style={s.stars}>
         {stars.split('').map((star, i) => (

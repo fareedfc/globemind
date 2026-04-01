@@ -30,15 +30,15 @@ const COACH_TIPS: Record<GameType, string> = {
 };
 
 export default function BrainScreen() {
-  const { miles, streak } = usePlayerStore();
+  const { score, streak } = usePlayerStore();
   const { domains, weeklyBaseline, snapshotWeekIfNeeded } = useBrainStore();
   const { isLoggedIn, name, logout } = useAuthStore();
 
   useEffect(() => {
-    snapshotWeekIfNeeded(miles);
+    snapshotWeekIfNeeded(score);
   }, []);
 
-  const weeklyDelta = miles - weeklyBaseline;
+  const weeklyDelta = score - weeklyBaseline;
 
   // Weakest of the 4 playable domains
   const weakestKey = (['memory', 'speed', 'logic', 'pattern'] as GameType[])
@@ -48,7 +48,7 @@ export default function BrainScreen() {
 
   return (
     <SafeAreaView style={s.container} edges={['top']}>
-      <TopBar right={<Pill variant="gold" label={`✈️ ${miles.toLocaleString()}`} />} />
+      <TopBar right={<Pill variant="gold" label={`⭐ ${score.toLocaleString()}`} />} />
       <ScrollView
         style={s.scroll}
         contentContainerStyle={s.content}
@@ -67,7 +67,7 @@ export default function BrainScreen() {
                 <Text style={s.signInEmoji}>🔒</Text>
                 <View>
                   <Text style={s.signInTitle}>Save your progress</Text>
-                  <Text style={s.signInSub}>Sign in to keep your miles & stats across devices</Text>
+                  <Text style={s.signInSub}>Sign in to keep your score & stats across devices</Text>
                 </View>
               </View>
               <Text style={s.signInCta}>Sign In →</Text>
@@ -92,11 +92,11 @@ export default function BrainScreen() {
           end={{ x: 1, y: 1 }}
           style={s.scoreHero}
         >
-          <Text style={s.scoreNum}>{miles.toLocaleString()}</Text>
+          <Text style={s.scoreNum}>{score.toLocaleString()}</Text>
           <View>
-            <Text style={s.scoreLbl}>Miles Traveled ✈️</Text>
+            <Text style={s.scoreLbl}>Total Score ⭐</Text>
             <Text style={s.scoreWeek}>
-              {weeklyDelta >= 0 ? `↑ +${weeklyDelta}` : `↓ ${weeklyDelta}`} miles this week
+              {weeklyDelta >= 0 ? `↑ +${weeklyDelta}` : `↓ ${weeklyDelta}`} pts this week
             </Text>
           </View>
         </LinearGradient>

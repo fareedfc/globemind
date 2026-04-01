@@ -44,13 +44,6 @@ export default function TabLayout() {
           tabBarIcon: () => <TabIcon emoji="🧠" />,
         }}
       />
-      <Tabs.Screen
-        name="miles"
-        options={{
-          title: 'Miles',
-          tabBarIcon: () => <TabIcon emoji="✈️" />,
-        }}
-      />
     </Tabs>
   );
 }

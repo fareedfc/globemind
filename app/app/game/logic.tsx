@@ -1,25 +1,40 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Animated } from 'react-native';
+
+const CELL_GAP = 14;
+import * as Haptics from 'expo-haptics';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Colors } from '../../constants/colors';
 import { LEVELS } from '../../data/levels';
 import { ODD_ONE_SETS, type OddOneSet } from '../../data/oddOneSets';
 import { WinScreen, type WinData } from '../../components/games/WinScreen';
+import { FailScreen } from '../../components/games/FailScreen';
 import { calcPatternStars, MILES_PER_STAR } from '../../utils/scoring';
 import { pickInsight } from '../../data/brainInsights';
 
 const TOTAL_ROUNDS = 7;
 const ANSWER_MS = 8_000;
+const FAIL_THRESHOLD = 4; // wrong answers before game over
 
-function CellButton({ item, style, onPress, disabled, emojiStyle }: {
+function CellButton({ item, style, onPress, disabled, emojiStyle, isCorrect }: {
   item: string;
   style: any;
   onPress: () => void;
   disabled: boolean;
   emojiStyle: any;
+  isCorrect?: boolean;
 }) {
   const scale = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    if (isCorrect) {
+      Animated.sequence([
+        Animated.spring(scale, { toValue: 1.2, tension: 300, friction: 5, useNativeDriver: true }),
+        Animated.spring(scale, { toValue: 1, tension: 200, friction: 8, useNativeDriver: true }),
+      ]).start();
+    }
+  }, [isCorrect]);
 
   const handlePress = () => {
     if (disabled) return;
@@ -28,9 +43,11 @@ function CellButton({ item, style, onPress, disabled, emojiStyle }: {
     onPress();
   };
 
+  // TouchableOpacity is the direct flex child (flex: 1 + aspectRatio from style).
+  // Animated.View sits inside purely for the scale transform.
   return (
-    <TouchableOpacity onPress={handlePress} disabled={disabled} activeOpacity={1}>
-      <Animated.View style={[style, { transform: [{ scale }] }]}>
+    <TouchableOpacity onPress={handlePress} disabled={disabled} activeOpacity={1} style={style}>
+      <Animated.View style={[s.cellInner, { transform: [{ scale }] }]}>
         <Text style={emojiStyle}>{item}</Text>
       </Animated.View>
     </TouchableOpacity>
@@ -56,6 +73,8 @@ export default function LogicGame() {
   const [pips, setPips] = useState<PipState[]>(Array(TOTAL_ROUNDS).fill('none'));
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [won, setWon] = useState(false);
+  const [failed, setFailed] = useState(false);
+  const wrongCountRef = useRef(0);
 
   const answerTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const answerStartRef = useRef(0);
@@ -78,7 +97,13 @@ export default function LogicGame() {
     if (!round) return;
     const correct = ans === round.odd;
 
-    if (correct) scoreRef.current += 1;
+    if (correct) {
+      scoreRef.current += 1;
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    } else {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      wrongCountRef.current += 1;
+    }
     setScore(scoreRef.current);
     setSelectedAnswer(ans);
     setPhase('feedback');
@@ -88,7 +113,13 @@ export default function LogicGame() {
       return next;
     });
 
+    const willFail = !correct && wrongCountRef.current >= FAIL_THRESHOLD;
+
     setTimeout(() => {
+      if (willFail) {
+        setFailed(true);
+        return;
+      }
       const nextRound = currentRoundRef.current + 1;
       if (nextRound >= TOTAL_ROUNDS) {
         setWon(true);
@@ -130,9 +161,11 @@ export default function LogicGame() {
     setTimerPct(100);
     setScore(0);
     scoreRef.current = 0;
+    wrongCountRef.current = 0;
     setPips(Array(TOTAL_ROUNDS).fill('none'));
     setSelectedAnswer(null);
     setWon(false);
+    setFailed(false);
   };
 
   const round = rounds.current[currentRound];
@@ -147,7 +180,7 @@ export default function LogicGame() {
     stats: [
       { num: `${score}/${TOTAL_ROUNDS}`, lbl: 'Correct' },
       { num: `${Math.round((score / TOTAL_ROUNDS) * 100)}%`, lbl: 'Accuracy' },
-      { num: `+${MILES_PER_STAR[stars]}`, lbl: 'Miles' },
+      { num: `+${MILES_PER_STAR[stars]}`, lbl: 'Points' },
     ],
     insight: pickInsight('logic'),
     stars,
@@ -156,7 +189,15 @@ export default function LogicGame() {
   if (won) {
     return (
       <SafeAreaView style={s.container} edges={['top', 'bottom']}>
-        <WinScreen data={winData} levelId={levelId} onPlayAgain={resetGame} onExit={() => router.replace('/(tabs)/journey')} />
+        <WinScreen data={winData} levelId={levelId} onExit={() => router.replace('/(tabs)/journey')} />
+      </SafeAreaView>
+    );
+  }
+
+  if (failed) {
+    return (
+      <SafeAreaView style={s.container} edges={['top', 'bottom']}>
+        <FailScreen onTryAgain={resetGame} onExit={() => router.replace('/(tabs)/journey')} />
       </SafeAreaView>
     );
   }
@@ -215,29 +256,35 @@ export default function LogicGame() {
           </Text>
         </View>
 
-        {/* 2×2 grid */}
+        {/* 2×2 grid — two explicit rows so flex: 1 resolves correctly */}
         <View style={s.grid}>
-          {items.map((item, i) => {
-            const isSelected = selectedAnswer === item;
-            const isOdd = item === round.odd;
-            const showCorrect = phase === 'feedback' && isOdd;
-            const showWrong = phase === 'feedback' && isSelected && !isOdd;
-            return (
-              <CellButton
-                key={`${currentRound}-${i}`}
-                item={item}
-                style={[
-                  s.cell,
-                  showCorrect && s.cellOk,
-                  showWrong && s.cellErr,
-                  phase === 'feedback' && !showCorrect && !showWrong && s.cellDim,
-                ]}
-                onPress={() => phase === 'answering' && handleAnswer(item)}
-                disabled={phase !== 'answering'}
-                emojiStyle={s.cellEmoji}
-              />
-            );
-          })}
+          {[0, 1].map(row => (
+            <View key={row} style={s.gridRow}>
+              {items.slice(row * 2, row * 2 + 2).map((item, col) => {
+                const i = row * 2 + col;
+                const isSelected = selectedAnswer === item;
+                const isOdd = item === round.odd;
+                const showCorrect = phase === 'feedback' && isOdd;
+                const showWrong = phase === 'feedback' && isSelected && !isOdd;
+                return (
+                  <CellButton
+                    key={`${currentRound}-${i}`}
+                    item={item}
+                    style={[
+                      s.cell,
+                      showCorrect && s.cellOk,
+                      showWrong && s.cellErr,
+                      phase === 'feedback' && !showCorrect && !showWrong && s.cellDim,
+                    ]}
+                    onPress={() => phase === 'answering' && handleAnswer(item)}
+                    disabled={phase !== 'answering'}
+                    emojiStyle={s.cellEmoji}
+                    isCorrect={showCorrect}
+                  />
+                );
+              })}
+            </View>
+          ))}
         </View>
 
         <Text style={s.roundLbl}>Round {currentRound + 1} of {TOTAL_ROUNDS}</Text>
@@ -276,25 +323,26 @@ const s = StyleSheet.create({
   scorePill: { paddingVertical: 5, paddingHorizontal: 12, borderRadius: 20 },
   scoreTxt: { fontSize: 13, fontFamily: 'Nunito_800ExtraBold' },
 
-  body: { flex: 1, paddingHorizontal: 20, paddingTop: 20, alignItems: 'center' },
-  domainTag: { fontSize: 11, fontFamily: 'Nunito_700Bold', textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 16 },
+  body: { flex: 1, paddingHorizontal: 20, paddingTop: 20 },
+  domainTag: { fontSize: 11, fontFamily: 'Nunito_700Bold', textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 16, alignSelf: 'center' },
 
-  pips: { flexDirection: 'row', gap: 5, marginBottom: 14 },
+  pips: { flexDirection: 'row', gap: 5, marginBottom: 14, alignSelf: 'center' },
   pip: { width: 28, height: 6, borderRadius: 3, backgroundColor: 'rgba(0,0,0,0.08)' },
   pipOk: { backgroundColor: Colors.teal },
   pipErr: { backgroundColor: Colors.coral },
   pipActive: { backgroundColor: 'rgba(0,0,0,0.2)' },
 
-  timerWrap: { width: '100%', marginBottom: 20 },
+  timerWrap: { marginBottom: 20 },
   timerTrack: { height: 6, backgroundColor: 'rgba(0,0,0,0.08)', borderRadius: 3, overflow: 'hidden' },
   timerFill: { height: '100%', borderRadius: 3 },
 
   promptWrap: { marginBottom: 32, minHeight: 28 },
-  promptTxt: { fontSize: 16, fontFamily: 'Nunito_800ExtraBold', color: Colors.text, textAlign: 'center' },
+  promptTxt: { fontSize: 16, fontFamily: 'Nunito_800ExtraBold', color: Colors.text, textAlign: 'center', alignSelf: 'center' },
 
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 14, justifyContent: 'center', width: '100%' },
+  grid: { gap: CELL_GAP },
+  gridRow: { flexDirection: 'row', gap: CELL_GAP },
   cell: {
-    width: '44%',
+    flex: 1,
     aspectRatio: 1,
     borderRadius: 20,
     backgroundColor: '#FFFFFF',
@@ -308,10 +356,11 @@ const s = StyleSheet.create({
     shadowRadius: 8,
     elevation: 2,
   },
+  cellInner: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   cellOk: { borderColor: Colors.teal, backgroundColor: 'rgba(6,214,160,0.2)' },
   cellErr: { borderColor: Colors.coral, backgroundColor: 'rgba(239,71,111,0.15)' },
   cellDim: { opacity: 0.35 },
   cellEmoji: { fontSize: 52 },
 
-  roundLbl: { marginTop: 28, fontSize: 12, fontFamily: 'Nunito_700Bold', color: Colors.muted },
+  roundLbl: { marginTop: 28, fontSize: 12, fontFamily: 'Nunito_700Bold', color: Colors.muted, alignSelf: 'center' },
 });

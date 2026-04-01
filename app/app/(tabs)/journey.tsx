@@ -9,7 +9,6 @@ import {
   StyleSheet,
   Dimensions,
   StatusBar,
-  DimensionValue,
 } from 'react-native';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -25,17 +24,73 @@ import { usePlayerStore } from '../../stores/playerStore';
 import { useProgressStore } from '../../stores/progressStore';
 import { useLives } from '../../hooks/useLives';
 
-const DECO: Array<{ emoji: string; left: DimensionValue; top: DimensionValue }> = [
-  { emoji: '✈️', left: '12%', top: '3%' },
-  { emoji: '🗺️', left: '58%', top: '13%' },
-  { emoji: '🌏', left: '73%', top: '23%' },
-  { emoji: '⭐', left: '25%', top: '33%' },
-  { emoji: '🌈', left: '62%', top: '43%' },
-  { emoji: '🎒', left: '15%', top: '53%' },
-  { emoji: '🧭', left: '78%', top: '63%' },
-  { emoji: '🌸', left: '35%', top: '73%' },
-  { emoji: '☁️', left: '55%', top: '83%' },
-  { emoji: '🌟', left: '20%', top: '90%' },
+// Themed decorations per world zone (absolute positions as % of PATH_HEIGHT)
+const WORLD_ZONES = [
+  {
+    label: 'World 1 · Forest',
+    gradColors: ['#F0FDF4', '#DCFCE7'] as [string, string],
+    startFrac: 0.00,
+    endFrac: 0.185,
+    deco: [
+      { emoji: '🌲', left: '8%',  top: '1.5%'  },
+      { emoji: '🌿', left: '85%', top: '2.5%'  },
+      { emoji: '🌳', left: '5%',  top: '8%'    },
+      { emoji: '🍃', left: '90%', top: '12%'   },
+      { emoji: '🌸', left: '10%', top: '15%'   },
+    ],
+  },
+  {
+    label: 'World 2 · Ocean',
+    gradColors: ['#F0F9FF', '#BAE6FD'] as [string, string],
+    startFrac: 0.185,
+    endFrac: 0.360,
+    deco: [
+      { emoji: '🌊', left: '7%',  top: '20%'   },
+      { emoji: '🐚', left: '88%', top: '22%'   },
+      { emoji: '🐠', left: '6%',  top: '27%'   },
+      { emoji: '🦀', left: '88%', top: '31%'   },
+      { emoji: '⛵', left: '12%', top: '34%'   },
+    ],
+  },
+  {
+    label: 'World 3 · Desert',
+    gradColors: ['#FFFBEB', '#FDE68A'] as [string, string],
+    startFrac: 0.360,
+    endFrac: 0.535,
+    deco: [
+      { emoji: '🌵', left: '8%',  top: '38.5%' },
+      { emoji: '☀️', left: '86%', top: '40%'   },
+      { emoji: '🏜️', left: '6%',  top: '45%'   },
+      { emoji: '⭐', left: '87%', top: '49%'   },
+      { emoji: '🦎', left: '10%', top: '52%'   },
+    ],
+  },
+  {
+    label: 'World 4 · Mountain',
+    gradColors: ['#F5F3FF', '#DDD6FE'] as [string, string],
+    startFrac: 0.535,
+    endFrac: 0.708,
+    deco: [
+      { emoji: '⛰️', left: '7%',  top: '56%'   },
+      { emoji: '❄️', left: '87%', top: '57.5%' },
+      { emoji: '🏔️', left: '6%',  top: '63%'   },
+      { emoji: '🦅', left: '87%', top: '66%'   },
+      { emoji: '🌨️', left: '10%', top: '69%'   },
+    ],
+  },
+  {
+    label: 'World 5 · Space',
+    gradColors: ['#EEF2FF', '#C7D2FE'] as [string, string],
+    startFrac: 0.708,
+    endFrac: 1.00,
+    deco: [
+      { emoji: '🌙', left: '8%',  top: '72.5%' },
+      { emoji: '🪐', left: '86%', top: '74%'   },
+      { emoji: '✨', left: '7%',  top: '80%'   },
+      { emoji: '🌟', left: '87%', top: '83%'   },
+      { emoji: '🚀', left: '10%', top: '87%'   },
+    ],
+  },
 ];
 
 const DOMAIN_COLORS: Record<string, string> = {
@@ -46,7 +101,7 @@ const DOMAIN_COLORS: Record<string, string> = {
 };
 
 export default function JourneyScreen() {
-  const { miles, streak, useLive } = usePlayerStore();
+  const { score, useLive } = usePlayerStore();
   const { currentLevelId, completions } = useProgressStore();
   const { lives, timeUntilNext } = useLives();
   const [pathWidth, setPathWidth] = useState(Dimensions.get('window').width - 40);
@@ -93,9 +148,8 @@ export default function JourneyScreen() {
       <TopBar
         right={
           <>
-            <Pill variant="gold" label={`✈️ ${miles.toLocaleString()}`} />
+            <Pill variant="gold" label={`⭐ ${score.toLocaleString()}`} />
             <Pill variant="red" label={`❤️ ${lives}${timeUntilNext ? ` · ${timeUntilNext}` : ''}`} />
-            <Pill variant="teal" label={`🔥 ${streak}`} />
           </>
         }
       />
@@ -123,18 +177,55 @@ export default function JourneyScreen() {
           style={[s.pathContainer, { height: PATH_HEIGHT }]}
           onLayout={e => setPathWidth(e.nativeEvent.layout.width)}
         >
-          <PathSVG width={pathWidth} />
+          {/* World zone background bands */}
+          {WORLD_ZONES.map((zone, zi) => (
+            <LinearGradient
+              key={zi}
+              colors={zone.gradColors}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={[
+                s.worldBand,
+                {
+                  top: zone.startFrac * PATH_HEIGHT,
+                  height: (zone.endFrac - zone.startFrac) * PATH_HEIGHT,
+                },
+              ]}
+              pointerEvents="none"
+            />
+          ))}
 
-          {/* Decorative scattered emoji */}
-          {DECO.map((d, i) => (
+          {/* World border lines + labels */}
+          {WORLD_ZONES.slice(1).map((zone, zi) => (
             <View
-              key={i}
-              style={[s.decoWrap, { left: d.left, top: d.top }]}
+              key={`wl-${zi}`}
+              style={[s.worldBorder, { top: zone.startFrac * PATH_HEIGHT }]}
               pointerEvents="none"
             >
-              <Text style={s.deco}>{d.emoji}</Text>
+              <View style={s.worldBorderLine} />
+              <Text style={s.worldLabel}>{zone.label}</Text>
             </View>
           ))}
+
+          {/* World 1 label at top */}
+          <View style={[s.worldBorder, { top: 0 }]} pointerEvents="none">
+            <Text style={[s.worldLabel, { marginTop: 8 }]}>{WORLD_ZONES[0].label}</Text>
+          </View>
+
+          <PathSVG width={pathWidth} />
+
+          {/* Themed decorations per world */}
+          {WORLD_ZONES.map((zone) =>
+            zone.deco.map((d, di) => (
+              <View
+                key={`${zone.label}-${di}`}
+                style={[s.decoWrap, { left: d.left, top: d.top }]}
+                pointerEvents="none"
+              >
+                <Text style={s.deco}>{d.emoji}</Text>
+              </View>
+            ))
+          )}
 
           {/* Level nodes */}
           {liveLevels.map((level, i) => {
@@ -262,12 +353,41 @@ const s = StyleSheet.create({
   pathContainer: {
     position: 'relative',
   },
+
+  // World zone bands
+  worldBand: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+  },
+  worldBorder: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingHorizontal: 10,
+  },
+  worldBorderLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: 'rgba(0,0,0,0.08)',
+  },
+  worldLabel: {
+    fontSize: 10,
+    fontFamily: 'Nunito_700Bold',
+    color: 'rgba(0,0,0,0.25)',
+    textTransform: 'uppercase',
+    letterSpacing: 1.2,
+  },
+
   decoWrap: {
     position: 'absolute',
   },
   deco: {
-    fontSize: 18,
-    opacity: 0.15,
+    fontSize: 22,
+    opacity: 0.22,
   },
 
   // Milestone

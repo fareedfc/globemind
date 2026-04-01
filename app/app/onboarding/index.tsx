@@ -17,10 +17,10 @@ const { width: SCREEN_W } = Dimensions.get('window');
 
 const SLIDES = [
   {
-    emoji: '✈️',
+    emoji: '🧠',
     accent: Colors.gold,
-    title: 'Explore the world.\nSharpen your mind.',
-    body: 'ThinkPop is a beautiful journey game designed to keep your brain sharp — without it ever feeling like homework.',
+    title: 'Train your brain.\nHave fun doing it.',
+    body: 'ThinkPop is a beautiful brain training game designed to keep your mind sharp — without it ever feeling like homework.',
   },
   {
     emoji: '🧩',
@@ -30,10 +30,10 @@ const SLIDES = [
     extras: ['🧩 Memory', '⚡ Speed', '🔮 Pattern', '🔤 Logic'],
   },
   {
-    emoji: '✈️',
+    emoji: '⭐',
     accent: Colors.teal,
-    title: 'Earn miles.\nTrack your journey.',
-    body: 'Every game earns you miles. The more you play — and the better you do — the further you travel.',
+    title: 'Earn points.\nTrack your progress.',
+    body: 'Every game earns you points. The more you play — and the better you do — the higher your score.',
   },
 ];
 
@@ -79,14 +79,14 @@ export default function OnboardingScreen() {
     return (
       <SafeAreaView style={s.container} edges={['top', 'bottom']}>
         <View style={s.baselineBody}>
-          <Text style={s.readyEmoji}>✈️</Text>
+          <Text style={s.readyEmoji}>⭐</Text>
           <LinearGradient
             colors={['#ECFDF5', '#D1FAE5']}
             style={s.scoreCard}
           >
-            <Text style={s.scoreCardLbl}>Miles Traveled</Text>
+            <Text style={s.scoreCardLbl}>Your Score</Text>
             <Text style={s.scoreCardNum}>0</Text>
-            <Text style={s.scoreCardSub}>Play your first game to earn miles and start your journey.</Text>
+            <Text style={s.scoreCardSub}>Play your first game to earn points and grow your score.</Text>
           </LinearGradient>
           <TouchableOpacity onPress={finish} activeOpacity={0.85} style={{ width: '100%' }}>
             <LinearGradient colors={['#FFAA00', '#FF8C00']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={s.startBtn}>

@@ -1,26 +1,39 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Animated } from 'react-native';
+import * as Haptics from 'expo-haptics';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Colors } from '../../constants/colors';
 import { LEVELS } from '../../data/levels';
 import { PATTERN_SETS, type PatternRound } from '../../data/patternSets';
 import { WinScreen, type WinData } from '../../components/games/WinScreen';
+import { FailScreen } from '../../components/games/FailScreen';
 import { calcPatternStars, MILES_PER_STAR } from '../../utils/scoring';
 import { pickInsight } from '../../data/brainInsights';
 
 const TOTAL_ROUNDS = 7;
 const ANSWER_MS = 8_000;
+const FAIL_THRESHOLD = 4;
 
 type Phase = 'watching' | 'answering' | 'feedback';
 type PipState = 'none' | 'ok' | 'err';
 
 const delay = (ms: number) => new Promise<void>(r => setTimeout(r, ms));
 
-function PatternChoiceBtn({ choice, style, onPress, disabled, txtStyle }: {
-  choice: string; style: any; onPress: () => void; disabled: boolean; txtStyle: any;
+function PatternChoiceBtn({ choice, style, onPress, disabled, txtStyle, isCorrect }: {
+  choice: string; style: any; onPress: () => void; disabled: boolean; txtStyle: any; isCorrect?: boolean;
 }) {
   const scale = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    if (isCorrect) {
+      Animated.sequence([
+        Animated.spring(scale, { toValue: 1.2, tension: 300, friction: 5, useNativeDriver: true }),
+        Animated.spring(scale, { toValue: 1, tension: 200, friction: 8, useNativeDriver: true }),
+      ]).start();
+    }
+  }, [isCorrect]);
+
   const handlePress = () => {
     if (disabled) return;
     scale.setValue(0.85);
@@ -53,8 +66,10 @@ export default function PatternGame() {
   const [pips, setPips] = useState<PipState[]>(Array(TOTAL_ROUNDS).fill('none'));
   const [feedbackAnswer, setFeedbackAnswer] = useState<string | null>(null);
   const [won, setWon] = useState(false);
+  const [failed, setFailed] = useState(false);
 
   const cancelRef = useRef(false);
+  const wrongCountRef = useRef(0);
   const answerTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const answerStartRef = useRef(0);
   const currentRoundRef = useRef(0);
@@ -78,7 +93,16 @@ export default function PatternGame() {
     if (!round) return;
     const correct = ans === round.ans;
 
-    if (correct) scoreRef.current += 1;
+    if (correct) {
+      scoreRef.current += 1;
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    } else if (ans !== null) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      wrongCountRef.current += 1;
+    } else {
+      // timeout counts as wrong
+      wrongCountRef.current += 1;
+    }
     const newScore = scoreRef.current;
     setScore(newScore);
     setFeedbackAnswer(ans);
@@ -89,7 +113,13 @@ export default function PatternGame() {
       return next;
     });
 
+    const willFail = !correct && wrongCountRef.current >= FAIL_THRESHOLD;
+
     setTimeout(() => {
+      if (willFail) {
+        setFailed(true);
+        return;
+      }
       const nextRound = currentRoundRef.current + 1;
       if (nextRound >= TOTAL_ROUNDS) {
         setWon(true);
@@ -164,9 +194,11 @@ export default function PatternGame() {
     setTimerPct(100);
     setScore(0);
     scoreRef.current = 0;
+    wrongCountRef.current = 0;
     setPips(Array(TOTAL_ROUNDS).fill('none'));
     setFeedbackAnswer(null);
     setWon(false);
+    setFailed(false);
   };
 
   const round = rounds.current[currentRound];
@@ -182,7 +214,7 @@ export default function PatternGame() {
     stats: [
       { num: `${score}/${TOTAL_ROUNDS}`, lbl: 'Correct' },
       { num: `${winPct}%`, lbl: 'Accuracy' },
-      { num: `+${MILES_PER_STAR[stars]}`, lbl: 'Miles' },
+      { num: `+${MILES_PER_STAR[stars]}`, lbl: 'Points' },
     ],
     insight: pickInsight('pattern'),
     stars,
@@ -191,7 +223,15 @@ export default function PatternGame() {
   if (won) {
     return (
       <SafeAreaView style={s.container} edges={['top', 'bottom']}>
-        <WinScreen data={winData} levelId={levelId} onPlayAgain={resetGame} onExit={() => router.replace('/(tabs)/journey')} />
+        <WinScreen data={winData} levelId={levelId} onExit={() => router.replace('/(tabs)/journey')} />
+      </SafeAreaView>
+    );
+  }
+
+  if (failed) {
+    return (
+      <SafeAreaView style={s.container} edges={['top', 'bottom']}>
+        <FailScreen onTryAgain={resetGame} onExit={() => router.replace('/(tabs)/journey')} />
       </SafeAreaView>
     );
   }
@@ -296,6 +336,7 @@ export default function PatternGame() {
                 onPress={() => phase === 'answering' && handleAnswer(choice)}
                 disabled={phase !== 'answering'}
                 txtStyle={s.choiceTxt}
+                isCorrect={showCorrect}
               />
             );
           })}
