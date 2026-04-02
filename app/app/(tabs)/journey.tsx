@@ -20,7 +20,7 @@ import { LevelNode } from '../../components/path/LevelNode';
 import { LEVELS, POS, type Level } from '../../data/levels';
 import { Colors } from '../../constants/colors';
 import { PATH_HEIGHT } from '../../constants/config';
-import { usePlayerStore } from '../../stores/playerStore';
+import { usePlayerStore, FREE_DAILY_LEVELS } from '../../stores/playerStore';
 import { useProgressStore } from '../../stores/progressStore';
 import { useLives } from '../../hooks/useLives';
 
@@ -101,7 +101,7 @@ const DOMAIN_COLORS: Record<string, string> = {
 };
 
 export default function JourneyScreen() {
-  const { score, useLive } = usePlayerStore();
+  const { score, useLive, isPremium, getDailyLevelsToday, incrementDailyLevels } = usePlayerStore();
   const { currentLevelId, completions } = useProgressStore();
   const { lives, timeUntilNext } = useLives();
   const [pathWidth, setPathWidth] = useState(Dimensions.get('window').width - 40);
@@ -149,7 +149,10 @@ export default function JourneyScreen() {
         right={
           <>
             <Pill variant="gold" label={`⭐ ${score.toLocaleString()}`} />
-            <Pill variant="red" label={`❤️ ${lives}${timeUntilNext ? ` · ${timeUntilNext}` : ''}`} />
+            {isPremium
+              ? <Pill variant="gold" label="👑 Premium" />
+              : <Pill variant="red" label={`❤️ ${lives}${timeUntilNext ? ` · ${timeUntilNext}` : ''}`} />
+            }
           </>
         }
       />
@@ -282,10 +285,13 @@ export default function JourneyScreen() {
                 activeOpacity={0.85}
                 onPress={() => {
                   closeModal();
-                  if (lives === 0) {
-                    router.push('/paywall');
+                  if (!isPremium && getDailyLevelsToday() >= FREE_DAILY_LEVELS) {
+                    router.push('/paywall?reason=daily');
+                  } else if (!isPremium && lives === 0) {
+                    router.push('/paywall?reason=lives');
                   } else {
                     useLive();
+                    incrementDailyLevels();
                     router.push(`/game/${selectedLevel?.type}?levelId=${selectedLevel?.id}`);
                   }
                 }}

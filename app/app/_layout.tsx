@@ -10,10 +10,13 @@ import {
   Nunito_900Black,
 } from '@expo-google-fonts/nunito';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { useAuthStore } from '../stores/authStore';
 
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
+  const initSession = useAuthStore((s) => s.initSession);
+
   const [fontsLoaded, fontError] = useFonts({
     Nunito_400Regular,
     Nunito_600SemiBold,
@@ -21,6 +24,11 @@ export default function RootLayout() {
     Nunito_800ExtraBold,
     Nunito_900Black,
   });
+
+  useEffect(() => {
+    // Restore Supabase session and pull cloud data if user was previously logged in
+    initSession();
+  }, []);
 
   useEffect(() => {
     if (fontsLoaded || fontError) SplashScreen.hideAsync();

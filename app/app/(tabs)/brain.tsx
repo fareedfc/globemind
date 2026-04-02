@@ -22,12 +22,54 @@ const DOMAIN_META: Array<{
   { key: 'pattern', icon: '🔮', label: 'Pattern', color: Colors.purple },
 ];
 
-const COACH_TIPS: Record<GameType, string> = {
-  memory:  'Memory is your biggest growth area. Aim for zero wrong flips on Memory levels.',
-  speed:   'Speed is your opportunity this week. Stack combos on Speed Match to accelerate gains.',
-  logic:   'Logic is your growth zone this week. Take your time and think it through.',
-  pattern: 'Pattern is where you grow fastest. Focus on Pattern Pulse levels to build this skill.',
+const COACH_TIPS: Record<GameType, string[]> = {
+  memory: [
+    "Every session you show up is a win. You're building something great.",
+    "Progress isn't always visible — but it's always happening.",
+    "Small steps every day add up to big leaps over time.",
+    "You're doing better than you think. Keep going.",
+    "The fact that you're here means you're already ahead.",
+    "Consistency beats intensity every single time.",
+    "Growth doesn't happen in a straight line — and that's perfectly fine.",
+    "You showed up today. That's the hardest part done.",
+  ],
+  speed: [
+    "Momentum builds slowly, then all at once. You're closer than you feel.",
+    "Every rep counts — even the ones that feel tough.",
+    "You're not competing with anyone but yesterday's you.",
+    "Trust the process. Results follow effort, always.",
+    "A little progress each day is all it takes.",
+    "Some days feel slower — that's just your mind consolidating its gains.",
+    "Showing up on hard days is where real growth happens.",
+    "You've got more in you than you realise.",
+  ],
+  logic: [
+    "Curiosity is a superpower. You've clearly got it.",
+    "Every challenge you face makes the next one easier.",
+    "You're sharpening a skill that will serve you for life.",
+    "Thinking takes effort — and you're putting in the work.",
+    "The toughest problems are the ones most worth solving.",
+    "Keep going. Every question you wrestle with makes you stronger.",
+    "You're not just playing — you're growing. There's a difference.",
+    "Hard things get easier. You're living proof.",
+  ],
+  pattern: [
+    "Your mind is more capable than you give it credit for.",
+    "Patterns are everywhere — you're learning to see them all.",
+    "Keep noticing, keep connecting. It's working.",
+    "Every level you play is rewiring you for the better.",
+    "You're building an eye for detail that most people never develop.",
+    "The best insights come to prepared minds — and yours is getting there.",
+    "Stay curious. That's what keeps the mind young.",
+    "You're making connections your brain will thank you for later.",
+  ],
 };
+
+// Pick a tip that rotates daily so it doesn't feel stale
+function pickTip(tips: string[]): string {
+  const dayIndex = Math.floor(Date.now() / 86_400_000);
+  return tips[dayIndex % tips.length];
+}
 
 export default function BrainScreen() {
   const { score, streak } = usePlayerStore();
@@ -44,7 +86,7 @@ export default function BrainScreen() {
   const weakestKey = (['memory', 'speed', 'logic', 'pattern'] as GameType[])
     .sort((a, b) => domains[a] - domains[b])[0];
 
-  const coachTip = COACH_TIPS[weakestKey];
+  const coachTip = pickTip(COACH_TIPS[weakestKey]);
 
   return (
     <SafeAreaView style={s.container} edges={['top']}>
@@ -101,8 +143,7 @@ export default function BrainScreen() {
           </View>
         </LinearGradient>
 
-        {/* Brain Training Areas */}
-        <Text style={s.sectionLbl}>Brain Training Areas</Text>
+        <Text style={s.sectionLbl}>Your Strengths</Text>
         <View style={s.domainList}>
           {DOMAIN_META.map(d => {
             const pct = domains[d.key];

@@ -33,15 +33,15 @@ export default function TabLayout() {
       <Tabs.Screen
         name="journey"
         options={{
-          title: 'Journey',
+          title: 'Explore',
           tabBarIcon: () => <TabIcon emoji="🗺️" />,
         }}
       />
       <Tabs.Screen
         name="brain"
         options={{
-          title: 'Brain',
-          tabBarIcon: () => <TabIcon emoji="🧠" />,
+          title: 'Stats',
+          tabBarIcon: () => <TabIcon emoji="📊" />,
         }}
       />
     </Tabs>

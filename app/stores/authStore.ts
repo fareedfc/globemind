@@ -1,83 +1,149 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
-// TODO: Replace login/signUp bodies with Supabase calls when backend is ready.
-// The store shape stays the same — just swap the implementations.
+import { supabase } from '../lib/supabase';
+import { pullAll } from '../lib/sync';
+import { setCurrentUserId } from '../lib/userId';
+import { usePlayerStore } from './playerStore';
+import { useProgressStore } from './progressStore';
+import { useBrainStore } from './brainStore';
 
 interface AuthState {
   isLoggedIn: boolean;
-  email: string | null;
-  name: string | null;
-  // local-only account store for prototype (single account per device)
-  _storedEmail: string | null;
-  _storedPasswordHash: string | null;
-  _storedName: string | null;
+  userId:     string | null;
+  email:      string | null;
+  name:       string | null;
 
-  signUp: (name: string, email: string, password: string) => Promise<{ error?: string }>;
-  login: (email: string, password: string) => Promise<{ error?: string }>;
-  logout: () => void;
+  signUp:      (name: string, email: string, password: string) => Promise<{ error?: string }>;
+  login:       (email: string, password: string)               => Promise<{ error?: string }>;
+  logout:      () => Promise<void>;
+  initSession: () => Promise<void>;
 }
 
-// Simple deterministic hash — not crypto-secure, fine for local prototype
-function simpleHash(s: string): string {
-  let h = 0;
-  for (let i = 0; i < s.length; i++) {
-    h = (Math.imul(31, h) + s.charCodeAt(i)) | 0;
+function hydrateStores(data: Awaited<ReturnType<typeof pullAll>>) {
+  const { profile, completions, brain } = data;
+
+  if (profile) {
+    const p = profile as Record<string, unknown>;
+    usePlayerStore.setState({
+      score:             p.score             as number,
+      lives:             p.lives             as number,
+      streak:            p.streak            as number,
+      lastPlayedDate:    (p.last_played      as string  | null) ?? null,
+      nextRefillAt:      (p.next_refill_at   as number  | null) ?? null,
+      isPremium:         p.is_premium        as boolean,
+      dailyLevelsPlayed: p.daily_count       as number,
+      dailyLevelsDate:   (p.daily_date       as string  | null) ?? null,
+    });
+    useProgressStore.setState({ currentLevelId: p.current_level as number });
   }
-  return String(h);
+
+  if (completions.length > 0) {
+    const map: Record<number, number> = {};
+    completions.forEach(c => { map[c.level_id] = c.stars; });
+    useProgressStore.setState({ completions: map });
+  }
+
+  if (brain) {
+    const b = brain as Record<string, unknown>;
+    useBrainStore.setState({
+      domains: {
+        memory:  b.memory  as number,
+        logic:   b.logic   as number,
+        speed:   b.speed   as number,
+        pattern: b.pattern as number,
+      },
+      weeklyBaseline: b.weekly_baseline as number,
+      weekStart:      (b.week_start as string) ?? '',
+    });
+  }
 }
 
 export const useAuthStore = create<AuthState>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       isLoggedIn: false,
-      email: null,
-      name: null,
-      _storedEmail: null,
-      _storedPasswordHash: null,
-      _storedName: null,
+      userId:     null,
+      email:      null,
+      name:       null,
 
       signUp: async (name, email, password) => {
-        const trimEmail = email.trim().toLowerCase();
-        const { _storedEmail } = get();
+        if (!name.trim())         return { error: 'Please enter your name.' };
+        if (!email.includes('@')) return { error: 'Please enter a valid email.' };
+        if (password.length < 6)  return { error: 'Password must be at least 6 characters.' };
 
-        if (!name.trim()) return { error: 'Please enter your name.' };
-        if (!trimEmail.includes('@')) return { error: 'Please enter a valid email.' };
-        if (password.length < 6) return { error: 'Password must be at least 6 characters.' };
-        if (_storedEmail && _storedEmail !== trimEmail)
-          return { error: 'An account already exists on this device. Log in instead.' };
-
-        set({
-          _storedEmail: trimEmail,
-          _storedPasswordHash: simpleHash(password),
-          _storedName: name.trim(),
-          isLoggedIn: true,
-          email: trimEmail,
-          name: name.trim(),
+        const { data, error } = await supabase.auth.signUp({
+          email: email.trim().toLowerCase(),
+          password,
+          options: { data: { name: name.trim() } },
         });
+
+        if (error)       return { error: error.message };
+        if (!data.user)  return { error: 'Sign-up failed. Please try again.' };
+
+        setCurrentUserId(data.user.id);
+        set({ isLoggedIn: true, userId: data.user.id, email: data.user.email ?? email, name: name.trim() });
         return {};
       },
 
       login: async (email, password) => {
-        const trimEmail = email.trim().toLowerCase();
-        const { _storedEmail, _storedPasswordHash, _storedName } = get();
+        if (!email.includes('@')) return { error: 'Please enter a valid email.' };
+        if (!password)            return { error: 'Please enter your password.' };
 
-        if (!trimEmail.includes('@')) return { error: 'Please enter a valid email.' };
-        if (!password) return { error: 'Please enter your password.' };
-        if (!_storedEmail) return { error: 'No account found. Please sign up first.' };
-        if (_storedEmail !== trimEmail) return { error: 'Email not recognised.' };
-        if (_storedPasswordHash !== simpleHash(password)) return { error: 'Incorrect password.' };
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: email.trim().toLowerCase(),
+          password,
+        });
 
-        set({ isLoggedIn: true, email: trimEmail, name: _storedName });
+        if (error)       return { error: error.message };
+        if (!data.user)  return { error: 'Login failed. Please try again.' };
+
+        const user = data.user;
+        setCurrentUserId(user.id);
+        set({
+          isLoggedIn: true,
+          userId:     user.id,
+          email:      user.email ?? email,
+          name:       user.user_metadata?.name ?? null,
+        });
+
+        const pulled = await pullAll(user.id);
+        hydrateStores(pulled);
         return {};
       },
 
-      logout: () => set({ isLoggedIn: false, email: null, name: null }),
+      logout: async () => {
+        await supabase.auth.signOut();
+        setCurrentUserId(null);
+        set({ isLoggedIn: false, userId: null, email: null, name: null });
+      },
+
+      initSession: async () => {
+        const { data } = await supabase.auth.getSession();
+        const user = data.session?.user;
+        if (!user) return;
+
+        setCurrentUserId(user.id);
+        set({
+          isLoggedIn: true,
+          userId:     user.id,
+          email:      user.email ?? null,
+          name:       user.user_metadata?.name ?? null,
+        });
+
+        const pulled = await pullAll(user.id);
+        hydrateStores(pulled);
+      },
     }),
     {
       name: 'thinkpop-auth',
       storage: createJSONStorage(() => AsyncStorage),
+      partialize: (s) => ({
+        isLoggedIn: s.isLoggedIn,
+        userId:     s.userId,
+        email:      s.email,
+        name:       s.name,
+      }),
     },
   ),
 );
