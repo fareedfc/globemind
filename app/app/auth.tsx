@@ -20,7 +20,7 @@ import { useAuthStore } from '../stores/authStore';
 type Mode = 'login' | 'signup';
 
 export default function AuthScreen() {
-  const { login, signUp } = useAuthStore();
+  const { login, signUp, resendConfirmation, resetPassword } = useAuthStore();
 
   const [mode, setMode] = useState<Mode>('signup');
   const [name, setName] = useState('');
@@ -29,6 +29,9 @@ export default function AuthScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [awaitingConfirmation, setAwaitingConfirmation] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
 
   const shakeAnim = useRef(new Animated.Value(0)).current;
 
@@ -67,10 +70,58 @@ export default function AuthScreen() {
       return;
     }
 
-    router.replace('/(tabs)/brain');
+    if ('needsConfirmation' in result && result.needsConfirmation) {
+      setAwaitingConfirmation(true);
+      return;
+    }
+
+    router.replace('/(tabs)/journey');
+  };
+
+  const handleResend = async () => {
+    if (resendCooldown) return;
+    setResendCooldown(true);
+    await resendConfirmation(email);
+    setTimeout(() => setResendCooldown(false), 30_000);
   };
 
   const isSignup = mode === 'signup';
+
+  if (awaitingConfirmation) {
+    return (
+      <SafeAreaView style={s.container} edges={['top', 'bottom']}>
+        <View style={s.confirmBody}>
+          <Text style={s.confirmEmoji}>📬</Text>
+          <Text style={s.confirmTitle}>Check your inbox</Text>
+          <Text style={s.confirmSub}>
+            We sent a confirmation link to{'\n'}
+            <Text style={s.confirmEmail}>{email}</Text>
+          </Text>
+          <Text style={s.confirmHint}>
+            Tap the link in the email to activate your account, then come back and log in.
+          </Text>
+
+          <TouchableOpacity
+            onPress={handleResend}
+            activeOpacity={resendCooldown ? 1 : 0.7}
+            style={s.resendBtn}
+          >
+            <Text style={[s.resendTxt, resendCooldown && s.resendTxtDim]}>
+              {resendCooldown ? 'Email sent — check your inbox' : "Didn't get it? Resend email"}
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={() => { setAwaitingConfirmation(false); switchMode('login'); }}
+            activeOpacity={0.7}
+            style={s.resendBtn}
+          >
+            <Text style={s.loginLinkTxt}>Already confirmed? Log in →</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={s.container} edges={['top', 'bottom']}>
@@ -173,6 +224,31 @@ export default function AuthScreen() {
                 </TouchableOpacity>
               </View>
             </View>
+
+            {/* Forgot password */}
+            {!isSignup && (
+              <TouchableOpacity
+                onPress={async () => {
+                  if (!email.includes('@')) {
+                    setError('Enter your email above first.');
+                    shake();
+                    return;
+                  }
+                  setLoading(true);
+                  const result = await resetPassword(email);
+                  setLoading(false);
+                  if (result.error) { setError(result.error); shake(); return; }
+                  setResetSent(true);
+                  setError('');
+                }}
+                activeOpacity={0.7}
+                style={s.forgotBtn}
+              >
+                <Text style={s.forgotTxt}>
+                  {resetSent ? '✓ Reset link sent — check your inbox' : 'Forgot password?'}
+                </Text>
+              </TouchableOpacity>
+            )}
 
             {/* Error */}
             {error ? (
@@ -356,5 +432,57 @@ const s = StyleSheet.create({
     color: Colors.muted,
     textAlign: 'center',
     opacity: 0.6,
+  },
+
+  forgotBtn: { alignSelf: 'flex-end', paddingVertical: 2 },
+  forgotTxt: { fontSize: 12, fontFamily: 'Nunito_700Bold', color: Colors.teal },
+
+  // Email confirmation screen
+  confirmBody: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 32,
+    gap: 16,
+  },
+  confirmEmoji: { fontSize: 64, marginBottom: 4 },
+  confirmTitle: {
+    fontSize: 26,
+    fontFamily: 'Nunito_900Black',
+    color: Colors.text,
+    textAlign: 'center',
+  },
+  confirmSub: {
+    fontSize: 15,
+    fontFamily: 'Nunito_400Regular',
+    color: Colors.muted,
+    textAlign: 'center',
+    lineHeight: 24,
+  },
+  confirmEmail: {
+    fontFamily: 'Nunito_700Bold',
+    color: Colors.text,
+  },
+  confirmHint: {
+    fontSize: 13,
+    fontFamily: 'Nunito_400Regular',
+    color: Colors.muted,
+    textAlign: 'center',
+    lineHeight: 21,
+    opacity: 0.8,
+    marginTop: 4,
+  },
+  resendBtn: { paddingVertical: 8 },
+  resendTxt: {
+    fontSize: 13,
+    fontFamily: 'Nunito_700Bold',
+    color: Colors.teal,
+    textDecorationLine: 'underline',
+  },
+  resendTxtDim: { color: Colors.muted, textDecorationLine: 'none' },
+  loginLinkTxt: {
+    fontSize: 14,
+    fontFamily: 'Nunito_700Bold',
+    color: Colors.gold,
   },
 });

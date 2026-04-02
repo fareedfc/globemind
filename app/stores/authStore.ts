@@ -14,8 +14,11 @@ interface AuthState {
   email:      string | null;
   name:       string | null;
 
-  signUp:      (name: string, email: string, password: string) => Promise<{ error?: string }>;
+  signUp:      (name: string, email: string, password: string) => Promise<{ error?: string; needsConfirmation?: boolean }>;
   login:       (email: string, password: string)               => Promise<{ error?: string }>;
+  resendConfirmation: (email: string)                          => Promise<{ error?: string }>;
+  resetPassword:      (email: string)                          => Promise<{ error?: string }>;
+  updatePassword:     (newPassword: string)                    => Promise<{ error?: string }>;
   logout:      () => Promise<void>;
   initSession: () => Promise<void>;
 }
@@ -81,6 +84,11 @@ export const useAuthStore = create<AuthState>()(
         if (error)       return { error: error.message };
         if (!data.user)  return { error: 'Sign-up failed. Please try again.' };
 
+        // If session is null, email confirmation is required before the user can log in
+        if (!data.session) {
+          return { needsConfirmation: true };
+        }
+
         setCurrentUserId(data.user.id);
         set({ isLoggedIn: true, userId: data.user.id, email: data.user.email ?? email, name: name.trim() });
         return {};
@@ -95,7 +103,12 @@ export const useAuthStore = create<AuthState>()(
           password,
         });
 
-        if (error)       return { error: error.message };
+        if (error) {
+          if (error.message.toLowerCase().includes('email not confirmed')) {
+            return { error: 'Please confirm your email first. Check your inbox for the link we sent.' };
+          }
+          return { error: error.message };
+        }
         if (!data.user)  return { error: 'Login failed. Please try again.' };
 
         const user = data.user;
@@ -109,6 +122,26 @@ export const useAuthStore = create<AuthState>()(
 
         const pulled = await pullAll(user.id);
         hydrateStores(pulled);
+        return {};
+      },
+
+      resendConfirmation: async (email) => {
+        const { error } = await supabase.auth.resend({ type: 'signup', email });
+        if (error) return { error: error.message };
+        return {};
+      },
+
+      resetPassword: async (email) => {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: 'thinkpop://reset',
+        });
+        if (error) return { error: error.message };
+        return {};
+      },
+
+      updatePassword: async (newPassword) => {
+        const { error } = await supabase.auth.updateUser({ password: newPassword });
+        if (error) return { error: error.message };
         return {};
       },
 

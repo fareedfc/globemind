@@ -1,15 +1,19 @@
 import { useRef, useEffect, useState } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet,
-  ScrollView, Animated,
+  ScrollView, Animated, ActivityIndicator, Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
+import Purchases, { PURCHASES_ERROR_CODE } from 'react-native-purchases';
 import { Colors } from '../constants/colors';
 import { useLives } from '../hooks/useLives';
 import { usePlayerStore, MAX_LIVES, FREE_DAILY_LEVELS } from '../stores/playerStore';
+
+// The product identifier you'll create in App Store Connect
+const PREMIUM_MONTHLY_ID = 'thinkpop_premium_monthly';
 
 const FEATURES = [
   { label: 'Daily levels',     free: `${FREE_DAILY_LEVELS} per day`, premium: 'Unlimited' },
@@ -25,6 +29,7 @@ export default function PaywallScreen() {
   const { isPremium, setPremium } = usePlayerStore();
 
   const [purchased, setPurchased] = useState(false);
+  const [loading, setLoading] = useState(false);
   const scaleAnim = useRef(new Animated.Value(0)).current;
   const btnAnim   = useRef(new Animated.Value(0)).current;
 
@@ -35,16 +40,53 @@ export default function PaywallScreen() {
     ]).start();
   }, []);
 
-  const handlePurchase = () => {
-    // TODO: replace with RevenueCat purchase flow
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    setPremium(true);
-    setPurchased(true);
+  const handlePurchase = async () => {
+    setLoading(true);
+    try {
+      const offerings = await Purchases.getOfferings();
+      const pkg = offerings.current?.availablePackages.find(
+        p => p.product.identifier === PREMIUM_MONTHLY_ID
+      ) ?? offerings.current?.monthly;
+
+      if (!pkg) {
+        Alert.alert('Not available', 'Purchase unavailable right now. Try again later.');
+        setLoading(false);
+        return;
+      }
+
+      const { customerInfo } = await Purchases.purchasePackage(pkg);
+      const isActive = typeof customerInfo.entitlements.active['premium'] !== 'undefined';
+      if (isActive) {
+        setPremium(true);
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        setPurchased(true);
+      }
+    } catch (e: any) {
+      if (e?.code !== PURCHASES_ERROR_CODE.PURCHASE_CANCELLED_ERROR) {
+        Alert.alert('Purchase failed', e?.message ?? 'Something went wrong. Please try again.');
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleRestore = () => {
-    // TODO: replace with RevenueCat restore flow
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  const handleRestore = async () => {
+    setLoading(true);
+    try {
+      const customerInfo = await Purchases.restorePurchases();
+      const isActive = typeof customerInfo.entitlements.active['premium'] !== 'undefined';
+      if (isActive) {
+        setPremium(true);
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        setPurchased(true);
+      } else {
+        Alert.alert('No purchases found', 'No active subscription found for this Apple ID.');
+      }
+    } catch (e: any) {
+      Alert.alert('Restore failed', e?.message ?? 'Something went wrong. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (purchased || isPremium) {
@@ -137,19 +179,25 @@ export default function PaywallScreen() {
 
         {/* Purchase CTA */}
         <Animated.View style={[s.ctaWrap, { opacity: btnAnim, transform: [{ translateY: btnAnim.interpolate({ inputRange: [0, 1], outputRange: [20, 0] }) }] }]}>
-          <TouchableOpacity onPress={handlePurchase} activeOpacity={0.88} style={{ width: '100%' }}>
+          <TouchableOpacity onPress={handlePurchase} activeOpacity={0.88} disabled={loading} style={{ width: '100%' }}>
             <LinearGradient
               colors={['#FFD166', '#FF9500']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={s.premiumBtn}
             >
-              <Text style={s.premiumBtnTxt}>Get Premium — $6.99/mo</Text>
-              <Text style={s.premiumBtnSub}>Unlimited play · Full Brain reports</Text>
+              {loading ? (
+                <ActivityIndicator color="#1a1a2e" style={{ paddingVertical: 20 }} />
+              ) : (
+                <>
+                  <Text style={s.premiumBtnTxt}>Get Premium — $6.99/mo</Text>
+                  <Text style={s.premiumBtnSub}>Unlimited play · Full Brain reports</Text>
+                </>
+              )}
             </LinearGradient>
           </TouchableOpacity>
 
-          <TouchableOpacity onPress={handleRestore} activeOpacity={0.6} style={s.restoreBtn}>
+          <TouchableOpacity onPress={handleRestore} activeOpacity={0.6} disabled={loading} style={s.restoreBtn}>
             <Text style={s.restoreTxt}>Restore Purchase</Text>
           </TouchableOpacity>
 

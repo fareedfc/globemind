@@ -423,13 +423,14 @@ const s = StyleSheet.create({
 
   choices: { flexDirection: 'row', gap: 7 },
   choice: {
-    flex: 1,
     paddingVertical: 18,
     borderRadius: 13,
     borderWidth: 2,
     borderColor: Colors.border,
     backgroundColor: '#FFFFFF',
     alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 64,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.06,
@@ -438,5 +439,5 @@ const s = StyleSheet.create({
   },
   choiceOk: { borderColor: Colors.teal, backgroundColor: 'rgba(6,214,160,0.2)' },
   choiceErr: { borderColor: Colors.coral, backgroundColor: 'rgba(239,71,111,0.15)' },
-  choiceTxt: { fontSize: 26 },
+  choiceTxt: { fontSize: 26, color: Colors.text },
 });

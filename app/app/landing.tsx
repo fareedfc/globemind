@@ -237,7 +237,7 @@ export default function LandingScreen() {
             </TouchableOpacity>
 
             <TouchableOpacity
-              onPress={() => isLoggedIn ? router.replace('/(tabs)/brain') : router.push('/auth')}
+              onPress={() => router.replace('/(tabs)/brain')}
               activeOpacity={0.82}
               style={s.btnTrack}
             >
