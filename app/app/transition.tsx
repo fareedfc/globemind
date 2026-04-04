@@ -10,6 +10,21 @@ import * as Haptics from 'expo-haptics';
 import { Colors } from '../constants/colors';
 import { LEVELS, POS } from '../data/levels';
 import { NODE_SIZE } from '../constants/config';
+import { useBrainStore, type GameType } from '../stores/brainStore';
+
+const DOMAIN_COLORS: Record<GameType, string> = {
+  memory:  Colors.gold,
+  speed:   Colors.coral,
+  logic:   Colors.teal,
+  pattern: Colors.purple,
+};
+
+const DOMAIN_LABELS: Record<GameType, string> = {
+  memory:  'Memory',
+  speed:   'Speed',
+  logic:   'Logic',
+  pattern: 'Pattern',
+};
 
 const SCENE_W = 280;
 const HALF = NODE_SIZE / 2;
@@ -18,9 +33,13 @@ const Y2 = 190;         // top of next node
 const SCENE_H = Y2 + NODE_SIZE + 48;
 
 export default function LevelTransitionScreen() {
-  const { levelId: rawId } = useLocalSearchParams<{ levelId: string }>();
-  const levelId = parseInt(rawId ?? '1');
-  const nextId  = levelId + 1;
+  const { levelId: rawId, domain: rawDomain, oldPct: rawOldPct } = useLocalSearchParams<{ levelId: string; domain: string; oldPct: string }>();
+  const levelId  = parseInt(rawId ?? '1');
+  const nextId   = levelId + 1;
+  const domain   = (rawDomain ?? null) as GameType | null;
+  const oldPct   = parseInt(rawOldPct ?? '0');
+  const newPct   = domain ? useBrainStore.getState().domains[domain] : 0;
+  const domainColor = domain ? DOMAIN_COLORS[domain] : Colors.gold;
 
   const current = LEVELS.find(l => l.id === levelId);
   const next    = LEVELS.find(l => l.id === nextId);
@@ -35,6 +54,7 @@ export default function LevelTransitionScreen() {
   const unlockOpacity= useRef(new Animated.Value(0)).current;
   const labelAnim    = useRef(new Animated.Value(0)).current;
   const btnAnim      = useRef(new Animated.Value(0)).current;
+  const barAnim      = useRef(new Animated.Value(oldPct)).current;
   const glowPulse    = useRef(new Animated.Value(0)).current;
 
   // Marker travels from (cx1, Y1+HALF) to (cx2, Y2+HALF) via translation
@@ -76,13 +96,16 @@ export default function LevelTransitionScreen() {
           ])
         ).start();
 
-        // Label then button
+        // Label then bar then button
         setTimeout(() => {
           Animated.spring(labelAnim, { toValue: 1, tension: 80, friction: 10, useNativeDriver: true }).start();
         }, 300);
         setTimeout(() => {
+          Animated.timing(barAnim, { toValue: newPct, duration: 900, easing: Easing.out(Easing.cubic), useNativeDriver: false }).start();
+        }, 700);
+        setTimeout(() => {
           Animated.spring(btnAnim, { toValue: 1, tension: 80, friction: 10, useNativeDriver: true }).start();
-        }, 560);
+        }, 900);
       });
     }, 450);
   }, []);
@@ -98,7 +121,7 @@ export default function LevelTransitionScreen() {
   return (
     <SafeAreaView style={s.container} edges={['top', 'bottom']}>
       <LinearGradient
-        colors={['#F0FDF9', '#E8FBF5', '#D4F5EB']}
+        colors={['#FFF6EE', '#FFF0E4', '#FFE6D2']}
         locations={[0, 0.5, 1]}
         style={StyleSheet.absoluteFill}
       />
@@ -177,6 +200,29 @@ export default function LevelTransitionScreen() {
           <Text style={s.unlockDomain}>{next.domain}</Text>
           <Text style={s.unlockDesc} numberOfLines={2}>{next.desc}</Text>
         </Animated.View>
+
+        {/* ── Strength bar ── */}
+        {domain && (
+          <Animated.View style={[s.strengthWrap, {
+            opacity: labelAnim,
+            transform: [{ translateY: labelAnim.interpolate({ inputRange: [0, 1], outputRange: [14, 0] }) }],
+          }]}>
+            <View style={s.strengthHeader}>
+              <Text style={[s.strengthLabel, { color: domainColor }]}>
+                {DOMAIN_LABELS[domain]} Strength
+              </Text>
+              <Text style={[s.strengthPcts, { color: domainColor }]}>
+                {oldPct}% → {newPct}%
+              </Text>
+            </View>
+            <View style={s.strengthTrack}>
+              <Animated.View style={[s.strengthFill, {
+                backgroundColor: domainColor,
+                width: barAnim.interpolate({ inputRange: [0, 100], outputRange: ['0%', '100%'] }),
+              }]} />
+            </View>
+          </Animated.View>
+        )}
 
         {/* ── Continue button ── */}
         <Animated.View style={[s.btnWrap, {
@@ -291,6 +337,35 @@ const s = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 20,
     paddingHorizontal: 8,
+  },
+
+  // ── Strength bar ───────────────────────────────────────────────────────────
+  strengthWrap: { width: '100%', gap: 8 },
+  strengthHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  strengthLabel: {
+    fontSize: 13,
+    fontFamily: 'Nunito_700Bold',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
+  strengthPcts: {
+    fontSize: 15,
+    fontFamily: 'Nunito_900Black',
+  },
+  strengthTrack: {
+    width: '100%',
+    height: 16,
+    backgroundColor: 'rgba(0,0,0,0.08)',
+    borderRadius: 8,
+    overflow: 'hidden',
+  },
+  strengthFill: {
+    height: '100%',
+    borderRadius: 8,
   },
 
   // ── Button ─────────────────────────────────────────────────────────────────

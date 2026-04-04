@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { ScrollView, View, Text, StyleSheet, DimensionValue, TouchableOpacity } from 'react-native';
+import { ScrollView, View, Text, StyleSheet, DimensionValue, TouchableOpacity, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
@@ -12,14 +12,14 @@ import { useAuthStore } from '../../stores/authStore';
 
 const DOMAIN_META: Array<{
   key: GameType;
-  icon: string;
+  icon: any;
   label: string;
   color: string;
 }> = [
-  { key: 'memory',  icon: '🧩', label: 'Memory',  color: Colors.gold },
-  { key: 'speed',   icon: '⚡', label: 'Speed',   color: Colors.coral },
-  { key: 'logic',   icon: '🔤', label: 'Logic',   color: Colors.teal },
-  { key: 'pattern', icon: '🔮', label: 'Pattern', color: Colors.purple },
+  { key: 'memory',  icon: require('../../assets/icons/icon-memory.png'),  label: 'Memory',  color: Colors.gold },
+  { key: 'speed',   icon: require('../../assets/icons/icon-speed.png'),   label: 'Speed',   color: Colors.coral },
+  { key: 'logic',   icon: require('../../assets/icons/icon-logic.png'),   label: 'Logic',   color: Colors.teal },
+  { key: 'pattern', icon: require('../../assets/icons/icon-pattern.png'), label: 'Pattern', color: Colors.purple },
 ];
 
 const COACH_TIPS: Record<GameType, string[]> = {
@@ -90,7 +90,7 @@ export default function BrainScreen() {
 
   return (
     <SafeAreaView style={s.container} edges={['top']}>
-      <TopBar right={<Pill variant="gold" label={`⭐ ${score.toLocaleString()}`} />} />
+      <TopBar />
       <ScrollView
         style={s.scroll}
         contentContainerStyle={s.content}
@@ -106,7 +106,7 @@ export default function BrainScreen() {
               style={s.signInBanner}
             >
               <View style={s.signInLeft}>
-                <Text style={s.signInEmoji}>🔒</Text>
+                <Image source={require('../../assets/icons/icon-lock.png')} style={s.signInEmoji} resizeMode="contain" />
                 <View>
                   <Text style={s.signInTitle}>Save your progress</Text>
                   <Text style={s.signInSub}>Sign in to keep your score & stats across devices</Text>
@@ -136,9 +136,9 @@ export default function BrainScreen() {
         >
           <Text style={s.scoreNum}>{score.toLocaleString()}</Text>
           <View>
-            <Text style={s.scoreLbl}>Total Score ⭐</Text>
+            <Text style={s.scoreLbl}>⭐ This Week</Text>
             <Text style={s.scoreWeek}>
-              {weeklyDelta >= 0 ? `↑ +${weeklyDelta}` : `↓ ${weeklyDelta}`} pts this week
+              {weeklyDelta >= 0 ? `↑ +${weeklyDelta}` : `↓ ${weeklyDelta}`} this week
             </Text>
           </View>
         </LinearGradient>
@@ -149,7 +149,7 @@ export default function BrainScreen() {
             const pct = domains[d.key];
             return (
               <View key={d.label} style={s.drow}>
-                <Text style={s.dico}>{d.icon}</Text>
+                <Image source={d.icon} style={s.dico} resizeMode="contain" />
                 <Text style={s.dlbl}>{d.label}</Text>
                 <View style={s.dtrack}>
                   <View
@@ -159,17 +159,25 @@ export default function BrainScreen() {
                     }]}
                   />
                 </View>
-                <Text style={s.dpct}>{pct}%</Text>
+                <Text style={[s.dpct, { color: d.color }]}>{pct}%</Text>
               </View>
             );
           })}
         </View>
 
         {/* Coach Tip */}
-        <View style={s.tipCard}>
-          <Text style={s.tipLbl}>🧠 Coach Tip</Text>
+        <LinearGradient
+          colors={['#FFF0E0', '#FFE0C0']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={s.tipCard}
+        >
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+            <Image source={require('../../assets/icons/icon-hint.png')} style={{ width: 32, height: 32 }} resizeMode="contain" />
+            <Text style={s.tipLbl}>Coach Tip</Text>
+          </View>
           <Text style={s.tipTxt}>{coachTip}</Text>
-        </View>
+        </LinearGradient>
 
         {/* Streak Card */}
         <LinearGradient
@@ -178,7 +186,7 @@ export default function BrainScreen() {
           end={{ x: 1, y: 0 }}
           style={s.streakCard}
         >
-          <Text style={s.streakIco}>🔥</Text>
+          <Image source={require('../../assets/icons/icon-flame.png')} style={s.streakIco} resizeMode="contain" />
           <View>
             <Text style={s.streakLbl}>Day Streak</Text>
             <Text style={s.streakNum}>{streak} days</Text>
@@ -205,7 +213,7 @@ const s = StyleSheet.create({
     borderColor: 'rgba(255,107,53,0.2)',
   },
   signInLeft: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 },
-  signInEmoji: { fontSize: 22 },
+  signInEmoji: { width: 32, height: 32 },
   signInTitle: { fontSize: 14, fontFamily: 'Nunito_700Bold', color: Colors.text },
   signInSub: { fontSize: 11, fontFamily: 'Nunito_400Regular', color: Colors.muted, marginTop: 1 },
   signInCta: { fontSize: 13, fontFamily: 'Nunito_800ExtraBold', color: Colors.coral },
@@ -272,56 +280,51 @@ const s = StyleSheet.create({
     gap: 11,
   },
   dico: {
-    fontSize: 18,
-    width: 28,
-    textAlign: 'center',
+    width: 48,
+    height: 48,
   },
   dlbl: {
-    fontSize: 13,
+    fontSize: 16,
     fontFamily: 'Nunito_700Bold',
     color: Colors.text,
-    width: 130,
+    width: 90,
   },
   dtrack: {
     flex: 1,
-    height: 8,
+    height: 16,
     backgroundColor: 'rgba(0,0,0,0.08)',
-    borderRadius: 4,
+    borderRadius: 8,
     overflow: 'hidden',
   },
   dfill: {
     height: '100%',
-    borderRadius: 4,
+    borderRadius: 8,
   },
   dpct: {
-    fontSize: 13,
+    fontSize: 17,
     fontFamily: 'Nunito_800ExtraBold',
     color: Colors.gold,
-    width: 36,
+    width: 48,
     textAlign: 'right',
   },
 
   tipCard: {
-    backgroundColor: 'rgba(245,158,11,0.08)',
-    borderWidth: 1,
-    borderColor: 'rgba(245,158,11,0.2)',
-    borderRadius: 14,
-    padding: 14,
+    borderRadius: 20,
+    padding: 20,
     marginBottom: 16,
   },
   tipLbl: {
-    fontSize: 11,
+    fontSize: 14,
     fontFamily: 'Nunito_700Bold',
     color: Colors.gold,
     textTransform: 'uppercase',
     letterSpacing: 1,
-    marginBottom: 4,
   },
   tipTxt: {
-    fontSize: 13,
+    fontSize: 16,
     fontFamily: 'Nunito_400Regular',
     color: Colors.text,
-    lineHeight: 20,
+    lineHeight: 24,
   },
 
   streakCard: {
@@ -333,7 +336,7 @@ const s = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(239,71,111,0.2)',
   },
-  streakIco: { fontSize: 32 },
+  streakIco: { width: 48, height: 48 },
   streakLbl: {
     fontSize: 12,
     fontFamily: 'Nunito_700Bold',

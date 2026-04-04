@@ -1,14 +1,20 @@
 import { useEffect, useRef } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet,
-  Animated, Easing, Dimensions,
+  Animated, Easing, Dimensions, Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
-import Svg, { Circle, Path, Rect } from 'react-native-svg';
 import { Colors } from '../constants/colors';
 import { useAuthStore } from '../stores/authStore';
+
+const GAME_ICONS = {
+  memory:  require('../assets/icons/icon-memory.png'),
+  speed:   require('../assets/icons/icon-speed.png'),
+  pattern: require('../assets/icons/icon-pattern.png'),
+  logic:   require('../assets/icons/icon-logic.png'),
+};
 
 const { width: SCREEN_W } = Dimensions.get('window');
 const BOARD_SIZE = Math.min(SCREEN_W - 80, 316);
@@ -50,56 +56,6 @@ const CARD_POSITIONS = {
   bottomLeft:  { bottom: 20, left: 16  },
   bottomRight: { bottom: 8,  right: 12 },
 } as const;
-
-// ─── SVG Icons ────────────────────────────────────────────────────────────────
-function CategoryIcon({ type, color }: { type: typeof GAMES[number]['icon']; color: string }) {
-  const stroke = {
-    stroke: color,
-    strokeWidth: 2.4,
-    strokeLinecap: 'round' as const,
-    strokeLinejoin: 'round' as const,
-  };
-  return (
-    <Svg width={44} height={44} viewBox="0 0 30 30" fill="none">
-      {type === 'pattern' && (
-        <>
-          <Circle cx="9"  cy="9"  r="2.3" fill={color} />
-          <Circle cx="21" cy="9"  r="2.3" fill={color} opacity="0.45" />
-          <Circle cx="15" cy="15" r="2.3" fill={color} />
-          <Circle cx="9"  cy="21" r="2.3" fill={color} opacity="0.45" />
-          <Circle cx="21" cy="21" r="2.3" fill={color} />
-          <Path d="M11 10.5L13.5 13"  {...stroke} opacity="0.55" />
-          <Path d="M16.5 17L19 19.5"  {...stroke} opacity="0.55" />
-          <Path d="M19 10.5L16.5 13"  {...stroke} opacity="0.55" />
-          <Path d="M13.5 17L11 19.5"  {...stroke} opacity="0.55" />
-        </>
-      )}
-      {type === 'memory' && (
-        <>
-          <Rect x="5"  y="8"  width="10" height="10" rx="3" {...stroke} />
-          <Rect x="15" y="12" width="10" height="10" rx="3" {...stroke} opacity="0.95" />
-        </>
-      )}
-      {type === 'logic' && (
-        <>
-          <Circle cx="8"  cy="8"  r="2.5" fill={color} />
-          <Circle cx="22" cy="10" r="2.5" fill={color} />
-          <Circle cx="15" cy="22" r="2.5" fill={color} />
-          <Path d="M10.3 8.7L19.6 9.4"  {...stroke} />
-          <Path d="M9.8 10.2L13.2 19.5" {...stroke} />
-          <Path d="M20.5 12L16.4 19.8"  {...stroke} />
-        </>
-      )}
-      {type === 'speed' && (
-        <>
-          <Path d="M7 18L13 11H17L13.8 16H19.5L12.5 23H9.4L12.6 18H7Z" fill={color} />
-          <Path d="M20.5 9.5L23 7"  {...stroke} opacity="0.75" />
-          <Path d="M21.5 14L25 14"  {...stroke} opacity="0.75" />
-        </>
-      )}
-    </Svg>
-  );
-}
 
 // ─── Logo ─────────────────────────────────────────────────────────────────────
 function ThinkPopLogo() {
@@ -209,7 +165,7 @@ export default function LandingScreen() {
                     ]}
                   >
                     <View style={s.cardIcon}>
-                      <CategoryIcon type={game.icon} color={game.color} />
+                      <Image source={GAME_ICONS[game.icon]} style={{ width: 56, height: 56 }} resizeMode="contain" />
                     </View>
                     <Text style={[s.cardLabel, { color: game.color }]}>{game.label}</Text>
                   </Animated.View>

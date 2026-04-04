@@ -1,9 +1,15 @@
 import { Tabs } from 'expo-router';
-import { Text } from 'react-native';
+import { Image } from 'react-native';
 import { Colors } from '../../constants/colors';
 
-function TabIcon({ emoji }: { emoji: string }) {
-  return <Text style={{ fontSize: 22 }}>{emoji}</Text>;
+function TabIcon({ source, focused }: { source: any; focused: boolean }) {
+  return (
+    <Image
+      source={source}
+      style={{ width: 28, height: 28, opacity: focused ? 1 : 0.45 }}
+      resizeMode="contain"
+    />
+  );
 }
 
 export default function TabLayout() {
@@ -34,14 +40,18 @@ export default function TabLayout() {
         name="journey"
         options={{
           title: 'Explore',
-          tabBarIcon: () => <TabIcon emoji="🗺️" />,
+          tabBarIcon: ({ focused }) => (
+            <TabIcon source={require('../../assets/icons/icon-map.png')} focused={focused} />
+          ),
         }}
       />
       <Tabs.Screen
         name="brain"
         options={{
           title: 'Stats',
-          tabBarIcon: () => <TabIcon emoji="📊" />,
+          tabBarIcon: ({ focused }) => (
+            <TabIcon source={require('../../assets/icons/icon-chart.png')} focused={focused} />
+          ),
         }}
       />
     </Tabs>

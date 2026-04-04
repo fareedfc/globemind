@@ -32,8 +32,8 @@ const SLIDES = [
   {
     emoji: '⭐',
     accent: Colors.teal,
-    title: 'Earn points.\nTrack your progress.',
-    body: 'Every game earns you points. The more you play — and the better you do — the higher your score.',
+    title: 'Earn ⭐ stars.\nTrack your progress.',
+    body: 'Every game earns you stars. The more you play — and the better you do — the higher you climb.',
   },
 ];
 
@@ -84,9 +84,9 @@ export default function OnboardingScreen() {
             colors={['#ECFDF5', '#D1FAE5']}
             style={s.scoreCard}
           >
-            <Text style={s.scoreCardLbl}>Your Score</Text>
+            <Text style={s.scoreCardLbl}>⭐ Your Stars</Text>
             <Text style={s.scoreCardNum}>0</Text>
-            <Text style={s.scoreCardSub}>Play your first game to earn points and grow your score.</Text>
+            <Text style={s.scoreCardSub}>Play your first game to earn ⭐ and watch your number grow.</Text>
           </LinearGradient>
           <TouchableOpacity onPress={finish} activeOpacity={0.85} style={{ width: '100%' }}>
             <LinearGradient colors={['#FFAA00', '#FF8C00']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={s.startBtn}>

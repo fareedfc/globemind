@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Animated, Dimensions } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Animated, Dimensions, Image } from 'react-native';
+
+const ICON_STAR = require('../../assets/icons/icon-star.png');
 
 const { width: SW, height: SH } = Dimensions.get('window');
 const PARTICLES = ['⭐', '🎉', '✨', '💫', '🌟', '🎊', '⭐', '✨', '💫', '🎉'];
@@ -87,6 +89,7 @@ export function WinScreen({ data, levelId, onExit }: Props) {
 
   const pointsEarned = useRef(MILES_PER_STAR[data.stars] ?? 150).current;
   const rewarded = useRef(false);
+  const oldDomainPct = useRef(useBrainStore.getState().domains[data.type]).current;
 
   // POP! moment
   const [popGone, setPopGone] = useState(false);
@@ -110,7 +113,7 @@ export function WinScreen({ data, levelId, onExit }: Props) {
   const navigateNext = () => {
     const hasNext = LEVELS.some(l => l.id === levelId + 1);
     if (hasNext) {
-      router.replace(`/transition?levelId=${levelId}` as any);
+      router.replace(`/transition?levelId=${levelId}&domain=${data.type}&oldPct=${oldDomainPct}` as any);
     } else {
       router.replace('/(tabs)/journey');
     }
@@ -223,11 +226,10 @@ export function WinScreen({ data, levelId, onExit }: Props) {
                     }),
                   },
                 ],
+                opacity: filled ? 1 : 0.2,
               }}
             >
-              <Text style={[s.star, filled ? s.starFilled : s.starEmpty]}>
-                {filled ? '⭐' : '☆'}
-              </Text>
+              <Image source={ICON_STAR} style={s.star} resizeMode="contain" />
             </Animated.View>
           );
         })}
@@ -244,7 +246,7 @@ export function WinScreen({ data, levelId, onExit }: Props) {
       <View style={s.scoreDelta}>
         <Text style={s.scoreDeltaNum}>{displayScore.toLocaleString()}</Text>
         <View style={s.scoreDeltaBadge}>
-          <Text style={s.scoreDeltaBadgeTxt}>+{pointsEarned} pts ⭐</Text>
+          <Text style={s.scoreDeltaBadgeTxt}>+{pointsEarned} ⭐</Text>
         </View>
       </View>
 
@@ -317,9 +319,7 @@ const s = StyleSheet.create({
     gap: 12,
     marginBottom: 16,
   },
-  star: { fontSize: 42 },
-  starFilled: {},
-  starEmpty: { opacity: 0.2 },
+  star: { width: 48, height: 48 },
 
   emoji: {
     fontSize: 64,

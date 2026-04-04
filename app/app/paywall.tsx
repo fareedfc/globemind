@@ -18,7 +18,7 @@ const PREMIUM_MONTHLY_ID = 'thinkpop_premium_monthly';
 const FEATURES = [
   { label: 'Daily levels',     free: `${FREE_DAILY_LEVELS} per day`, premium: 'Unlimited' },
   { label: 'Lives',            free: `${MAX_LIVES}, slow refill`,   premium: 'Generous refill' },
-  { label: 'Brain Score',      free: 'Basic summary',               premium: 'Full breakdown' },
+  { label: 'Strengths',        free: 'Basic summary',               premium: 'Full breakdown' },
   { label: 'Weekly Report',    free: 'Highlights only',             premium: 'Detailed analysis' },
   { label: 'All 4 game modes', free: '✓',                           premium: '✓ + future modes' },
 ];

@@ -117,7 +117,7 @@ export default function SpeedGame() {
         setMaxCombo(m => Math.max(m, next));
         const pts = 10 + (next > 1 ? (next - 1) * 5 : 0);
         setScore(s => s + pts);
-        setComboText(next > 1 ? `🔥 x${next} +${pts}` : `✓ +${pts}`);
+        setComboText(next > 1 ? `🔥 x${next} +${pts}⭐` : `✓ +${pts}⭐`);
         return next;
       });
       setTimeout(() => {
@@ -168,7 +168,7 @@ export default function SpeedGame() {
     title: stars === 3 ? 'Blazing Fast!' : stars === 2 ? 'Sharp Reflexes!' : 'Good Warm-Up!',
     sub: 'Processing speed is a core marker of brain health.',
     stats: [
-      { num: score, lbl: 'Score' },
+      { num: `⭐ ${score}`, lbl: 'Total' },
       { num: `${acc}%`, lbl: 'Accuracy' },
       { num: `x${maxCombo}`, lbl: 'Best combo' },
     ],
