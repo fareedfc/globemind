@@ -32,9 +32,11 @@ export default function RootLayout() {
   });
 
   useEffect(() => {
-    // Initialise RevenueCat
-    Purchases.setLogLevel(LOG_LEVEL.ERROR);
-    Purchases.configure({ apiKey: RC_API_KEY_IOS });
+    // Initialise RevenueCat (no-op in Expo Go — requires a dev/production build)
+    try {
+      Purchases.setLogLevel(LOG_LEVEL.ERROR);
+      Purchases.configure({ apiKey: RC_API_KEY_IOS });
+    } catch (_) {}
 
     // Restore Supabase session and pull cloud data if user was previously logged in
     initSession();

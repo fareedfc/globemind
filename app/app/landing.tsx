@@ -17,29 +17,29 @@ const GAMES = [
   {
     icon: 'memory',
     label: 'Memory',
-    color: '#F59E0B',
-    tint: '#FFE7A8',
+    color: '#E07B00',
+    tint: '#FFE9C4',
     pos: 'topLeft',
   },
   {
     icon: 'speed',
     label: 'Speed',
-    color: '#F97316',
-    tint: '#FFD1B3',
+    color: '#E8460A',
+    tint: '#FFD9CC',
     pos: 'topRight',
   },
   {
     icon: 'pattern',
     label: 'Pattern',
-    color: '#0EA5A4',
-    tint: '#B9F3EA',
+    color: '#8B3FD9',
+    tint: '#EEE0FF',
     pos: 'bottomLeft',
   },
   {
     icon: 'logic',
     label: 'Logic',
-    color: '#2563EB',
-    tint: '#C9D9FF',
+    color: '#D4006A',
+    tint: '#FFD6ED',
     pos: 'bottomRight',
   },
 ] as const;
@@ -119,8 +119,8 @@ const logo = StyleSheet.create({
     textAlign: 'center',
     fontFamily: 'Nunito_900Black',
     letterSpacing: -1.6,
-    color: '#0F3D3A',
-    textShadowColor: 'rgba(255,255,255,0.5)',
+    color: '#3D1A00',
+    textShadowColor: 'rgba(255,255,255,0.6)',
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 8,
   },
@@ -173,7 +173,7 @@ export default function LandingScreen() {
   return (
     <View style={s.container}>
       <LinearGradient
-        colors={['#F0FDF9', '#E8FBF5', '#D4F5EB']}
+        colors={['#FFF6EE', '#FFF0E4', '#FFE6D2']}
         locations={[0, 0.5, 1]}
         style={StyleSheet.absoluteFill}
       />
@@ -265,9 +265,9 @@ const s = StyleSheet.create({
 
   // Blobs
   blob: { position: 'absolute', borderRadius: 999 },
-  blobTop:  { width: 280, height: 280, top: -90,   right: -70, backgroundColor: 'rgba(249,115,22,0.09)'  },
-  blobSide: { width: 240, height: 240, left: -80,  top: '33%', backgroundColor: 'rgba(37,99,235,0.08)'  },
-  blobBtm:  { width: 300, height: 300, bottom: -110, left: 20, backgroundColor: 'rgba(16,185,129,0.1)'  },
+  blobTop:  { width: 280, height: 280, top: -90,   right: -70, backgroundColor: 'rgba(255,107,53,0.10)'  },
+  blobSide: { width: 240, height: 240, left: -80,  top: '33%', backgroundColor: 'rgba(212,0,106,0.07)'  },
+  blobBtm:  { width: 300, height: 300, bottom: -110, left: 20, backgroundColor: 'rgba(255,180,0,0.09)'  },
 
   // Board
   boardSection: { alignItems: 'center', flex: 1, justifyContent: 'center' },
@@ -278,7 +278,7 @@ const s = StyleSheet.create({
     width: BOARD_SIZE * 0.5,
     height: BOARD_SIZE * 0.5,
     borderRadius: 999,
-    backgroundColor: 'rgba(251,146,60,0.12)',
+    backgroundColor: 'rgba(255,107,53,0.14)',
   },
 
   card: {
@@ -325,9 +325,9 @@ const s = StyleSheet.create({
     paddingVertical: 17,
     borderRadius: 20,
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.6)',
+    backgroundColor: 'rgba(255,255,255,0.65)',
     borderWidth: 1,
-    borderColor: 'rgba(15,61,58,0.08)',
+    borderColor: 'rgba(61,26,0,0.10)',
   },
-  btnTrackTxt: { fontSize: 15, fontFamily: 'Nunito_800ExtraBold', color: '#124B46' },
+  btnTrackTxt: { fontSize: 15, fontFamily: 'Nunito_800ExtraBold', color: '#3D1A00' },
 });

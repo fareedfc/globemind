@@ -100,7 +100,7 @@ export default function BrainScreen() {
         {!isLoggedIn && (
           <TouchableOpacity onPress={() => router.push('/auth')} activeOpacity={0.88} style={s.signInBannerWrap}>
             <LinearGradient
-              colors={['rgba(0,200,255,0.12)', 'rgba(177,108,234,0.12)']}
+              colors={['rgba(255,107,53,0.12)', 'rgba(212,0,106,0.10)']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={s.signInBanner}
@@ -129,7 +129,7 @@ export default function BrainScreen() {
 
         {/* Miles Hero */}
         <LinearGradient
-          colors={['#ECFDF5', '#D1FAE5']}
+          colors={['#FFF0E0', '#FFE0C0']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={s.scoreHero}
@@ -202,13 +202,13 @@ const s = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     borderWidth: 1,
-    borderColor: 'rgba(0,200,255,0.2)',
+    borderColor: 'rgba(255,107,53,0.2)',
   },
   signInLeft: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 },
   signInEmoji: { fontSize: 22 },
   signInTitle: { fontSize: 14, fontFamily: 'Nunito_700Bold', color: Colors.text },
   signInSub: { fontSize: 11, fontFamily: 'Nunito_400Regular', color: Colors.muted, marginTop: 1 },
-  signInCta: { fontSize: 13, fontFamily: 'Nunito_800ExtraBold', color: Colors.blue },
+  signInCta: { fontSize: 13, fontFamily: 'Nunito_800ExtraBold', color: Colors.coral },
 
   accountRow: {
     flexDirection: 'row',

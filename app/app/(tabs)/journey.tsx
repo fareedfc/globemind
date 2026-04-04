@@ -164,7 +164,7 @@ export default function JourneyScreen() {
       >
         {/* Vibe Banner */}
         <LinearGradient
-          colors={['#ECFDF5', '#D1FAE5']}
+          colors={['#FFF0E0', '#FFE0C0']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={s.vibeBanner}
