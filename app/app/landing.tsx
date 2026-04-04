@@ -61,28 +61,18 @@ const CARD_POSITIONS = {
 function ThinkPopLogo() {
   return (
     <View style={logo.wrap}>
-      <Text style={logo.base}>
-        Think<Text style={logo.pop}>Pop</Text>
-      </Text>
+      <Image
+        source={require('../assets/icons/logo-thinkpop.png')}
+        style={logo.img}
+        resizeMode="contain"
+      />
     </View>
   );
 }
 
 const logo = StyleSheet.create({
-  wrap: { paddingTop: 4, alignItems: 'center' },
-  base: {
-    fontSize: 58,
-    textAlign: 'center',
-    fontFamily: 'Nunito_900Black',
-    letterSpacing: -1.6,
-    color: '#3D1A00',
-    textShadowColor: 'rgba(255,255,255,0.6)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 8,
-  },
-  pop: {
-    color: Colors.coral,
-  },
+  wrap: { alignItems: 'center' },
+  img:  { width: '100%', height: 200 },
 });
 
 // ─── Main Screen ──────────────────────────────────────────────────────────────

@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, Image, StyleSheet } from 'react-native';
 import { Colors } from '../../constants/colors';
 
 type Variant = 'gold' | 'red' | 'teal';
@@ -9,10 +9,11 @@ const VARIANTS: Record<Variant, { bg: string; color: string }> = {
   teal: { bg: 'rgba(0,201,167,0.15)', color: Colors.teal },
 };
 
-export function Pill({ variant, label }: { variant: Variant; label: string }) {
+export function Pill({ variant, label, icon }: { variant: Variant; label: string; icon?: any }) {
   const vs = VARIANTS[variant];
   return (
     <View style={[s.pill, { backgroundColor: vs.bg }]}>
+      {icon && <Image source={icon} style={s.icon} resizeMode="contain" />}
       <Text style={[s.text, { color: vs.color }]}>{label}</Text>
     </View>
   );
@@ -20,12 +21,16 @@ export function Pill({ variant, label }: { variant: Variant; label: string }) {
 
 const s = StyleSheet.create({
   pill: {
-    borderRadius: 20,
-    paddingVertical: 5,
-    paddingHorizontal: 11,
+    borderRadius: 23,
+    paddingVertical: 7,
+    paddingHorizontal: 13,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
+  icon: { width: 22, height: 22 },
   text: {
-    fontSize: 13,
+    fontSize: 15,
     fontFamily: 'Nunito_700Bold',
   },
 });

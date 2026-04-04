@@ -148,10 +148,10 @@ export default function JourneyScreen() {
       <TopBar
         right={
           <>
-            <Pill variant="gold" label={`⭐ ${score.toLocaleString()}`} />
+            <Pill variant="gold" icon={require('../../assets/icons/icon-star.png')} label={score.toLocaleString()} />
             {isPremium
-              ? <Pill variant="gold" label="👑 Premium" />
-              : <Pill variant="red" label={`❤️ ${lives}${timeUntilNext ? ` · ${timeUntilNext}` : ''}`} />
+              ? <Pill variant="gold" icon={require('../../assets/icons/icon-crown.png')} label="Premium" />
+              : <Pill variant="red" icon={require('../../assets/icons/icon-heart.png')} label={`${lives}${timeUntilNext ? ` · ${timeUntilNext}` : ''}`} />
             }
           </>
         }

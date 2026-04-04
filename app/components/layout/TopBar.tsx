@@ -1,5 +1,4 @@
-import { View, Text, StyleSheet } from 'react-native';
-import { Colors } from '../../constants/colors';
+import { View, Image, StyleSheet } from 'react-native';
 
 interface Props {
   right?: React.ReactNode;
@@ -7,10 +6,12 @@ interface Props {
 
 export function TopBar({ right }: Props) {
   return (
-    <View style={s.bar}>
-      <Text style={s.logo}>
-        Think<Text style={s.logoCoral}>Pop</Text>
-      </Text>
+    <View style={[s.bar, !right && s.barCentered]}>
+      <Image
+        source={require('../../assets/icons/logo-thinkpop.png')}
+        style={[s.logo, !right && s.logoCentered]}
+        resizeMode="contain"
+      />
       {right ? <View style={s.right}>{right}</View> : null}
     </View>
   );
@@ -25,15 +26,16 @@ const s = StyleSheet.create({
     paddingTop: 16,
     paddingBottom: 10,
   },
-  logo: {
-    fontSize: 22,
-    fontFamily: 'Nunito_900Black',
-    color: Colors.text,
-    letterSpacing: -0.5,
+  barCentered: {
+    justifyContent: 'center',
   },
-  logoCoral: {
-    color: Colors.coral,
-    fontFamily: 'Nunito_900Black',
+  logo: {
+    width: 150,
+    height: 64,
+  },
+  logoCentered: {
+    width: 220,
+    height: 96,
   },
   right: {
     flexDirection: 'row',
