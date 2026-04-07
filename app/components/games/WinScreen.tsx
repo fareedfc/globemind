@@ -1,5 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Animated, Dimensions, Image } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Animated, Dimensions, Image, ImageBackground, ImageSourcePropType } from 'react-native';
+
+const LANDING_BACKGROUND = require('../../assets/landing-background.png');
+
+const GAME_ICONS: Record<string, ImageSourcePropType> = {
+  memory:  require('../../assets/icons/icon-memory.png'),
+  speed:   require('../../assets/icons/icon-speed.png'),
+  logic:   require('../../assets/icons/icon-logic.png'),
+  pattern: require('../../assets/icons/icon-pattern.png'),
+};
 
 const ICON_STAR = require('../../assets/icons/icon-star.png');
 
@@ -63,7 +72,7 @@ import { LEVELS } from '../../data/levels';
 import { usePlayerStore } from '../../stores/playerStore';
 import { useProgressStore } from '../../stores/progressStore';
 import { useBrainStore, type GameType } from '../../stores/brainStore';
-import { MILES_PER_STAR } from '../../utils/scoring';
+import { calcActualPoints } from '../../utils/scoring';
 import * as Haptics from 'expo-haptics';
 
 export interface WinData {
@@ -87,7 +96,9 @@ export function WinScreen({ data, levelId, onExit }: Props) {
   const { completeLevel } = useProgressStore();
   const { recordGame } = useBrainStore();
 
-  const pointsEarned = useRef(MILES_PER_STAR[data.stars] ?? 150).current;
+  const isFirstClear = useRef(useProgressStore.getState().completions[levelId] === undefined).current;
+  const lastPlayedAt = useRef(useProgressStore.getState().lastPlayedAt[levelId]).current;
+  const pointsEarned = useRef(calcActualPoints(data.stars, isFirstClear, lastPlayedAt)).current;
   const rewarded = useRef(false);
   const oldDomainPct = useRef(useBrainStore.getState().domains[data.type]).current;
 
@@ -125,9 +136,10 @@ export function WinScreen({ data, levelId, onExit }: Props) {
 
     // POP! splash — runs first, content reveals after
     Animated.sequence([
-      Animated.spring(popScale, { toValue: 1, tension: 180, friction: 7, useNativeDriver: true }),
-      Animated.delay(380),
-      Animated.timing(popOpacity, { toValue: 0, duration: 260, useNativeDriver: true }),
+      Animated.spring(popScale, { toValue: 1.15, tension: 260, friction: 5, useNativeDriver: true }),
+      Animated.spring(popScale, { toValue: 1,    tension: 200, friction: 8, useNativeDriver: true }),
+      Animated.delay(340),
+      Animated.timing(popOpacity, { toValue: 0, duration: 240, useNativeDriver: true }),
     ]).start(() => {
       setPopGone(true);
       // Start progress bar after a short pause so content has landed
@@ -148,7 +160,7 @@ export function WinScreen({ data, levelId, onExit }: Props) {
 
       addScore(pointsEarned);
       completeLevel(levelId, data.stars);
-      recordGame(data.type, data.stars);
+      recordGame(data.type, data.stars, levelId, isFirstClear, lastPlayedAt);
       recordPlay();
 
       // Animate score counter: old → old + earned over 1.2s
@@ -192,23 +204,27 @@ export function WinScreen({ data, levelId, onExit }: Props) {
   }, []);
 
   return (
-    <>
-    {/* POP! splash overlay */}
-    {!popGone && (
-      <Animated.View
-        pointerEvents="none"
-        style={[s.popOverlay, { opacity: popOpacity }]}
+    <ImageBackground source={LANDING_BACKGROUND} style={s.root} resizeMode="cover">
+      <View style={s.bgScrim} />
+
+      {/* POP! splash overlay */}
+      {!popGone && (
+        <Animated.View
+          pointerEvents="none"
+          style={[s.popOverlay, { opacity: popOpacity }]}
+        >
+          <Animated.Image
+            source={GAME_ICONS[data.type]}
+            style={[s.popIcon, { transform: [{ scale: popScale }] }]}
+            resizeMode="contain"
+          />
+        </Animated.View>
+      )}
+      <Confetti />
+      <ScrollView
+        contentContainerStyle={s.container}
+        showsVerticalScrollIndicator={false}
       >
-        <Animated.Text style={[s.popText, { transform: [{ scale: popScale }] }]}>
-          POP! 🎉
-        </Animated.Text>
-      </Animated.View>
-    )}
-    <Confetti />
-    <ScrollView
-      contentContainerStyle={s.container}
-      showsVerticalScrollIndicator={false}
-    >
       {/* Stars */}
       <View style={s.starsRow}>
         {[0, 1, 2].map(i => {
@@ -283,26 +299,27 @@ export function WinScreen({ data, levelId, onExit }: Props) {
         />
       </View>
       <Text style={s.progressLbl}>Continuing to Journey...</Text>
-    </ScrollView>
-    </>
+      </ScrollView>
+    </ImageBackground>
   );
 }
 
 const s = StyleSheet.create({
+  root: { flex: 1 },
+  bgScrim: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(255,255,255,0.50)',
+  },
+
   popOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: Colors.bg,
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 99,
   },
-  popText: {
-    fontSize: 64,
-    fontFamily: 'Nunito_900Black',
-    color: '#EC4899',
-    textShadowColor: 'rgba(249,115,22,0.3)',
-    textShadowOffset: { width: 0, height: 4 },
-    textShadowRadius: 12,
+  popIcon: {
+    width: 140,
+    height: 140,
   },
 
   container: {
@@ -311,7 +328,6 @@ const s = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 24,
     paddingVertical: 28,
-    backgroundColor: Colors.bg,
   },
 
   starsRow: {
@@ -322,7 +338,7 @@ const s = StyleSheet.create({
   star: { width: 48, height: 48 },
 
   emoji: {
-    fontSize: 64,
+    fontSize: 76,
     textAlign: 'center',
     marginBottom: 12,
   },

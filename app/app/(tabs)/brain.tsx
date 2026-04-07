@@ -1,10 +1,12 @@
 import { useEffect } from 'react';
-import { ScrollView, View, Text, StyleSheet, DimensionValue, TouchableOpacity, Image } from 'react-native';
+import {
+  ScrollView, View, Text, StyleSheet,
+  DimensionValue, TouchableOpacity, Image, ImageBackground,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { TopBar } from '../../components/layout/TopBar';
-import { Pill } from '../../components/ui/Pill';
 import { Colors } from '../../constants/colors';
 import { usePlayerStore } from '../../stores/playerStore';
 import { useBrainStore, type GameType } from '../../stores/brainStore';
@@ -15,12 +17,37 @@ const DOMAIN_META: Array<{
   icon: any;
   label: string;
   color: string;
+  gradStart: string;
+  gradEnd: string;
+  tint: string;
 }> = [
-  { key: 'memory',  icon: require('../../assets/icons/icon-memory.png'),  label: 'Memory',  color: Colors.gold },
-  { key: 'speed',   icon: require('../../assets/icons/icon-speed.png'),   label: 'Speed',   color: Colors.coral },
-  { key: 'logic',   icon: require('../../assets/icons/icon-logic.png'),   label: 'Logic',   color: Colors.teal },
-  { key: 'pattern', icon: require('../../assets/icons/icon-pattern.png'), label: 'Pattern', color: Colors.purple },
+  {
+    key: 'memory',  icon: require('../../assets/icons/icon-memory.png'),
+    label: 'Memory',  color: '#FF8A00',
+    gradStart: '#FF8A00', gradEnd: '#FFC857',
+    tint: 'rgba(255,138,0,0.10)',
+  },
+  {
+    key: 'speed',   icon: require('../../assets/icons/icon-speed.png'),
+    label: 'Speed',   color: '#E8460A',
+    gradStart: '#FFC857', gradEnd: '#FFE47A',
+    tint: 'rgba(255,200,87,0.14)',
+  },
+  {
+    key: 'logic',   icon: require('../../assets/icons/icon-logic.png'),
+    label: 'Logic',   color: '#2EC4B6',
+    gradStart: '#2EC4B6', gradEnd: '#7EEEE6',
+    tint: 'rgba(46,196,182,0.12)',
+  },
+  {
+    key: 'pattern', icon: require('../../assets/icons/icon-pattern.png'),
+    label: 'Pattern', color: '#7A5CFF',
+    gradStart: '#7A5CFF', gradEnd: '#B19EFF',
+    tint: 'rgba(122,92,255,0.10)',
+  },
 ];
+
+const SCREEN_BACKGROUND = require('../../assets/landing-background.png');
 
 const COACH_TIPS: Record<GameType, string[]> = {
   memory: [
@@ -65,7 +92,6 @@ const COACH_TIPS: Record<GameType, string[]> = {
   ],
 };
 
-// Pick a tip that rotates daily so it doesn't feel stale
 function pickTip(tips: string[]): string {
   const dayIndex = Math.floor(Date.now() / 86_400_000);
   return tips[dayIndex % tips.length];
@@ -82,269 +108,342 @@ export default function BrainScreen() {
 
   const weeklyDelta = score - weeklyBaseline;
 
-  // Weakest of the 4 playable domains
   const weakestKey = (['memory', 'speed', 'logic', 'pattern'] as GameType[])
     .sort((a, b) => domains[a] - domains[b])[0];
 
   const coachTip = pickTip(COACH_TIPS[weakestKey]);
 
   return (
-    <SafeAreaView style={s.container} edges={['top']}>
-      <TopBar />
+    <ImageBackground source={SCREEN_BACKGROUND} style={s.screen} resizeMode="cover">
+      <View style={s.bgScrim} />
+    <SafeAreaView style={s.safe} edges={['top']}>
+      <TopBar compact />
+
       <ScrollView
         style={s.scroll}
         contentContainerStyle={s.content}
         showsVerticalScrollIndicator={false}
       >
-        {/* Sign-in banner (guest users) */}
+
+        {/* ── Sign-in banner ─────────────────────────────────────────────── */}
         {!isLoggedIn && (
-          <TouchableOpacity onPress={() => router.push('/auth')} activeOpacity={0.88} style={s.signInBannerWrap}>
+          <TouchableOpacity onPress={() => router.push('/auth')} activeOpacity={0.88} style={s.card}>
             <LinearGradient
-              colors={['rgba(255,107,53,0.12)', 'rgba(212,0,106,0.10)']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={s.signInBanner}
+              colors={['rgba(122,92,255,0.10)', 'rgba(122,92,255,0.05)']}
+              start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+              style={s.signInInner}
             >
-              <View style={s.signInLeft}>
-                <Image source={require('../../assets/icons/icon-lock.png')} style={s.signInEmoji} resizeMode="contain" />
-                <View>
-                  <Text style={s.signInTitle}>Save your progress</Text>
-                  <Text style={s.signInSub}>Sign in to keep your score & stats across devices</Text>
-                </View>
+              <View style={[s.iconBubble, { backgroundColor: 'rgba(122,92,255,0.12)' }]}>
+                <Image source={require('../../assets/icons/icon-lock.png')} style={s.signInIco} resizeMode="contain" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={s.signInTitle}>Save your progress</Text>
+                <Text style={s.signInSub}>Sign in to keep your score & stats across devices</Text>
               </View>
               <Text style={s.signInCta}>Sign In →</Text>
             </LinearGradient>
           </TouchableOpacity>
         )}
 
-        {/* Logged-in account row */}
+        {/* ── Account row ────────────────────────────────────────────────── */}
         {isLoggedIn && name && (
           <View style={s.accountRow}>
-            <Text style={s.accountTxt}>Signed in as <Text style={{ color: Colors.teal }}>{name}</Text></Text>
+            <Text style={s.accountTxt}>Signed in as <Text style={{ color: '#2EC4B6', fontFamily: 'Nunito_700Bold' }}>{name}</Text></Text>
             <TouchableOpacity onPress={logout} activeOpacity={0.7}>
               <Text style={s.logoutTxt}>Log out</Text>
             </TouchableOpacity>
           </View>
         )}
 
-        {/* Miles Hero */}
-        <LinearGradient
-          colors={['#FFF0E0', '#FFE0C0']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={s.scoreHero}
-        >
-          <Text style={s.scoreNum}>{score.toLocaleString()}</Text>
-          <View>
-            <Text style={s.scoreLbl}>⭐ This Week</Text>
-            <Text style={s.scoreWeek}>
-              {weeklyDelta >= 0 ? `↑ +${weeklyDelta}` : `↓ ${weeklyDelta}`} this week
-            </Text>
-          </View>
-        </LinearGradient>
+        {/* ── Score hero card ────────────────────────────────────────────── */}
+        <View style={[s.card, s.heroCard]}>
+          <LinearGradient
+            colors={['#824703', '#FFC857']}
+            start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+            style={s.heroGradient}
+          >
+            <View>
+              <Text style={s.heroLabel}>TOTAL SCORE</Text>
+              <Text style={s.heroScore}>{score.toLocaleString()}</Text>
+            </View>
+            <View style={s.heroRight}>
+              <View style={s.weekBadge}>
+                <Text style={s.weekBadgeTxt}>
+                  {weeklyDelta >= 0 ? `↑ +${weeklyDelta}` : `↓ ${Math.abs(weeklyDelta)}`}
+                </Text>
+              </View>
+              <Text style={s.heroWeekLbl}>this week</Text>
+            </View>
+          </LinearGradient>
+        </View>
 
+        {/* ── Streak card ────────────────────────────────────────────────── */}
+        <View style={[s.card, { overflow: 'hidden' }]}>
+          <LinearGradient
+            colors={['#FF8A00', '#FF5DA2']}
+            start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+            style={s.streakGradient}
+          >
+            <View style={s.streakIcoBubble}>
+              <Image source={require('../../assets/icons/icon-flame.png')} style={s.streakIco} resizeMode="contain" />
+            </View>
+            <View>
+              <Text style={s.streakLbl}>Day Streak</Text>
+              <Text style={s.streakNum}>{streak} days</Text>
+            </View>
+            <Text style={s.streakFlair}>🔥</Text>
+          </LinearGradient>
+        </View>
+
+        {/* ── Strengths card ─────────────────────────────────────────────── */}
         <Text style={s.sectionLbl}>Your Strengths</Text>
-        <View style={s.domainList}>
-          {DOMAIN_META.map(d => {
+        <View style={s.card}>
+          {DOMAIN_META.map((d, i) => {
             const pct = domains[d.key];
             return (
-              <View key={d.label} style={s.drow}>
-                <Image source={d.icon} style={s.dico} resizeMode="contain" />
-                <Text style={s.dlbl}>{d.label}</Text>
-                <View style={s.dtrack}>
-                  <View
-                    style={[s.dfill, {
-                      width: `${pct}%` as DimensionValue,
-                      backgroundColor: d.color,
-                    }]}
-                  />
+              <View key={d.key} style={[s.drow, i < DOMAIN_META.length - 1 && s.drowBorder]}>
+                <View style={[s.iconBubble, { backgroundColor: d.tint }]}>
+                  <Image source={d.icon} style={s.dico} resizeMode="contain" />
                 </View>
-                <Text style={[s.dpct, { color: d.color }]}>{pct}%</Text>
+                <View style={s.dInfo}>
+                  <View style={s.dTopRow}>
+                    <Text style={s.dlbl}>{d.label}</Text>
+                    <Text style={[s.dpct, { color: d.color }]}>{pct}%</Text>
+                  </View>
+                  <View style={s.dtrack}>
+                    <View style={{ width: `${pct}%` as DimensionValue, height: '100%', backgroundColor: d.color, borderRadius: 6 }} />
+                  </View>
+                </View>
               </View>
             );
           })}
         </View>
 
-        {/* Coach Tip */}
-        <LinearGradient
-          colors={['#FFF0E0', '#FFE0C0']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={s.tipCard}
-        >
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-            <Image source={require('../../assets/icons/icon-hint.png')} style={{ width: 32, height: 32 }} resizeMode="contain" />
-            <Text style={s.tipLbl}>Coach Tip</Text>
+        {/* ── Coach tip card ─────────────────────────────────────────────── */}
+        <Text style={s.sectionLbl}>Coach Tip</Text>
+        <View style={[s.card, s.tipCard]}>
+          <View style={s.tipAccent} />
+          <View style={s.tipInner}>
+            <View style={s.tipHeader}>
+              <Image source={require('../../assets/icons/icon-hint.png')} style={s.tipIco} resizeMode="contain" />
+              <Text style={s.tipLbl}>Today's insight</Text>
+            </View>
+            <Text style={s.tipTxt}>{coachTip}</Text>
           </View>
-          <Text style={s.tipTxt}>{coachTip}</Text>
-        </LinearGradient>
+        </View>
 
-        {/* Streak Card */}
-        <LinearGradient
-          colors={['rgba(239,71,111,0.15)', 'rgba(155,93,229,0.1)']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={s.streakCard}
-        >
-          <Image source={require('../../assets/icons/icon-flame.png')} style={s.streakIco} resizeMode="contain" />
-          <View>
-            <Text style={s.streakLbl}>Day Streak</Text>
-            <Text style={s.streakNum}>{streak} days</Text>
-          </View>
-        </LinearGradient>
       </ScrollView>
     </SafeAreaView>
+    </ImageBackground>
   );
 }
 
-const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.bg },
-  scroll: { flex: 1 },
-  content: { paddingHorizontal: 20, paddingBottom: 40 },
+const CARD_SHADOW = {
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: 6 },
+  shadowOpacity: 0.08,
+  shadowRadius: 20,
+  elevation: 4,
+};
 
-  signInBannerWrap: { marginBottom: 14 },
-  signInBanner: {
-    borderRadius: 16,
-    padding: 14,
+const s = StyleSheet.create({
+  screen: { flex: 1 },
+  bgScrim: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(255,255,255,0.50)' },
+  safe: { flex: 1 },
+  scroll: { flex: 1 },
+  content: { paddingHorizontal: 16, paddingBottom: 100, gap: 10 },
+
+  // ── Sign-in banner ───────────────────────────────────────────────────────
+  signInInner: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    gap: 12,
+    padding: 16,
     borderWidth: 1,
-    borderColor: 'rgba(255,107,53,0.2)',
+    borderColor: 'rgba(122,92,255,0.18)',
+    borderRadius: 20,
   },
-  signInLeft: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 },
-  signInEmoji: { width: 32, height: 32 },
-  signInTitle: { fontSize: 14, fontFamily: 'Nunito_700Bold', color: Colors.text },
-  signInSub: { fontSize: 11, fontFamily: 'Nunito_400Regular', color: Colors.muted, marginTop: 1 },
-  signInCta: { fontSize: 13, fontFamily: 'Nunito_800ExtraBold', color: Colors.coral },
+  signInIco: { width: 24, height: 24 },
+  signInTitle: { fontSize: 14, fontFamily: 'Nunito_700Bold', color: '#1A1A2E' },
+  signInSub: { fontSize: 11, fontFamily: 'Nunito_400Regular', color: '#888', marginTop: 1 },
+  signInCta: { fontSize: 13, fontFamily: 'Nunito_800ExtraBold', color: '#7A5CFF' },
 
+  // ── Account row ──────────────────────────────────────────────────────────
   accountRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 14,
-    paddingHorizontal: 2,
+    paddingHorizontal: 4,
+    paddingVertical: 4,
   },
-  accountTxt: { fontSize: 13, fontFamily: 'Nunito_400Regular', color: Colors.muted },
-  logoutTxt: { fontSize: 13, fontFamily: 'Nunito_700Bold', color: Colors.coral },
+  accountTxt: { fontSize: 13, fontFamily: 'Nunito_400Regular', color: '#888' },
+  logoutTxt: { fontSize: 13, fontFamily: 'Nunito_700Bold', color: '#E8460A' },
 
-  scoreHero: {
+  // ── Card base ────────────────────────────────────────────────────────────
+  card: {
+    backgroundColor: '#FFFFFF',
     borderRadius: 20,
-    padding: 20,
-    marginBottom: 16,
+    overflow: 'hidden',
+    ...CARD_SHADOW,
+  },
+
+  // ── Icon bubble (used in domain rows) ────────────────────────────────────
+  iconBubble: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  // ── Score hero ───────────────────────────────────────────────────────────
+  heroCard: { marginTop: 4 },
+  heroGradient: {
+    padding: 18,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 16,
+    justifyContent: 'space-between',
   },
-  scoreNum: {
-    fontSize: 52,
-    fontFamily: 'Nunito_900Black',
-    color: Colors.gold,
-    lineHeight: 56,
-  },
-  scoreLbl: {
-    fontSize: 12,
+  heroLabel: {
+    fontSize: 11,
     fontFamily: 'Nunito_700Bold',
+    color: 'rgba(255,255,255,0.80)',
+    letterSpacing: 1.4,
     textTransform: 'uppercase',
-    letterSpacing: 1,
-    color: Colors.muted,
-    marginBottom: 2,
+    marginBottom: 4,
   },
-  scoreRank: {
-    fontSize: 14,
+  heroScore: {
+    fontSize: 48,
+    fontFamily: 'Nunito_900Black',
+    color: '#FFFFFF',
+    lineHeight: 52,
+  },
+  heroRight: { alignItems: 'flex-end', gap: 6 },
+  weekBadge: {
+    backgroundColor: 'rgba(120,50,0,0.30)',
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+  },
+  weekBadgeTxt: {
+    fontSize: 15,
+    fontFamily: 'Nunito_900Black',
+    color: '#FFFFFF',
+  },
+  heroWeekLbl: {
+    fontSize: 11,
     fontFamily: 'Nunito_700Bold',
-    color: Colors.teal,
-  },
-  scoreWeek: {
-    fontSize: 13,
-    fontFamily: 'Nunito_400Regular',
-    color: Colors.muted,
-    marginTop: 2,
+    color: 'rgba(120,50,0,0.75)',
+    letterSpacing: 0.5,
   },
 
+  // ── Section label ────────────────────────────────────────────────────────
   sectionLbl: {
-    fontSize: 12,
+    fontSize: 11,
     fontFamily: 'Nunito_700Bold',
     textTransform: 'uppercase',
-    letterSpacing: 1,
-    color: Colors.muted,
-    marginBottom: 12,
+    letterSpacing: 1.2,
+    color: '#555555',
+    marginLeft: 4,
+    marginBottom: -4,
   },
-  domainList: {
-    gap: 13,
-    marginBottom: 20,
-  },
+
+  // ── Domain rows ──────────────────────────────────────────────────────────
   drow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 11,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    gap: 12,
   },
-  dico: {
-    width: 48,
-    height: 48,
+  drowBorder: {
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0,0,0,0.05)',
+  },
+  dico: { width: 26, height: 26 },
+  dInfo: { flex: 1, gap: 7 },
+  dTopRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   dlbl: {
-    fontSize: 16,
+    fontSize: 15,
     fontFamily: 'Nunito_700Bold',
-    color: Colors.text,
-    width: 90,
-  },
-  dtrack: {
-    flex: 1,
-    height: 16,
-    backgroundColor: 'rgba(0,0,0,0.08)',
-    borderRadius: 8,
-    overflow: 'hidden',
-  },
-  dfill: {
-    height: '100%',
-    borderRadius: 8,
+    color: '#1A1A2E',
   },
   dpct: {
-    fontSize: 17,
-    fontFamily: 'Nunito_800ExtraBold',
-    color: Colors.gold,
-    width: 48,
-    textAlign: 'right',
+    fontSize: 15,
+    fontFamily: 'Nunito_900Black',
+  },
+  dtrack: {
+    width: '100%',
+    height: 10,
+    backgroundColor: 'rgba(0,0,0,0.06)',
+    borderRadius: 6,
+    overflow: 'hidden',
   },
 
+  // ── Coach tip ────────────────────────────────────────────────────────────
   tipCard: {
-    borderRadius: 20,
-    padding: 20,
-    marginBottom: 16,
+    flexDirection: 'row',
+    backgroundColor: '#FFF9E6',
+    ...CARD_SHADOW,
   },
+  tipAccent: {
+    width: 4,
+    backgroundColor: '#FFC857',
+    borderTopLeftRadius: 20,
+    borderBottomLeftRadius: 20,
+  },
+  tipInner: { flex: 1, padding: 14 },
+  tipHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 6 },
+  tipIco: { width: 28, height: 28 },
   tipLbl: {
-    fontSize: 14,
+    fontSize: 11,
     fontFamily: 'Nunito_700Bold',
-    color: Colors.gold,
     textTransform: 'uppercase',
-    letterSpacing: 1,
+    letterSpacing: 1.2,
+    color: '#9A6F00',
   },
   tipTxt: {
-    fontSize: 16,
+    fontSize: 15,
     fontFamily: 'Nunito_400Regular',
-    color: Colors.text,
-    lineHeight: 24,
+    color: '#3D2800',
+    lineHeight: 23,
   },
 
-  streakCard: {
-    borderRadius: 14,
-    padding: 16,
+  // ── Streak ───────────────────────────────────────────────────────────────
+  streakGradient: {
     flexDirection: 'row',
     alignItems: 'center',
+    padding: 16,
     gap: 14,
-    borderWidth: 1,
-    borderColor: 'rgba(239,71,111,0.2)',
   },
-  streakIco: { width: 48, height: 48 },
+  streakIcoBubble: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(255,255,255,0.20)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  streakIco: { width: 30, height: 30 },
   streakLbl: {
-    fontSize: 12,
+    fontSize: 11,
     fontFamily: 'Nunito_700Bold',
-    color: Colors.muted,
+    color: 'rgba(255,255,255,0.80)',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    marginBottom: 2,
   },
   streakNum: {
-    fontSize: 26,
+    fontSize: 28,
     fontFamily: 'Nunito_900Black',
-    color: Colors.coral,
+    color: '#FFFFFF',
+  },
+  streakFlair: {
+    marginLeft: 'auto',
+    fontSize: 36,
   },
 });

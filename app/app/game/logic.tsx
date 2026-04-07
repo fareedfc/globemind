@@ -197,7 +197,7 @@ export default function LogicGame() {
   if (failed) {
     return (
       <SafeAreaView style={s.container} edges={['top', 'bottom']}>
-        <FailScreen onTryAgain={resetGame} onExit={() => router.replace('/(tabs)/journey')} />
+        <FailScreen type="logic" onTryAgain={resetGame} onExit={() => router.replace('/(tabs)/journey')} />
       </SafeAreaView>
     );
   }
@@ -360,7 +360,7 @@ const s = StyleSheet.create({
   cellOk: { borderColor: Colors.teal, backgroundColor: 'rgba(6,214,160,0.2)' },
   cellErr: { borderColor: Colors.coral, backgroundColor: 'rgba(239,71,111,0.15)' },
   cellDim: { opacity: 0.35 },
-  cellEmoji: { fontSize: 52 },
+  cellEmoji: { fontSize: 60 },
 
   roundLbl: { marginTop: 28, fontSize: 12, fontFamily: 'Nunito_700Bold', color: Colors.muted, alignSelf: 'center' },
 });

@@ -211,7 +211,7 @@ export default function MemoryGame() {
   if (failed) {
     return (
       <SafeAreaView style={s.container} edges={['top', 'bottom']}>
-        <FailScreen onTryAgain={resetGame} onExit={() => router.replace('/(tabs)/journey')} />
+        <FailScreen type="memory" onTryAgain={resetGame} onExit={() => router.replace('/(tabs)/journey')} />
       </SafeAreaView>
     );
   }
@@ -328,8 +328,8 @@ const s = StyleSheet.create({
   cardDown: { backgroundColor: 'rgba(0,0,0,0.06)', borderWidth: 1.5, borderColor: Colors.border },
   cardUp: { backgroundColor: 'rgba(6,214,160,0.15)', borderWidth: 2, borderColor: Colors.teal },
   cardMatched: { opacity: 0.55 },
-  emojiDown: { fontSize: 20, color: 'rgba(31,41,55,0.3)', fontFamily: 'Nunito_900Black' },
-  emojiUp: { fontSize: 26 },
+  emojiDown: { fontSize: 24, color: 'rgba(31,41,55,0.3)', fontFamily: 'Nunito_900Black' },
+  emojiUp: { fontSize: 32 },
 
   pips: { flexDirection: 'row', justifyContent: 'center', gap: 7, paddingVertical: 8 },
   pip: { width: 10, height: 10, borderRadius: 5, backgroundColor: 'rgba(0,0,0,0.1)' },

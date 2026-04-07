@@ -2,14 +2,16 @@ import { View, Image, StyleSheet } from 'react-native';
 
 interface Props {
   right?: React.ReactNode;
+  compact?: boolean;
 }
 
-export function TopBar({ right }: Props) {
+export function TopBar({ right, compact }: Props) {
+  const centered = !right;
   return (
-    <View style={[s.bar, !right && s.barCentered]}>
+    <View style={[s.bar, centered && s.barCentered]}>
       <Image
         source={require('../../assets/icons/logo-thinkpop.png')}
-        style={[s.logo, !right && s.logoCentered]}
+        style={[s.logo, centered && s.logoCentered, compact && s.logoCompact]}
         resizeMode="contain"
       />
       {right ? <View style={s.right}>{right}</View> : null}
@@ -36,6 +38,11 @@ const s = StyleSheet.create({
   logoCentered: {
     width: 220,
     height: 96,
+  },
+  logoCompact: {
+    width: 130,
+    height: 48,
+    alignSelf: 'center',
   },
   right: {
     flexDirection: 'row',

@@ -1,16 +1,19 @@
 import { useEffect, useRef } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Animated } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Animated, ImageBackground } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { Colors } from '../../constants/colors';
 import { usePlayerStore } from '../../stores/playerStore';
+import { useBrainStore, type GameType } from '../../stores/brainStore';
 
 interface Props {
+  type: GameType;
   onTryAgain: () => void;
   onExit: () => void;
 }
 
-export function FailScreen({ onTryAgain, onExit }: Props) {
+export function FailScreen({ type, onTryAgain, onExit }: Props) {
   const { useLive } = usePlayerStore();
+  const { recordFail } = useBrainStore();
   // The "almost pop" bubble
   const bubbleScale = useRef(new Animated.Value(0)).current;
   const bubbleOpacity = useRef(new Animated.Value(1)).current;
@@ -26,7 +29,8 @@ export function FailScreen({ onTryAgain, onExit }: Props) {
 
   useEffect(() => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    useLive(); // deduct a life on failure
+    useLive();
+    recordFail(type);
 
     // 1. Bubble springs up to 0.85 — almost there but not quite
     Animated.sequence([
@@ -105,7 +109,8 @@ export function FailScreen({ onTryAgain, onExit }: Props) {
   });
 
   return (
-    <View style={s.container}>
+    <ImageBackground source={require('../../assets/landing-background.png')} style={s.container} resizeMode="cover">
+      <View style={s.bgScrim} />
       {/* Almost-pop bubble */}
       <Animated.Text
         style={[
@@ -154,7 +159,7 @@ export function FailScreen({ onTryAgain, onExit }: Props) {
           <Text style={s.btnSecondaryTxt}>Back to Journey</Text>
         </TouchableOpacity>
       </Animated.View>
-    </View>
+    </ImageBackground>
   );
 }
 
@@ -164,7 +169,10 @@ const s = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 28,
-    backgroundColor: Colors.bg,
+  },
+  bgScrim: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(255,255,255,0.50)',
   },
 
   bubble: {

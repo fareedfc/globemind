@@ -6,7 +6,8 @@ import { getCurrentUserId } from '../lib/userId';
 
 interface ProgressState {
   currentLevelId: number;
-  completions: Record<number, number>; // levelId → stars earned
+  completions: Record<number, number>;   // levelId → best stars earned
+  lastPlayedAt: Record<number, number>;  // levelId → timestamp (ms)
   completeLevel: (id: number, stars: number) => void;
 }
 
@@ -15,12 +16,17 @@ export const useProgressStore = create<ProgressState>()(
     (set, get) => ({
       currentLevelId: 4,
       completions: { 1: 3, 2: 3, 3: 2 },
+      lastPlayedAt: {},
 
       completeLevel: (id, stars) => {
         set((s) => ({
           completions: {
             ...s.completions,
             [id]: Math.max(stars, s.completions[id] ?? 0),
+          },
+          lastPlayedAt: {
+            ...s.lastPlayedAt,
+            [id]: Date.now(),
           },
           currentLevelId: Math.max(s.currentLevelId, id + 1),
         }));

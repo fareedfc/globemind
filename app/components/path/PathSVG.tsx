@@ -1,46 +1,56 @@
 import Svg, { Path } from 'react-native-svg';
 import { POS } from '../../data/levels';
-import { PATH_HEIGHT } from '../../constants/config';
+import { MAP_WIDTH, MAP_HEIGHT } from '../../constants/config';
 
-interface Props {
-  width: number;
-}
-
-// One path-data string from a slice of the 50 POS points
+// One path-data string — horizontal bezier: tangents flow rightward
 function buildSegment(pts: { x: number; y: number }[]): string {
   if (pts.length < 2) return '';
   let d = `M${pts[0].x.toFixed(1)} ${pts[0].y.toFixed(1)}`;
   for (let i = 1; i < pts.length; i++) {
     const p = pts[i - 1];
     const q = pts[i];
-    const cx = (p.x + q.x) / 2;
-    d += ` C${cx.toFixed(1)} ${p.y.toFixed(1)},${cx.toFixed(1)} ${q.y.toFixed(1)},${q.x.toFixed(1)} ${q.y.toFixed(1)}`;
+    const dx = q.x - p.x;
+    // Control points use half the x-delta so curves flow smoothly rightward
+    d += ` C${(p.x + dx * 0.5).toFixed(1)} ${p.y.toFixed(1)},${(q.x - dx * 0.5).toFixed(1)} ${q.y.toFixed(1)},${q.x.toFixed(1)} ${q.y.toFixed(1)}`;
   }
   return d;
 }
 
 // World road colours (slightly transparent so bg shows through)
 const WORLD_COLORS = [
-  'rgba(74, 222, 128, 0.75)',   // W1 Forest  · green
-  'rgba(56, 189, 248, 0.75)',   // W2 Ocean   · sky blue
-  'rgba(251, 191, 36, 0.80)',   // W3 Desert  · amber
-  'rgba(167, 139, 250, 0.75)',  // W4 Mountain· purple
-  'rgba(99, 229, 213, 0.80)',   // W5 Space   · cyan-teal
+  'rgba(74, 222, 128, 0.75)',   // W1  Forest       · green
+  'rgba(56, 189, 248, 0.75)',   // W2  Ocean        · sky blue
+  'rgba(251, 191, 36, 0.80)',   // W3  Desert       · amber
+  'rgba(167, 139, 250, 0.75)',  // W4  Mountain     · purple
+  'rgba(99, 229, 213, 0.80)',   // W5  Space        · cyan-teal
+  'rgba(14, 116, 144, 0.80)',   // W6  Deep Ocean   · deep teal
+  'rgba(239, 68, 68, 0.78)',    // W7  Volcanic     · red
+  'rgba(186, 230, 253, 0.85)',  // W8  Arctic       · ice blue
+  'rgba(217, 119, 6, 0.78)',    // W9  Ancient Ruins· warm gold
+  'rgba(168, 85, 247, 0.80)',   // W10 Cosmic Finale· deep purple
 ];
 
-// World 1: indices 0-9, W2: 9-19 (shared endpoint = seamless join), etc.
+// Shared endpoints create seamless joins between worlds
 const WORLD_RANGES: [number, number][] = [
-  [0, 10],
-  [9, 20],
+  [0,  10],
+  [9,  20],
   [19, 30],
   [29, 40],
   [39, 50],
+  [49, 60],
+  [59, 70],
+  [69, 80],
+  [79, 90],
+  [89, 101],
 ];
 
-export function PathSVG({ width }: Props) {
-  const W = width;
-  const H = PATH_HEIGHT;
-  const pts = POS.map(p => ({ x: p.x * W, y: p.y * H }));
+interface Props {
+  width?: number;
+  height?: number;
+}
+
+export function PathSVG({ width = MAP_WIDTH, height = MAP_HEIGHT }: Props) {
+  const pts = POS.map(p => ({ x: p.x * width, y: p.y * height }));
 
   // Build per-world segment paths
   const segments = WORLD_RANGES.map(([from, to]) => buildSegment(pts.slice(from, to)));
@@ -51,8 +61,8 @@ export function PathSVG({ width }: Props) {
   return (
     <Svg
       style={{ position: 'absolute', top: 0, left: 0 }}
-      width={W}
-      height={H}
+      width={width}
+      height={height}
     >
       {/* Drop shadow (single wide stroke behind everything) */}
       <Path

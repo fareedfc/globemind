@@ -298,7 +298,7 @@ const s = StyleSheet.create({
 
   prompt: { flex: 1, justifyContent: 'center', gap: 14 },
   findLbl: { fontSize: 12, fontFamily: 'Nunito_700Bold', textTransform: 'uppercase', letterSpacing: 1.5, color: Colors.muted, alignSelf: 'center' },
-  target: { fontSize: 62, lineHeight: 72, alignSelf: 'center' },
+  target: { fontSize: 74, lineHeight: 84, alignSelf: 'center' },
   comboTxt: { fontSize: 13, fontFamily: 'Nunito_700Bold', color: Colors.gold, height: 20, alignSelf: 'center' },
 
   grid: {
@@ -326,7 +326,7 @@ const s = StyleSheet.create({
   optInner: { alignItems: 'center', justifyContent: 'center' },
   optCorrect: { borderColor: Colors.teal, backgroundColor: 'rgba(6,214,160,0.15)' },
   optWrong: { borderColor: Colors.coral, backgroundColor: 'rgba(239,71,111,0.15)' },
-  optTxt: { fontSize: 30 },
+  optTxt: { fontSize: 36 },
 
   startBtn: {
     marginTop: 16,

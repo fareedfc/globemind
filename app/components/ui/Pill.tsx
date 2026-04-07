@@ -1,12 +1,13 @@
 import { View, Text, Image, StyleSheet } from 'react-native';
 import { Colors } from '../../constants/colors';
 
-type Variant = 'gold' | 'red' | 'teal';
+type Variant = 'gold' | 'red' | 'teal' | 'warm';
 
 const VARIANTS: Record<Variant, { bg: string; color: string }> = {
   gold: { bg: 'rgba(245,158,11,0.15)', color: Colors.gold },
-  red: { bg: 'rgba(255,92,53,0.15)', color: Colors.coral },
-  teal: { bg: 'rgba(0,201,167,0.15)', color: Colors.teal },
+  red:  { bg: 'rgba(255,92,53,0.15)',  color: Colors.coral },
+  teal: { bg: 'rgba(0,201,167,0.15)',  color: Colors.teal },
+  warm: { bg: '#FFE0C0',               color: '#C25E00' },
 };
 
 export function Pill({ variant, label, icon }: { variant: Variant; label: string; icon?: any }) {

@@ -41,7 +41,7 @@ function PatternChoiceBtn({ choice, style, onPress, disabled, txtStyle, isCorrec
     onPress();
   };
   return (
-    <TouchableOpacity onPress={handlePress} disabled={disabled} activeOpacity={1} style={{ flex: 1 }}>
+    <TouchableOpacity onPress={handlePress} disabled={disabled} activeOpacity={1} style={s.choiceWrap}>
       <Animated.View style={[style, { transform: [{ scale }] }]}>
         <Text style={txtStyle}>{choice}</Text>
       </Animated.View>
@@ -231,7 +231,7 @@ export default function PatternGame() {
   if (failed) {
     return (
       <SafeAreaView style={s.container} edges={['top', 'bottom']}>
-        <FailScreen onTryAgain={resetGame} onExit={() => router.replace('/(tabs)/journey')} />
+        <FailScreen type="pattern" onTryAgain={resetGame} onExit={() => router.replace('/(tabs)/journey')} />
       </SafeAreaView>
     );
   }
@@ -291,7 +291,6 @@ export default function PatternGame() {
         <View style={s.seq}>
           {round.seq.map((sym, i) => {
             const isLit = phase === 'watching' && litIndex === i;
-            const isDim = phase !== 'watching' && phase !== 'feedback';
             const isFeedbackOk = phase === 'feedback' && feedbackAnswer === round.ans;
             const isFeedbackErr = phase === 'feedback' && feedbackAnswer !== round.ans;
             return (
@@ -300,7 +299,6 @@ export default function PatternGame() {
                 style={[
                   s.sym,
                   isLit && s.symLit,
-                  isDim && s.symDim,
                   isFeedbackOk && s.symOk,
                   isFeedbackErr && s.symErr,
                 ]}
@@ -321,7 +319,7 @@ export default function PatternGame() {
            phase === 'feedback' && feedbackAnswer !== round.ans ? `The answer was ${round.ans}` : ''}
         </Text>
 
-        {/* Choices */}
+        {/* Choices — 2×2 grid */}
         <View style={s.choices}>
           {round.ch.map((choice, i) => {
             const isSelected = feedbackAnswer === choice;
@@ -412,25 +410,24 @@ const s = StyleSheet.create({
     elevation: 2,
   },
   symLit: { borderColor: Colors.teal, backgroundColor: 'rgba(6,214,160,0.2)', transform: [{ scale: 1.15 }] },
-  symDim: { opacity: 0.15 },
   symOk: { borderColor: Colors.teal, backgroundColor: 'rgba(6,214,160,0.2)' },
   symErr: { borderColor: Colors.coral, backgroundColor: 'rgba(239,71,111,0.2)' },
-  symTxt: { fontSize: 20 },
+  symTxt: { fontSize: 24 },
   symQuestion: { borderColor: 'rgba(245,158,11,0.4)', backgroundColor: 'rgba(245,158,11,0.07)' },
   symQuestionTxt: { fontSize: 16, fontFamily: 'Nunito_900Black', color: Colors.gold },
 
   question: { textAlign: 'center', minHeight: 26, marginBottom: 12, fontSize: 13, fontFamily: 'Nunito_700Bold', color: Colors.muted },
 
-  choices: { flexDirection: 'row', gap: 7 },
+  choices: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  choiceWrap: { width: '48%' },
   choice: {
-    paddingVertical: 18,
-    borderRadius: 13,
+    borderRadius: 18,
     borderWidth: 2,
     borderColor: Colors.border,
     backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: 64,
+    height: 110,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.06,
@@ -439,5 +436,5 @@ const s = StyleSheet.create({
   },
   choiceOk: { borderColor: Colors.teal, backgroundColor: 'rgba(6,214,160,0.2)' },
   choiceErr: { borderColor: Colors.coral, backgroundColor: 'rgba(239,71,111,0.15)' },
-  choiceTxt: { fontSize: 26, color: Colors.text },
+  choiceTxt: { fontSize: 48, color: Colors.text },
 });

@@ -10,13 +10,12 @@ import * as Haptics from 'expo-haptics';
 import Purchases, { PURCHASES_ERROR_CODE } from 'react-native-purchases';
 import { Colors } from '../constants/colors';
 import { useLives } from '../hooks/useLives';
-import { usePlayerStore, MAX_LIVES, FREE_DAILY_LEVELS } from '../stores/playerStore';
+import { usePlayerStore, MAX_LIVES } from '../stores/playerStore';
 
 // The product identifier you'll create in App Store Connect
 const PREMIUM_MONTHLY_ID = 'thinkpop_premium_monthly';
 
 const FEATURES = [
-  { label: 'Daily levels',     free: `${FREE_DAILY_LEVELS} per day`, premium: 'Unlimited' },
   { label: 'Lives',            free: `${MAX_LIVES}, slow refill`,   premium: 'Generous refill' },
   { label: 'Strengths',        free: 'Basic summary',               premium: 'Full breakdown' },
   { label: 'Weekly Report',    free: 'Highlights only',             premium: 'Detailed analysis' },
@@ -132,9 +131,9 @@ export default function PaywallScreen() {
           {isDaily ? (
             <>
               <Text style={s.headerEmoji}>📅</Text>
-              <Text style={s.headerTitle}>Daily limit reached</Text>
+              <Text style={s.headerTitle}>Keep going with Premium</Text>
               <Text style={s.headerSub}>
-                Free players get {FREE_DAILY_LEVELS} levels a day. Come back tomorrow — or go unlimited right now.
+                Premium unlocks extra perks and a smoother play experience whenever you want it.
               </Text>
             </>
           ) : (

@@ -2,436 +2,353 @@ import { useState, useRef } from 'react';
 import {
   View,
   Text,
-  ScrollView,
+  Image,
   TouchableOpacity,
   Modal,
   Animated,
   StyleSheet,
-  Dimensions,
   StatusBar,
+  ImageBackground,
+  ScrollView,
+  Dimensions,
 } from 'react-native';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { TopBar } from '../../components/layout/TopBar';
 import { Pill } from '../../components/ui/Pill';
-import { PathSVG } from '../../components/path/PathSVG';
-import { LevelNode } from '../../components/path/LevelNode';
 import { LEVELS, POS, type Level } from '../../data/levels';
 import { Colors } from '../../constants/colors';
-import { PATH_HEIGHT } from '../../constants/config';
-import { usePlayerStore, FREE_DAILY_LEVELS } from '../../stores/playerStore';
+import { MAP_HEIGHT, MAP_WIDTH } from '../../constants/config';
+import { PathSVG } from '../../components/path/PathSVG';
+import { LevelNode } from '../../components/path/LevelNode';
+import { usePlayerStore } from '../../stores/playerStore';
 import { useProgressStore } from '../../stores/progressStore';
 import { useLives } from '../../hooks/useLives';
 
-// Themed decorations per world zone (absolute positions as % of PATH_HEIGHT)
-const WORLD_ZONES = [
-  {
-    label: 'World 1 · Forest',
-    gradColors: ['#F0FDF4', '#DCFCE7'] as [string, string],
-    startFrac: 0.00,
-    endFrac: 0.185,
-    deco: [
-      { emoji: '🌲', left: '8%',  top: '1.5%'  },
-      { emoji: '🌿', left: '85%', top: '2.5%'  },
-      { emoji: '🌳', left: '5%',  top: '8%'    },
-      { emoji: '🍃', left: '90%', top: '12%'   },
-      { emoji: '🌸', left: '10%', top: '15%'   },
-    ],
-  },
-  {
-    label: 'World 2 · Ocean',
-    gradColors: ['#F0F9FF', '#BAE6FD'] as [string, string],
-    startFrac: 0.185,
-    endFrac: 0.360,
-    deco: [
-      { emoji: '🌊', left: '7%',  top: '20%'   },
-      { emoji: '🐚', left: '88%', top: '22%'   },
-      { emoji: '🐠', left: '6%',  top: '27%'   },
-      { emoji: '🦀', left: '88%', top: '31%'   },
-      { emoji: '⛵', left: '12%', top: '34%'   },
-    ],
-  },
-  {
-    label: 'World 3 · Desert',
-    gradColors: ['#FFFBEB', '#FDE68A'] as [string, string],
-    startFrac: 0.360,
-    endFrac: 0.535,
-    deco: [
-      { emoji: '🌵', left: '8%',  top: '38.5%' },
-      { emoji: '☀️', left: '86%', top: '40%'   },
-      { emoji: '🏜️', left: '6%',  top: '45%'   },
-      { emoji: '⭐', left: '87%', top: '49%'   },
-      { emoji: '🦎', left: '10%', top: '52%'   },
-    ],
-  },
-  {
-    label: 'World 4 · Mountain',
-    gradColors: ['#F5F3FF', '#DDD6FE'] as [string, string],
-    startFrac: 0.535,
-    endFrac: 0.708,
-    deco: [
-      { emoji: '⛰️', left: '7%',  top: '56%'   },
-      { emoji: '❄️', left: '87%', top: '57.5%' },
-      { emoji: '🏔️', left: '6%',  top: '63%'   },
-      { emoji: '🦅', left: '87%', top: '66%'   },
-      { emoji: '🌨️', left: '10%', top: '69%'   },
-    ],
-  },
-  {
-    label: 'World 5 · Space',
-    gradColors: ['#EEF2FF', '#C7D2FE'] as [string, string],
-    startFrac: 0.708,
-    endFrac: 1.00,
-    deco: [
-      { emoji: '🌙', left: '8%',  top: '72.5%' },
-      { emoji: '🪐', left: '86%', top: '74%'   },
-      { emoji: '✨', left: '7%',  top: '80%'   },
-      { emoji: '🌟', left: '87%', top: '83%'   },
-      { emoji: '🚀', left: '10%', top: '87%'   },
-    ],
-  },
-];
+const { width: SCREEN_W } = Dimensions.get('window');
 
 const DOMAIN_COLORS: Record<string, string> = {
-  memory: Colors.gold,
-  word: Colors.purple,
-  speed: Colors.coral,
+  memory:  Colors.gold,
+  word:    Colors.purple,
+  speed:   Colors.coral,
   pattern: Colors.teal,
 };
 
+const DOMAIN_ICONS: Record<string, ReturnType<typeof require>> = {
+  memory:  require('../../assets/icons/icon-memory.png'),
+  speed:   require('../../assets/icons/icon-speed.png'),
+  logic:   require('../../assets/icons/icon-logic.png'),
+  pattern: require('../../assets/icons/icon-pattern.png'),
+};
+
+const SCREEN_BACKGROUND = require('../../assets/landing-background.png');
+
+// One background image per world, tiled side-by-side across the horizontal canvas
+const WORLD_BACKGROUNDS = [
+  require('../../assets/worlds/w1-forest.png'),
+  require('../../assets/worlds/w2-ocean.png'),
+  require('../../assets/worlds/w3-desert.png'),
+  require('../../assets/worlds/w4-mountain.png'),
+  require('../../assets/worlds/w5-space.png'),
+  require('../../assets/worlds/w6-deep-ocean.png'),
+  require('../../assets/worlds/w7-volcanic.png'),
+  require('../../assets/worlds/w8-arctic.png'),
+  require('../../assets/worlds/w9-ruins.png'),
+  require('../../assets/worlds/w10-cosmic.png'),
+];
+
+// Horizontal map dimensions
+const MAP_VIEW_WIDTH  = MAP_WIDTH;  // 16000 — full horizontal canvas
+const MAP_VIEW_HEIGHT = MAP_HEIGHT; // 600   — fixed display height
+const WORLD_WIDTH = MAP_VIEW_WIDTH / 10; // each world gets equal share
+
+const WORLD_MARKERS = [
+  { label: 'World 1',  subtitle: 'Warm-up trail',    start: 1  },
+  { label: 'World 2',  subtitle: 'Momentum coast',   start: 11 },
+  { label: 'World 3',  subtitle: 'Focus dunes',      start: 21 },
+  { label: 'World 4',  subtitle: 'Clarity ridge',    start: 31 },
+  { label: 'World 5',  subtitle: 'Space ascent',     start: 41 },
+  { label: 'World 6',  subtitle: 'Deep ocean',       start: 51 },
+  { label: 'World 7',  subtitle: 'Volcanic peaks',   start: 61 },
+  { label: 'World 8',  subtitle: 'Arctic tundra',    start: 71 },
+  { label: 'World 9',  subtitle: 'Ancient ruins',    start: 81 },
+  { label: 'World 10', subtitle: 'Cosmic finale',    start: 91 },
+];
+
 export default function JourneyScreen() {
-  const { score, useLive, isPremium, getDailyLevelsToday, incrementDailyLevels } = usePlayerStore();
+  const { score, useLive, isPremium } = usePlayerStore();
   const { currentLevelId, completions } = useProgressStore();
   const { lives, timeUntilNext } = useLives();
-  const [pathWidth, setPathWidth] = useState(Dimensions.get('window').width - 40);
+
+  const [mapH, setMapH] = useState(MAP_VIEW_HEIGHT);
   const [selectedLevel, setSelectedLevel] = useState<Level | null>(null);
-  const [modalVisible, setModalVisible] = useState(false);
+  const [modalVisible, setModalVisible]   = useState(false);
   const modalAnim = useRef(new Animated.Value(400)).current;
+  const scrollRef = useRef<ScrollView>(null);
+  const hasAutoScrolled = useRef(false);
 
-  // Derive live levels from static data + persisted progress
-  const liveLevels: Level[] = LEVELS.map(l => {
-    const starsEarned = completions[l.id];
-    const done = starsEarned !== undefined;
-    const curr = l.id === currentLevelId;
-    return { ...l, done, curr, stars: starsEarned ?? 0 };
-  });
+  // Build live levels with current completion state
+  const liveLevels: Level[] = LEVELS.map(l => ({
+    ...l,
+    done:  completions[l.id] !== undefined,
+    curr:  l.id === currentLevelId,
+    stars: completions[l.id] ?? 0,
+  }));
 
-  const currentLevel = liveLevels.find(l => l.curr);
-
+  // ── Modal ─────────────────────────────────────────────────────────────────
   const openModal = (level: Level) => {
     setSelectedLevel(level);
     setModalVisible(true);
     modalAnim.setValue(400);
     Animated.spring(modalAnim, {
-      toValue: 0,
-      tension: 80,
-      friction: 10,
-      useNativeDriver: true,
+      toValue: 0, tension: 80, friction: 10, useNativeDriver: true,
     }).start();
   };
 
   const closeModal = () => {
     Animated.timing(modalAnim, {
-      toValue: 400,
-      duration: 200,
-      useNativeDriver: true,
+      toValue: 400, duration: 200, useNativeDriver: true,
     }).start(() => {
       setModalVisible(false);
       setSelectedLevel(null);
     });
   };
 
-  return (
-    <SafeAreaView style={s.container} edges={['top']}>
-      <StatusBar barStyle="dark-content" backgroundColor={Colors.bg} />
-      <TopBar
-        right={
-          <>
-            <Pill variant="gold" icon={require('../../assets/icons/icon-star.png')} label={score.toLocaleString()} />
-            {isPremium
-              ? <Pill variant="gold" icon={require('../../assets/icons/icon-crown.png')} label="Premium" />
-              : <Pill variant="red" icon={require('../../assets/icons/icon-heart.png')} label={`${lives}${timeUntilNext ? ` · ${timeUntilNext}` : ''}`} />
-            }
-          </>
-        }
-      />
+  // Auto-scroll to current level (horizontal)
+  const scrollToCurrent = () => {
+    if (hasAutoScrolled.current) return;
+    const currentPos = POS[Math.max(0, currentLevelId - 1)];
+    if (!currentPos) return;
+    const targetX = Math.max(0, currentPos.x * MAP_VIEW_WIDTH - SCREEN_W / 2);
+    // Small delay so the layout is fully painted before animating
+    setTimeout(() => {
+      scrollRef.current?.scrollTo({ x: targetX, y: 0, animated: true });
+    }, 400);
+    hasAutoScrolled.current = true;
+  };
 
-      <ScrollView
-        style={s.scroll}
-        contentContainerStyle={s.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Vibe Banner */}
+  return (
+    <ImageBackground source={SCREEN_BACKGROUND} style={s.container} resizeMode="cover">
+      <View style={s.bgScrim} />
+      <SafeAreaView style={s.safe} edges={['top']}>
+        <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
+
+        <TopBar
+          right={
+            <>
+              <Pill
+                variant="warm"
+                icon={require('../../assets/icons/icon-star.png')}
+                label={score.toLocaleString()}
+              />
+              {isPremium
+                ? <Pill variant="warm" icon={require('../../assets/icons/icon-crown.png')} label="Premium" />
+                : <Pill variant="warm" icon={require('../../assets/icons/icon-heart.png')} label={`${lives}${timeUntilNext ? ` · ${timeUntilNext}` : ''}`} />
+              }
+            </>
+          }
+        />
+
         <LinearGradient
-          colors={['#FFF0E0', '#FFE0C0']}
+          colors={['#f8ece0', '#FFE0C0']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          style={s.vibeBanner}
+          style={s.banner}
         >
-          <View>
-            <Text style={s.vibeLabel}>Your journey</Text>
-            <Text style={s.vibeTitle}>Level {currentLevelId} of {LEVELS.length} 🌍</Text>
-          </View>
+          <Text style={s.bannerLabel}>Your journey</Text>
+          <Text style={s.bannerTitle}>Level {currentLevelId} of {LEVELS.length} 🌍</Text>
         </LinearGradient>
 
-        {/* Path Container */}
-        <View
-          style={[s.pathContainer, { height: PATH_HEIGHT }]}
-          onLayout={e => setPathWidth(e.nativeEvent.layout.width)}
+        {/* Horizontal map */}
+        <ScrollView
+          ref={scrollRef}
+          horizontal
+          style={s.mapScroll}
+          contentContainerStyle={{ width: MAP_VIEW_WIDTH, height: mapH }}
+          showsHorizontalScrollIndicator={false}
+          onContentSizeChange={scrollToCurrent}
+          onLayout={(e) => setMapH(e.nativeEvent.layout.height)}
         >
-          {/* World zone background bands */}
-          {WORLD_ZONES.map((zone, zi) => (
-            <LinearGradient
-              key={zi}
-              colors={zone.gradColors}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={[
-                s.worldBand,
-                {
-                  top: zone.startFrac * PATH_HEIGHT,
-                  height: (zone.endFrac - zone.startFrac) * PATH_HEIGHT,
-                },
-              ]}
-              pointerEvents="none"
+          {/* 10 world background images tiled side by side */}
+          {WORLD_BACKGROUNDS.map((src, i) => (
+            <Image
+              key={i}
+              source={src}
+              style={{
+                position: 'absolute',
+                left: i * WORLD_WIDTH,
+                top: 0,
+                width: WORLD_WIDTH,
+                height: mapH,
+              }}
+              resizeMode="cover"
             />
           ))}
 
-          {/* World border lines + labels */}
-          {WORLD_ZONES.slice(1).map((zone, zi) => (
-            <View
-              key={`wl-${zi}`}
-              style={[s.worldBorder, { top: zone.startFrac * PATH_HEIGHT }]}
-              pointerEvents="none"
-            >
-              <View style={s.worldBorderLine} />
-              <Text style={s.worldLabel}>{zone.label}</Text>
-            </View>
-          ))}
+          <PathSVG width={MAP_VIEW_WIDTH} height={mapH} />
 
-          {/* World 1 label at top */}
-          <View style={[s.worldBorder, { top: 0 }]} pointerEvents="none">
-            <Text style={[s.worldLabel, { marginTop: 8 }]}>{WORLD_ZONES[0].label}</Text>
-          </View>
-
-          <PathSVG width={pathWidth} />
-
-          {/* Themed decorations per world */}
-          {WORLD_ZONES.map((zone) =>
-            zone.deco.map((d, di) => (
-              <View
-                key={`${zone.label}-${di}`}
-                style={[s.decoWrap, { left: d.left, top: d.top }]}
-                pointerEvents="none"
-              >
-                <Text style={s.deco}>{d.emoji}</Text>
-              </View>
-            ))
-          )}
-
-          {/* Level nodes */}
-          {liveLevels.map((level, i) => {
-            const pos = POS[i];
+          {/* World markers pinned near top of each world zone */}
+          {WORLD_MARKERS.map((world) => {
+            const pos = POS[world.start - 1];
             if (!pos) return null;
+            return (
+              <View
+                key={world.label}
+                style={[
+                  s.worldMarker,
+                  {
+                    left: pos.x * MAP_VIEW_WIDTH - 56,
+                    bottom: 8,
+                  },
+                ]}
+              >
+                <Text style={s.worldLabel}>{world.label}</Text>
+                <Text style={s.worldSub}>{world.subtitle}</Text>
+              </View>
+            );
+          })}
+
+          {liveLevels.map((level, index) => {
+            const pos = POS[index];
             return (
               <LevelNode
                 key={level.id}
                 level={level}
-                x={pos.x * pathWidth}
-                y={pos.y * PATH_HEIGHT}
+                x={pos.x * MAP_VIEW_WIDTH}
+                y={pos.y * mapH}
                 onPress={openModal}
               />
             );
           })}
-        </View>
+        </ScrollView>
 
-        {/* Milestone banner */}
-        <View style={s.milestone}>
-          <Text style={{ fontSize: 16 }}>🌅</Text>
-          <Text style={s.milestoneText}>Keep going — new challenges ahead</Text>
-        </View>
+        <Modal
+          visible={modalVisible}
+          transparent
+          animationType="none"
+          onRequestClose={closeModal}
+          statusBarTranslucent
+        >
+          <TouchableOpacity style={s.overlay} activeOpacity={1} onPress={closeModal}>
+            <Animated.View style={[s.modal, { transform: [{ translateY: modalAnim }] }]}>
+              <TouchableOpacity activeOpacity={1} onPress={() => {}}>
+                <View style={s.dragHandle} />
 
-        {/* Locked hint */}
-        <View style={s.lockedHint}>
-          <Text style={{ fontSize: 22, opacity: 0.25 }}>🔒</Text>
-          <Text style={s.lockedHintText}>More adventures unlocking soon</Text>
-        </View>
-      </ScrollView>
+                <View style={s.modalRow}>
+                  <Text style={s.modalIco}>{selectedLevel?.e}</Text>
+                  <Text style={s.modalTitle}>Level {selectedLevel?.id}</Text>
+                </View>
 
-      {/* Level Modal (bottom sheet) */}
-      <Modal
-        visible={modalVisible}
-        transparent
-        animationType="none"
-        onRequestClose={closeModal}
-        statusBarTranslucent
-      >
-        <TouchableOpacity style={s.overlay} activeOpacity={1} onPress={closeModal}>
-          <Animated.View
-            style={[s.modal, { transform: [{ translateY: modalAnim }] }]}
-          >
-            <TouchableOpacity activeOpacity={1} onPress={() => {}}>
-              <View style={s.dragHandle} />
-              <View style={s.modalRow}>
-                <Text style={s.modalIco}>{selectedLevel?.e}</Text>
-                <Text style={s.modalTitle}>Level {selectedLevel?.id}</Text>
-              </View>
-              <Text style={[s.modalDomain, { color: DOMAIN_COLORS[selectedLevel?.type ?? ''] ?? Colors.text }]}>
-                🧠 {selectedLevel?.domain}
-              </Text>
-              <Text style={s.modalDesc}>{selectedLevel?.desc}</Text>
-              <TouchableOpacity
-                activeOpacity={0.85}
-                onPress={() => {
-                  closeModal();
-                  if (!isPremium && getDailyLevelsToday() >= FREE_DAILY_LEVELS) {
-                    router.push('/paywall?reason=daily');
-                  } else if (!isPremium && lives === 0) {
-                    router.push('/paywall?reason=lives');
-                  } else {
+                <View style={s.modalDomainRow}>
+                  {DOMAIN_ICONS[selectedLevel?.type ?? ''] && (
+                    <Image
+                      source={DOMAIN_ICONS[selectedLevel?.type ?? '']}
+                      style={s.modalDomainIcon}
+                      resizeMode="contain"
+                    />
+                  )}
+                  <Text style={[s.modalDomain, { color: DOMAIN_COLORS[selectedLevel?.type ?? ''] ?? Colors.text }]}>
+                    {selectedLevel?.domain}
+                  </Text>
+                </View>
+                <Text style={s.modalDesc}>{selectedLevel?.desc}</Text>
+
+                <TouchableOpacity
+                  activeOpacity={0.85}
+                  onPress={() => {
+                    closeModal();
+                    // TODO: restore lives gate before shipping
                     useLive();
-                    incrementDailyLevels();
                     router.push(`/game/${selectedLevel?.type}?levelId=${selectedLevel?.id}`);
-                  }
-                }}
-              >
-                <LinearGradient
-                  colors={['#FFAA00', '#FF8C00']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={s.playBtn}
+                  }}
                 >
-                  <Text style={s.playBtnText}>▶  Play Now</Text>
-                </LinearGradient>
+                  <LinearGradient
+                    colors={['#8B3FD9', '#8B3FD9']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={s.playBtn}
+                  >
+                    <Text style={s.playBtnText}>▶  Play Now</Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+
+                {timeUntilNext && (
+                  <Text style={s.livesTimer}>❤️ Next life in {timeUntilNext}</Text>
+                )}
+
+                <TouchableOpacity style={s.skipBtn} onPress={closeModal} activeOpacity={0.7}>
+                  <Text style={s.skipBtnText}>Maybe later</Text>
+                </TouchableOpacity>
               </TouchableOpacity>
-              {timeUntilNext && (
-                <Text style={s.livesTimer}>❤️ Next life in {timeUntilNext}</Text>
-              )}
-              <TouchableOpacity style={s.skipBtn} onPress={closeModal} activeOpacity={0.7}>
-                <Text style={s.skipBtnText}>Maybe later</Text>
-              </TouchableOpacity>
-            </TouchableOpacity>
-          </Animated.View>
-        </TouchableOpacity>
-      </Modal>
-    </SafeAreaView>
+            </Animated.View>
+          </TouchableOpacity>
+        </Modal>
+      </SafeAreaView>
+    </ImageBackground>
   );
 }
 
 const s = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.bg,
-  },
-  scroll: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingHorizontal: 20,
-    paddingBottom: 40,
+  container: { flex: 1 },
+  safe: { flex: 1 },
+  bgScrim: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(255,255,255,0.50)',
   },
 
-  // Vibe banner
-  vibeBanner: {
+  banner: {
+    marginHorizontal: 16,
     marginTop: 8,
-    marginBottom: 20,
-    borderRadius: 20,
-    height: 80,
-    paddingHorizontal: 20,
-    justifyContent: 'center',
+    marginBottom: 10,
+    borderRadius: 18,
+    paddingHorizontal: 18,
+    paddingVertical: 12,
   },
-  vibeLabel: {
-    fontSize: 11,
+  bannerLabel: {
+    fontSize: 10,
     fontFamily: 'Nunito_700Bold',
     letterSpacing: 1.5,
     textTransform: 'uppercase',
     color: Colors.muted,
   },
-  vibeTitle: {
-    fontSize: 20,
+  bannerTitle: {
+    fontSize: 18,
     fontFamily: 'Nunito_900Black',
     color: Colors.text,
-    marginTop: 2,
+    marginTop: 1,
   },
 
-  // Path
-  pathContainer: {
-    position: 'relative',
-  },
-
-  // World zone bands
-  worldBand: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-  },
-  worldBorder: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    paddingHorizontal: 10,
-  },
-  worldBorderLine: {
+  mapScroll: {
     flex: 1,
-    height: 1,
-    backgroundColor: 'rgba(0,0,0,0.08)',
+  },
+
+  worldMarker: {
+    position: 'absolute',
+    width: 112,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.88)',
+    borderWidth: 1,
+    borderColor: 'rgba(61,26,0,0.08)',
+    alignItems: 'center',
   },
   worldLabel: {
-    fontSize: 10,
-    fontFamily: 'Nunito_700Bold',
-    color: 'rgba(0,0,0,0.25)',
-    textTransform: 'uppercase',
-    letterSpacing: 1.2,
-  },
-
-  decoWrap: {
-    position: 'absolute',
-  },
-  deco: {
-    fontSize: 22,
-    opacity: 0.22,
-  },
-
-  // Milestone
-  milestone: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    marginTop: 20,
-    marginBottom: 0,
-    paddingVertical: 11,
-    paddingHorizontal: 16,
-    backgroundColor: 'rgba(0,0,0,0.03)',
-    borderRadius: 50,
-    borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.12)',
-    borderStyle: 'dashed',
-  },
-  milestoneText: {
-    fontSize: 13,
-    fontFamily: 'Nunito_700Bold',
-    color: Colors.muted,
-  },
-
-  // Locked hint
-  lockedHint: {
-    alignItems: 'center',
-    paddingTop: 20,
-    paddingBottom: 40,
-    gap: 6,
-  },
-  lockedHintText: {
-    fontSize: 13,
-    fontFamily: 'Nunito_700Bold',
+    fontSize: 11,
+    fontFamily: 'Nunito_900Black',
     color: Colors.text,
-    opacity: 0.25,
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+  },
+  worldSub: {
+    marginTop: 1,
+    fontSize: 9,
+    fontFamily: 'Nunito_700Bold',
+    color: 'rgba(19,78,74,0.58)',
+    textAlign: 'center',
   },
 
-  // Modal overlay
   overlay: {
     flex: 1,
     backgroundColor: 'rgba(10,10,20,0.85)',
@@ -441,7 +358,7 @@ const s = StyleSheet.create({
   modal: {
     width: '100%',
     maxWidth: 420,
-    backgroundColor: Colors.bg2,
+    backgroundColor: '#f9e3cb',
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
     paddingHorizontal: 20,
@@ -449,38 +366,35 @@ const s = StyleSheet.create({
     paddingBottom: 34,
   },
   dragHandle: {
-    width: 40,
-    height: 4,
+    width: 40, height: 4,
     backgroundColor: 'rgba(0,0,0,0.12)',
     borderRadius: 2,
     alignSelf: 'center',
     marginBottom: 18,
   },
-  modalRow: {
+  modalRow:   { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 4 },
+  modalIco:   { fontSize: 38 },
+  modalTitle: { fontSize: 22, fontFamily: 'Nunito_900Black', color: Colors.text },
+  modalDomainRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    marginBottom: 4,
+    gap: 8,
+    marginBottom: 12,
   },
-  modalIco: {
-    fontSize: 38,
-  },
-  modalTitle: {
-    fontSize: 22,
-    fontFamily: 'Nunito_900Black',
-    color: Colors.text,
+  modalDomainIcon: {
+    width: 28,
+    height: 28,
   },
   modalDomain: {
     fontSize: 12,
     fontFamily: 'Nunito_700Bold',
     textTransform: 'uppercase',
     letterSpacing: 1,
-    marginBottom: 12,
   },
   modalDesc: {
     fontSize: 14,
     fontFamily: 'Nunito_400Regular',
-    color: Colors.muted,
+
     lineHeight: 22,
     marginBottom: 18,
   },
@@ -489,13 +403,8 @@ const s = StyleSheet.create({
     paddingVertical: 17,
     borderRadius: 16,
     alignItems: 'center',
-    marginBottom: 0,
   },
-  playBtnText: {
-    fontSize: 17,
-    fontFamily: 'Nunito_900Black',
-    color: '#FFFFFF',
-  },
+  playBtnText:  { fontSize: 17, fontFamily: 'Nunito_900Black', color: '#FFFFFF' },
   livesTimer: {
     textAlign: 'center',
     fontSize: 12,
@@ -512,9 +421,5 @@ const s = StyleSheet.create({
     alignItems: 'center',
     marginTop: 10,
   },
-  skipBtnText: {
-    fontSize: 14,
-    fontFamily: 'Nunito_700Bold',
-    color: Colors.text,
-  },
+  skipBtnText: { fontSize: 14, fontFamily: 'Nunito_700Bold', color: Colors.text },
 });

@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { TouchableOpacity, View, Text, StyleSheet, Animated } from 'react-native';
+import { View, Text, StyleSheet, Animated, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Colors } from '../../constants/colors';
 import { Level } from '../../data/levels';
@@ -107,6 +107,9 @@ export function LevelNode({ level, x, y, onPress }: Props) {
       {isCurr && (
         <Animated.View style={[s.ring, ringStyle]} />
       )}
+      {isCurr && (
+        <Text style={s.hereArrow}>▼</Text>
+      )}
       <Animated.View style={[isLocked && s.dimmed, isCurr && bobStyle]}>
         <Animated.View style={{ transform: [{ scale: unlockScale }] }}>
           <Bubble level={level} />
@@ -155,6 +158,13 @@ const s = StyleSheet.create({
     borderColor: 'rgba(6,214,160,0.35)',
     top: -10,
     left: -10,
+  },
+  hereArrow: {
+    position: 'absolute',
+    top: -24,
+    fontSize: 16,
+    color: Colors.teal,
+    alignSelf: 'center',
   },
   stars: {
     flexDirection: 'row',

@@ -1,11 +1,11 @@
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet,
-  Animated, Easing, Dimensions, Image,
+  Animated, Easing, Dimensions, Image, ImageBackground,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { Colors } from '../constants/colors';
 import { useAuthStore } from '../stores/authStore';
 
@@ -15,6 +15,7 @@ const GAME_ICONS = {
   pattern: require('../assets/icons/icon-pattern.png'),
   logic:   require('../assets/icons/icon-logic.png'),
 };
+const LANDING_BACKGROUND = require('../assets/landing-background.png');
 
 const { width: SCREEN_W } = Dimensions.get('window');
 const BOARD_SIZE = Math.min(SCREEN_W - 80, 316);
@@ -84,14 +85,54 @@ export default function LandingScreen() {
   const ctaAnim    = useRef(new Animated.Value(0)).current;
   const glowAnim   = useRef(new Animated.Value(0)).current;
   const rotAnim    = useRef(new Animated.Value(0)).current;
+  const logoScale  = useRef(new Animated.Value(0.72)).current;
+  const logoTilt   = useRef(new Animated.Value(-8)).current;
+
+  const runEntrance = useCallback(() => {
+    headerAnim.setValue(0);
+    boardAnim.setValue(0);
+    ctaAnim.setValue(0);
+    logoScale.setValue(0.72);
+    logoTilt.setValue(-8);
+
+    Animated.parallel([
+      Animated.sequence([
+        Animated.spring(logoScale, {
+          toValue: 1.08,
+          tension: 150,
+          friction: 5,
+          useNativeDriver: true,
+        }),
+        Animated.spring(logoScale, {
+          toValue: 1,
+          tension: 110,
+          friction: 8,
+          useNativeDriver: true,
+        }),
+      ]),
+      Animated.sequence([
+        Animated.timing(logoTilt, {
+          toValue: 2,
+          duration: 220,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: true,
+        }),
+        Animated.spring(logoTilt, {
+          toValue: 0,
+          tension: 120,
+          friction: 8,
+          useNativeDriver: true,
+        }),
+      ]),
+      Animated.stagger(130, [
+        Animated.spring(headerAnim, { toValue: 1, tension: 72, friction: 8, useNativeDriver: true }),
+        Animated.spring(boardAnim,  { toValue: 1, tension: 60, friction: 10, useNativeDriver: true }),
+        Animated.spring(ctaAnim,    { toValue: 1, tension: 60, friction: 10, useNativeDriver: true }),
+      ]),
+    ]).start();
+  }, [boardAnim, ctaAnim, headerAnim, logoScale, logoTilt]);
 
   useEffect(() => {
-    Animated.stagger(130, [
-      Animated.spring(headerAnim, { toValue: 1, tension: 65, friction: 11, useNativeDriver: true }),
-      Animated.spring(boardAnim,  { toValue: 1, tension: 60, friction: 10, useNativeDriver: true }),
-      Animated.spring(ctaAnim,    { toValue: 1, tension: 60, friction: 10, useNativeDriver: true }),
-    ]).start();
-
     // Gentle glow pulse
     Animated.loop(
       Animated.sequence([
@@ -104,7 +145,13 @@ export default function LandingScreen() {
     Animated.loop(
       Animated.timing(rotAnim, { toValue: 1, duration: 24000, easing: Easing.linear, useNativeDriver: true })
     ).start();
-  }, []);
+  }, [glowAnim, rotAnim]);
+
+  useFocusEffect(
+    useCallback(() => {
+      runEntrance();
+    }, [runEntrance])
+  );
 
   const entry = (anim: Animated.Value, dist = 24) => ({
     opacity: anim,
@@ -115,25 +162,41 @@ export default function LandingScreen() {
   const glowOpacity = glowAnim.interpolate({ inputRange: [0, 1], outputRange: [0.28, 0.55] });
   const boardRotate = rotAnim.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] });
   const cardCounter = rotAnim.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '-360deg'] });
+  const headerOpacity = headerAnim;
+  const headerTranslateX = headerAnim.interpolate({
+    inputRange: [0, 0.62, 0.82, 1],
+    outputRange: [-90, 12, -6, 0],
+  });
+  const headerTranslate = headerAnim.interpolate({
+    inputRange: [0, 0.62, 0.82, 1],
+    outputRange: [-96, 20, -10, 0],
+  });
+  const headerRotate = logoTilt.interpolate({
+    inputRange: [-8, 0, 2],
+    outputRange: ['-8deg', '0deg', '2deg'],
+  });
 
   return (
     <View style={s.container}>
-      <LinearGradient
-        colors={['#FFF6EE', '#FFF0E4', '#FFE6D2']}
-        locations={[0, 0.5, 1]}
-        style={StyleSheet.absoluteFill}
-      />
-
-      {/* Blobs */}
-      <View style={[s.blob, s.blobTop]}  />
-      <View style={[s.blob, s.blobSide]} />
-      <View style={[s.blob, s.blobBtm]} />
+      <ImageBackground source={LANDING_BACKGROUND} style={StyleSheet.absoluteFill} resizeMode="cover">
+        <View style={s.bgScrim} />
+      </ImageBackground>
 
       <SafeAreaView style={s.safe} edges={['top', 'bottom']}>
         <View style={s.inner}>
 
           {/* Logo */}
-          <Animated.View style={entry(headerAnim)}>
+          <Animated.View
+            style={{
+              opacity: headerOpacity,
+              transform: [
+                { translateX: headerTranslateX },
+                { translateY: headerTranslate },
+                { scale: logoScale },
+                { rotate: headerRotate },
+              ],
+            }}
+          >
             <ThinkPopLogo />
           </Animated.View>
 
@@ -172,7 +235,7 @@ export default function LandingScreen() {
               style={s.btnWrap}
             >
               <LinearGradient
-                colors={['#FB923C', '#F97316']}
+                colors={['#9333EA', '#6B21A8']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={s.btnPlay}
@@ -200,6 +263,10 @@ export default function LandingScreen() {
 const s = StyleSheet.create({
   container: { flex: 1 },
   safe:      { flex: 1 },
+  bgScrim: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(255,255,255,0.10)',
+  },
 
   inner: {
     flex: 1,
@@ -208,12 +275,6 @@ const s = StyleSheet.create({
     paddingBottom: 22,
     justifyContent: 'space-between',
   },
-
-  // Blobs
-  blob: { position: 'absolute', borderRadius: 999 },
-  blobTop:  { width: 280, height: 280, top: -90,   right: -70, backgroundColor: 'rgba(255,107,53,0.10)'  },
-  blobSide: { width: 240, height: 240, left: -80,  top: '33%', backgroundColor: 'rgba(212,0,106,0.07)'  },
-  blobBtm:  { width: 300, height: 300, bottom: -110, left: 20, backgroundColor: 'rgba(255,180,0,0.09)'  },
 
   // Board
   boardSection: { alignItems: 'center', flex: 1, justifyContent: 'center' },
@@ -258,7 +319,7 @@ const s = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 10,
-    shadowColor: '#F97316',
+    shadowColor: '#6B21A8',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.30,
     shadowRadius: 18,

@@ -1,11 +1,13 @@
 import { useEffect, useRef } from 'react';
 import {
-  View, Text, TouchableOpacity, StyleSheet, Animated, Easing,
+  View, Text, TouchableOpacity, StyleSheet, Animated, Easing, ImageBackground,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+
+const LANDING_BACKGROUND = require('../assets/landing-background.png');
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import Svg, { Path } from 'react-native-svg';
-import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import { Colors } from '../constants/colors';
 import { LEVELS, POS } from '../data/levels';
@@ -26,11 +28,13 @@ const DOMAIN_LABELS: Record<GameType, string> = {
   pattern: 'Pattern',
 };
 
-const SCENE_W = 280;
-const HALF = NODE_SIZE / 2;
-const Y1 = 40;          // top of current node
-const Y2 = 190;         // top of next node
-const SCENE_H = Y2 + NODE_SIZE + 48;
+// Horizontal scene: two nodes side by side, star travels left → right
+const SCENE_W = 300;
+const SCENE_H = NODE_SIZE + 80; // room for node + tag above/below
+const HALF    = NODE_SIZE / 2;
+const X1      = 48;              // left node centre x
+const X2      = SCENE_W - 48;   // right node centre x
+const CY      = SCENE_H / 2;    // shared vertical centre
 
 export default function LevelTransitionScreen() {
   const { levelId: rawId, domain: rawDomain, oldPct: rawOldPct } = useLocalSearchParams<{ levelId: string; domain: string; oldPct: string }>();
@@ -44,22 +48,18 @@ export default function LevelTransitionScreen() {
   const current = LEVELS.find(l => l.id === levelId);
   const next    = LEVELS.find(l => l.id === nextId);
 
-  // Node centres (x)
-  const cx1 = (POS[levelId - 1]?.x ?? 0.55) * SCENE_W;
-  const cx2 = (POS[levelId]?.x    ?? 0.22) * SCENE_W;
-
   // Animated values
-  const progress     = useRef(new Animated.Value(0)).current;
-  const unlockScale  = useRef(new Animated.Value(0)).current;
-  const unlockOpacity= useRef(new Animated.Value(0)).current;
-  const labelAnim    = useRef(new Animated.Value(0)).current;
-  const btnAnim      = useRef(new Animated.Value(0)).current;
-  const barAnim      = useRef(new Animated.Value(oldPct)).current;
-  const glowPulse    = useRef(new Animated.Value(0)).current;
+  const progress      = useRef(new Animated.Value(0)).current;
+  const unlockScale   = useRef(new Animated.Value(0)).current;
+  const unlockOpacity = useRef(new Animated.Value(0)).current;
+  const labelAnim     = useRef(new Animated.Value(0)).current;
+  const btnAnim       = useRef(new Animated.Value(0)).current;
+  const barAnim       = useRef(new Animated.Value(oldPct)).current;
+  const glowPulse     = useRef(new Animated.Value(0)).current;
 
-  // Marker travels from (cx1, Y1+HALF) to (cx2, Y2+HALF) via translation
-  const markerTX = progress.interpolate({ inputRange: [0, 1], outputRange: [0, cx2 - cx1] });
-  const markerTY = progress.interpolate({ inputRange: [0, 1], outputRange: [0, Y2 - Y1] });
+  // Star travels left → right (horizontal)
+  const markerTX = progress.interpolate({ inputRange: [0, 1], outputRange: [0, X2 - X1] });
+  const markerTY = new Animated.Value(0); // stays on same vertical line
 
   // Glow pulse around unlocked node
   const glowScale  = glowPulse.interpolate({ inputRange: [0, 1], outputRange: [1, 1.65] });
@@ -112,19 +112,14 @@ export default function LevelTransitionScreen() {
 
   if (!current || !next) return null;
 
-  // Bezier path between the two node centres
-  const bx  = (cx1 + cx2) / 2;
-  const by1 = Y1 + HALF;
-  const by2 = Y2 + HALF;
-  const pathD = `M${cx1} ${by1} C${bx} ${by1},${bx} ${by2},${cx2} ${by2}`;
+  // Horizontal dashed path between the two node centres
+  const pathD = `M${X1} ${CY} C${(X1 + X2) / 2} ${CY},${(X1 + X2) / 2} ${CY},${X2} ${CY}`;
 
   return (
     <SafeAreaView style={s.container} edges={['top', 'bottom']}>
-      <LinearGradient
-        colors={['#FFF6EE', '#FFF0E4', '#FFE6D2']}
-        locations={[0, 0.5, 1]}
-        style={StyleSheet.absoluteFill}
-      />
+      <ImageBackground source={LANDING_BACKGROUND} style={StyleSheet.absoluteFill} resizeMode="cover">
+        <View style={s.bgScrim} />
+      </ImageBackground>
 
       <View style={s.inner}>
         <View style={s.titleWrap}>
@@ -132,7 +127,7 @@ export default function LevelTransitionScreen() {
           <Text style={s.subHeader}>You're on a roll 🔥</Text>
         </View>
 
-        {/* ── Mini path scene ── */}
+        {/* ── Mini path scene (horizontal) ── */}
         <View style={[s.scene, { width: SCENE_W, height: SCENE_H }]}>
 
           {/* Dashed connecting path */}
@@ -140,51 +135,51 @@ export default function LevelTransitionScreen() {
             <Path
               d={pathD}
               fill="none"
-              stroke="rgba(255,209,102,0.4)"
+              stroke="rgba(143,104,15,0.4)"
               strokeWidth={3.5}
               strokeDasharray="9 6"
               strokeLinecap="round"
             />
           </Svg>
 
-          {/* Current level node — completed (gold) */}
-          <View style={[s.node, s.nodeDone, { left: cx1 - HALF, top: Y1 }]}>
+          {/* Current level node — completed (gold), left side */}
+          <View style={[s.node, s.nodeDone, { left: X1 - HALF, top: CY - HALF }]}>
             <Text style={s.nodeEmoji}>{current.e}</Text>
           </View>
-          <Text style={[s.nodeTag, { left: cx1 - 28, top: Y1 + NODE_SIZE + 5 }]}>
+          <Text style={[s.nodeTag, { left: X1 - 28, top: CY + HALF + 5 }]}>
             L{levelId} ✅
           </Text>
 
           {/* Glow ring around next node */}
           <Animated.View style={[s.glow, {
-            left:  cx2 - HALF - 14,
-            top:   Y2 - 14,
+            left:    X2 - HALF - 14,
+            top:     CY - HALF - 14,
             opacity: glowOp,
             transform: [{ scale: glowScale }],
           }]} />
 
-          {/* Next level node — unlocking (teal) */}
+          {/* Next level node — unlocking (teal), right side */}
           <Animated.View style={[s.node, s.nodeNext, {
-            left:  cx2 - HALF,
-            top:   Y2,
+            left:    X2 - HALF,
+            top:     CY - HALF,
             opacity: unlockOpacity,
             transform: [{ scale: unlockScale }],
           }]}>
             <Text style={s.nodeEmoji}>{next.e}</Text>
           </Animated.View>
           <Animated.Text style={[s.nodeTag, {
-            left:  cx2 - 28,
-            top:   Y2 + NODE_SIZE + 5,
-            color: Colors.teal,
+            left:    X2 - 28,
+            top:     CY + HALF + 5,
+            color:   Colors.teal,
             opacity: unlockOpacity,
           }]}>
             L{nextId} 🔓
           </Animated.Text>
 
-          {/* Travelling star marker */}
+          {/* Travelling star — moves left → right */}
           <Animated.Text style={[s.marker, {
-            left: cx1 - 14,
-            top:  Y1 + HALF - 14,
+            left: X1 - 14,
+            top:  CY - HALF - 20,
             transform: [{ translateX: markerTX }, { translateY: markerTY }],
           }]}>
             ⭐
@@ -208,16 +203,16 @@ export default function LevelTransitionScreen() {
             transform: [{ translateY: labelAnim.interpolate({ inputRange: [0, 1], outputRange: [14, 0] }) }],
           }]}>
             <View style={s.strengthHeader}>
-              <Text style={[s.strengthLabel, { color: domainColor }]}>
+              <Text style={[s.strengthLabel, { color: '#5d430a' }]}>
                 {DOMAIN_LABELS[domain]} Strength
               </Text>
-              <Text style={[s.strengthPcts, { color: domainColor }]}>
+              <Text style={[s.strengthPcts, { color: '#9f710d' }]}>
                 {oldPct}% → {newPct}%
               </Text>
             </View>
             <View style={s.strengthTrack}>
               <Animated.View style={[s.strengthFill, {
-                backgroundColor: domainColor,
+                backgroundColor: '#5d430a',
                 width: barAnim.interpolate({ inputRange: [0, 100], outputRange: ['0%', '100%'] }),
               }]} />
             </View>
@@ -234,7 +229,7 @@ export default function LevelTransitionScreen() {
             activeOpacity={0.85}
           >
             <LinearGradient
-              colors={['#FFAA00', '#FF8C00']}
+              colors={['#5d430a', '#5d430a']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={s.btn}
@@ -250,6 +245,10 @@ export default function LevelTransitionScreen() {
 
 const s = StyleSheet.create({
   container: { flex: 1 },
+  bgScrim: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(255,255,255,0.50)',
+  },
   inner: {
     flex: 1,
     alignItems: 'center',
