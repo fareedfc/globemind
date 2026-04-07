@@ -149,7 +149,7 @@ export function FailScreen({ type, onTryAgain, onExit }: Props) {
       >
         <Text style={s.title}>So close!</Text>
         <Text style={s.sub}>
-          Your brain was warming up.{'\n'}Give it another pop.
+          You were warming up.{'\n'}Give it another pop.
         </Text>
 
         <TouchableOpacity style={s.btnPrimary} onPress={onTryAgain} activeOpacity={0.85}>

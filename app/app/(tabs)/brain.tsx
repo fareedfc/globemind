@@ -1,16 +1,14 @@
 import { useEffect } from 'react';
 import {
   ScrollView, View, Text, StyleSheet,
-  DimensionValue, TouchableOpacity, Image, ImageBackground,
+  DimensionValue, Image, ImageBackground,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { router } from 'expo-router';
-import { TopBar } from '../../components/layout/TopBar';
 import { Colors } from '../../constants/colors';
 import { usePlayerStore } from '../../stores/playerStore';
 import { useBrainStore, type GameType } from '../../stores/brainStore';
-import { useAuthStore } from '../../stores/authStore';
+
 
 const DOMAIN_META: Array<{
   key: GameType;
@@ -97,10 +95,11 @@ function pickTip(tips: string[]): string {
   return tips[dayIndex % tips.length];
 }
 
+
 export default function BrainScreen() {
   const { score, streak } = usePlayerStore();
   const { domains, weeklyBaseline, snapshotWeekIfNeeded } = useBrainStore();
-  const { isLoggedIn, name, logout } = useAuthStore();
+
 
   useEffect(() => {
     snapshotWeekIfNeeded(score);
@@ -117,7 +116,11 @@ export default function BrainScreen() {
     <ImageBackground source={SCREEN_BACKGROUND} style={s.screen} resizeMode="cover">
       <View style={s.bgScrim} />
     <SafeAreaView style={s.safe} edges={['top']}>
-      <TopBar compact />
+      <Image
+        source={require('../../assets/icons/logo-thinkpop.png')}
+        style={s.logo}
+        resizeMode="contain"
+      />
 
       <ScrollView
         style={s.scroll}
@@ -125,40 +128,10 @@ export default function BrainScreen() {
         showsVerticalScrollIndicator={false}
       >
 
-        {/* ── Sign-in banner ─────────────────────────────────────────────── */}
-        {!isLoggedIn && (
-          <TouchableOpacity onPress={() => router.push('/auth')} activeOpacity={0.88} style={s.card}>
-            <LinearGradient
-              colors={['rgba(122,92,255,0.10)', 'rgba(122,92,255,0.05)']}
-              start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
-              style={s.signInInner}
-            >
-              <View style={[s.iconBubble, { backgroundColor: 'rgba(122,92,255,0.12)' }]}>
-                <Image source={require('../../assets/icons/icon-lock.png')} style={s.signInIco} resizeMode="contain" />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={s.signInTitle}>Save your progress</Text>
-                <Text style={s.signInSub}>Sign in to keep your score & stats across devices</Text>
-              </View>
-              <Text style={s.signInCta}>Sign In →</Text>
-            </LinearGradient>
-          </TouchableOpacity>
-        )}
-
-        {/* ── Account row ────────────────────────────────────────────────── */}
-        {isLoggedIn && name && (
-          <View style={s.accountRow}>
-            <Text style={s.accountTxt}>Signed in as <Text style={{ color: '#2EC4B6', fontFamily: 'Nunito_700Bold' }}>{name}</Text></Text>
-            <TouchableOpacity onPress={logout} activeOpacity={0.7}>
-              <Text style={s.logoutTxt}>Log out</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-
         {/* ── Score hero card ────────────────────────────────────────────── */}
         <View style={[s.card, s.heroCard]}>
           <LinearGradient
-            colors={['#824703', '#FFC857']}
+            colors={['#4A0E8F', '#8B3FD9', '#C76FE8']}
             start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
             style={s.heroGradient}
           >
@@ -248,6 +221,11 @@ const CARD_SHADOW = {
 
 const s = StyleSheet.create({
   screen: { flex: 1 },
+  logo: {
+    width: 190,
+    height: 76,
+    alignSelf: 'center',
+  },
   bgScrim: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(255,255,255,0.50)' },
   safe: { flex: 1 },
   scroll: { flex: 1 },
@@ -320,7 +298,7 @@ const s = StyleSheet.create({
   },
   heroRight: { alignItems: 'flex-end', gap: 6 },
   weekBadge: {
-    backgroundColor: 'rgba(120,50,0,0.30)',
+    backgroundColor: 'rgba(255,255,255,0.20)',
     borderRadius: 20,
     paddingHorizontal: 12,
     paddingVertical: 5,
@@ -333,7 +311,7 @@ const s = StyleSheet.create({
   heroWeekLbl: {
     fontSize: 11,
     fontFamily: 'Nunito_700Bold',
-    color: 'rgba(120,50,0,0.75)',
+    color: 'rgba(255,255,255,0.65)',
     letterSpacing: 0.5,
   },
 
@@ -411,6 +389,54 @@ const s = StyleSheet.create({
     fontFamily: 'Nunito_400Regular',
     color: '#3D2800',
     lineHeight: 23,
+  },
+
+  // ── Badges ───────────────────────────────────────────────────────────────
+  badgeGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  badgeCard: {
+    width: '18%',
+    flexGrow: 1,
+    borderRadius: 14,
+    paddingVertical: 10,
+    paddingHorizontal: 4,
+    alignItems: 'center',
+    gap: 4,
+  },
+  badgeEarned: {
+    backgroundColor: 'rgba(139,63,217,0.12)',
+    borderWidth: 1.5,
+    borderColor: '#8B3FD9',
+  },
+  badgeLocked: {
+    backgroundColor: 'rgba(0,0,0,0.04)',
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.08)',
+  },
+  badgeEmoji: {
+    fontSize: 26,
+    marginBottom: 2,
+  },
+  badgeEmojiLocked: {
+    opacity: 0.25,
+  },
+  badgeName: {
+    fontSize: 10,
+    fontFamily: 'Nunito_700Bold',
+    color: '#8B3FD9',
+    textAlign: 'center',
+  },
+  badgeDesc: {
+    fontSize: 11,
+    fontFamily: 'Nunito_400Regular',
+    color: Colors.muted,
+    textAlign: 'center',
+  },
+  badgeTextLocked: {
+    color: 'rgba(0,0,0,0.25)',
   },
 
   // ── Streak ───────────────────────────────────────────────────────────────

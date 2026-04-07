@@ -8,7 +8,8 @@ import { LEVELS } from '../../data/levels';
 import { MEMORY_SETS } from '../../data/memoryEmojis';
 import { WinScreen, type WinData } from '../../components/games/WinScreen';
 import { FailScreen } from '../../components/games/FailScreen';
-import { calcMemoryStars, MILES_PER_STAR } from '../../utils/scoring';
+import { calcMemoryStars, calcActualPoints } from '../../utils/scoring';
+import { useProgressStore } from '../../stores/progressStore';
 import { pickInsight } from '../../data/brainInsights';
 
 interface Card {
@@ -186,15 +187,18 @@ export default function MemoryGame() {
   const numRows = Math.ceil(deck.length / numCols);
 
   const stars = calcMemoryStars(wrongFlips, totalPairs);
+  const isFirstClear = useProgressStore.getState().completions[levelId] === undefined;
+  const lastPlayedAt = useProgressStore.getState().lastPlayedAt?.[levelId];
+  const previewPts = calcActualPoints(stars, levelId, isFirstClear, lastPlayedAt);
   const winData: WinData = {
     type: 'memory',
-    emoji: stars === 3 ? '🎴' : stars === 2 ? '🧠' : '🌱',
-    title: stars === 3 ? 'Flawless Memory!' : stars === 2 ? 'Memory Sharp!' : 'Good Effort!',
+    emoji: stars === 5 ? '🎴' : stars === 4 ? '🌟' : stars === 3 ? '✨' : stars === 2 ? '👍' : '🌱',
+    title: stars === 5 ? 'Flawless Memory!' : stars === 4 ? 'Excellent!' : stars === 3 ? 'Memory Sharp!' : stars === 2 ? 'Good Effort!' : 'Keep Practicing!',
     sub: 'Your working memory is firing on all cylinders.',
     stats: [
       { num: totalPairs, lbl: 'Pairs found' },
       { num: wrongFlips, lbl: 'Wrong flips' },
-      { num: `+${MILES_PER_STAR[stars]}`, lbl: 'Points' },
+      { num: `+${previewPts}`, lbl: 'Points' },
     ],
     insight: pickInsight('memory'),
     stars,
@@ -312,9 +316,9 @@ const s = StyleSheet.create({
   scoreTxt: { fontSize: 13, fontFamily: 'Nunito_800ExtraBold' },
 
   body: { padding: 16, paddingBottom: 40 },
-  domainTag: { fontSize: 11, fontFamily: 'Nunito_700Bold', textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 8 },
+  domainTag: { fontSize: 16, fontFamily: 'Nunito_900Black', textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 8 },
   instr: { backgroundColor: 'rgba(0,0,0,0.03)', borderRadius: 11, padding: 10, marginBottom: 14 },
-  instrTxt: { fontSize: 13, fontFamily: 'Nunito_400Regular', color: Colors.muted, lineHeight: 20 },
+  instrTxt: { fontSize: 18, fontFamily: 'Nunito_700Bold', color: '#1A1A1A', lineHeight: 26 },
 
   timerWrap: { marginBottom: 10 },
   timerTrack: { height: 6, backgroundColor: 'rgba(0,0,0,0.08)', borderRadius: 3, overflow: 'hidden' },

@@ -25,8 +25,8 @@ const s = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 10,
+    paddingTop: 0,
+    paddingBottom: 0,
   },
   barCentered: {
     justifyContent: 'center',

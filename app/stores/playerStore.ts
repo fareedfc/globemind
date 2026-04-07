@@ -19,7 +19,9 @@ interface PlayerState {
   isPremium: boolean;
   dailyLevelsPlayed: number;
   dailyLevelsDate: string | null;
+  hapticsEnabled: boolean;
   addScore: (pts: number) => void;
+  toggleHaptics: () => void;
   useLive: () => void;
   refillLive: () => void;
   recordPlay: () => void;
@@ -39,6 +41,7 @@ export const usePlayerStore = create<PlayerState>()(
       isPremium: false,
       dailyLevelsPlayed: 0,
       dailyLevelsDate: null,
+      hapticsEnabled: true,
 
       addScore: (pts) => {
         set((s) => ({ score: s.score + pts }));
@@ -78,6 +81,8 @@ export const usePlayerStore = create<PlayerState>()(
           const streak = s.lastPlayedDate === yesterday ? s.streak + 1 : 1;
           return { streak, lastPlayedDate: today };
         }),
+
+      toggleHaptics: () => set((s) => ({ hapticsEnabled: !s.hapticsEnabled })),
 
       setPremium: (val) => {
         set({ isPremium: val });

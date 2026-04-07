@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -13,7 +13,7 @@ import {
   Dimensions,
 } from 'react-native';
 import { router } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { TopBar } from '../../components/layout/TopBar';
 import { Pill } from '../../components/ui/Pill';
@@ -25,6 +25,7 @@ import { LevelNode } from '../../components/path/LevelNode';
 import { usePlayerStore } from '../../stores/playerStore';
 import { useProgressStore } from '../../stores/progressStore';
 import { useLives } from '../../hooks/useLives';
+import { useUIStore } from '../../stores/uiStore';
 
 const { width: SCREEN_W } = Dimensions.get('window');
 
@@ -63,27 +64,44 @@ const MAP_VIEW_WIDTH  = MAP_WIDTH;  // 16000 — full horizontal canvas
 const MAP_VIEW_HEIGHT = MAP_HEIGHT; // 600   — fixed display height
 const WORLD_WIDTH = MAP_VIEW_WIDTH / 10; // each world gets equal share
 
+// Soft tinted background per world for the tab bar
+const WORLD_TAB_COLORS = [
+  '#D9EDD4', // W1  Forest    — soft green
+  '#C8DFF5', // W2  Ocean     — soft blue
+  '#F5E8C8', // W3  Desert    — sandy
+  '#E8D5C0', // W4  Mountain  — earthy
+  '#C8C5E8', // W5  Space     — soft indigo
+  '#C0DDE8', // W6  Deep Ocean— deep teal
+  '#F5CFC8', // W7  Volcanic  — warm coral
+  '#C8E8F0', // W8  Arctic    — icy blue
+  '#F0E0C0', // W9  Ruins     — warm amber
+  '#DCC8F0', // W10 Cosmic    — soft purple
+];
+
 const WORLD_MARKERS = [
-  { label: 'World 1',  subtitle: 'Warm-up trail',    start: 1  },
-  { label: 'World 2',  subtitle: 'Momentum coast',   start: 11 },
-  { label: 'World 3',  subtitle: 'Focus dunes',      start: 21 },
-  { label: 'World 4',  subtitle: 'Clarity ridge',    start: 31 },
-  { label: 'World 5',  subtitle: 'Space ascent',     start: 41 },
-  { label: 'World 6',  subtitle: 'Deep ocean',       start: 51 },
-  { label: 'World 7',  subtitle: 'Volcanic peaks',   start: 61 },
-  { label: 'World 8',  subtitle: 'Arctic tundra',    start: 71 },
-  { label: 'World 9',  subtitle: 'Ancient ruins',    start: 81 },
-  { label: 'World 10', subtitle: 'Cosmic finale',    start: 91 },
+  { label: 'World 1',  subtitle: 'Into the Woods',    start: 1  },
+  { label: 'World 2',  subtitle: 'Momentum Coast',   start: 11 },
+  { label: 'World 3',  subtitle: 'Focus Dunes',      start: 21 },
+  { label: 'World 4',  subtitle: 'Clarity Ridge',    start: 31 },
+  { label: 'World 5',  subtitle: 'Space Ascent',     start: 41 },
+  { label: 'World 6',  subtitle: 'Deep Ocean',       start: 51 },
+  { label: 'World 7',  subtitle: 'Volcanic Peaks',   start: 61 },
+  { label: 'World 8',  subtitle: 'Arctic Tundra',    start: 71 },
+  { label: 'World 9',  subtitle: 'Ancient Ruins',    start: 81 },
+  { label: 'World 10', subtitle: 'Cosmic Finale',    start: 91 },
 ];
 
 export default function JourneyScreen() {
   const { score, useLive, isPremium } = usePlayerStore();
+  const insets = useSafeAreaInsets();
+  const setWorldIdx = useUIStore((s) => s.setWorldIdx);
   const { currentLevelId, completions } = useProgressStore();
   const { lives, timeUntilNext } = useLives();
 
   const [mapH, setMapH] = useState(MAP_VIEW_HEIGHT);
   const [selectedLevel, setSelectedLevel] = useState<Level | null>(null);
   const [modalVisible, setModalVisible]   = useState(false);
+  const [scrollX, setScrollX] = useState(0);
   const modalAnim = useRef(new Animated.Value(400)).current;
   const scrollRef = useRef<ScrollView>(null);
   const hasAutoScrolled = useRef(false);
@@ -128,39 +146,42 @@ export default function JourneyScreen() {
     hasAutoScrolled.current = true;
   };
 
+  const worldIdx = WORLD_WIDTH > 0
+    ? Math.max(0, Math.min(Math.floor(scrollX / WORLD_WIDTH), WORLD_MARKERS.length - 1))
+    : 0;
+
+  useEffect(() => {
+    setWorldIdx(worldIdx);
+  }, [worldIdx]);
+
   return (
     <ImageBackground source={SCREEN_BACKGROUND} style={s.container} resizeMode="cover">
       <View style={s.bgScrim} />
-      <SafeAreaView style={s.safe} edges={['top']}>
+      <SafeAreaView style={s.safe} edges={[]}>
         <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
 
-        <TopBar
-          right={
-            <>
-              <Pill
-                variant="warm"
-                icon={require('../../assets/icons/icon-star.png')}
-                label={score.toLocaleString()}
-              />
-              {isPremium
-                ? <Pill variant="warm" icon={require('../../assets/icons/icon-crown.png')} label="Premium" />
-                : <Pill variant="warm" icon={require('../../assets/icons/icon-heart.png')} label={`${lives}${timeUntilNext ? ` · ${timeUntilNext}` : ''}`} />
-              }
-            </>
-          }
-        />
-
-        <LinearGradient
-          colors={['#f8ece0', '#FFE0C0']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={s.banner}
-        >
-          <Text style={s.bannerLabel}>Your journey</Text>
-          <Text style={s.bannerTitle}>Level {currentLevelId} of {LEVELS.length} 🌍</Text>
-        </LinearGradient>
-
         {/* Horizontal map */}
+        <View style={s.mapContainer}>
+
+          {/* Floating header — transparent, overlaid on map */}
+          <View style={[s.headerOverlay, { paddingTop: insets.top }]} pointerEvents="box-none">
+            <TopBar
+              right={
+                <>
+                  <Pill
+                    variant="warm"
+                    icon={require('../../assets/icons/icon-star.png')}
+                    label={score.toLocaleString()}
+                    bg={WORLD_TAB_COLORS[worldIdx]}
+                  />
+                  {isPremium
+                    ? <Pill variant="warm" icon={require('../../assets/icons/icon-crown.png')} label="Premium" bg={WORLD_TAB_COLORS[worldIdx]} />
+                    : <Pill variant="warm" icon={require('../../assets/icons/icon-heart.png')} label={`${lives}${timeUntilNext ? ` · ${timeUntilNext}` : ''}`} bg={WORLD_TAB_COLORS[worldIdx]} />
+                  }
+                </>
+              }
+            />
+          </View>
         <ScrollView
           ref={scrollRef}
           horizontal
@@ -169,6 +190,8 @@ export default function JourneyScreen() {
           showsHorizontalScrollIndicator={false}
           onContentSizeChange={scrollToCurrent}
           onLayout={(e) => setMapH(e.nativeEvent.layout.height)}
+          onScroll={(e) => setScrollX(e.nativeEvent.contentOffset.x)}
+          scrollEventThrottle={100}
         >
           {/* 10 world background images tiled side by side */}
           {WORLD_BACKGROUNDS.map((src, i) => (
@@ -181,6 +204,7 @@ export default function JourneyScreen() {
                 top: 0,
                 width: WORLD_WIDTH,
                 height: mapH,
+                opacity: 0.9,
               }}
               resizeMode="cover"
             />
@@ -222,6 +246,25 @@ export default function JourneyScreen() {
             );
           })}
         </ScrollView>
+
+          {/* Level label overlaid on map — does not scroll */}
+          <View style={[s.levelOverlay, { backgroundColor: WORLD_TAB_COLORS[worldIdx] }]} pointerEvents="none">
+            <Text style={s.bannerLabel}>YOUR JOURNEY</Text>
+            <Text style={s.bannerTitle}>Level {currentLevelId} of {LEVELS.length} 🌍</Text>
+          </View>
+
+          {/* World banner overlaid on map — updates as user scrolls */}
+          {(() => {
+            const world = WORLD_MARKERS[worldIdx];
+            if (!world) return null;
+            return (
+              <View style={[s.worldOverlay, { backgroundColor: WORLD_TAB_COLORS[worldIdx] }]} pointerEvents="none">
+                <Text style={s.bannerLabel}>{world.label.toUpperCase()}</Text>
+                <Text style={s.bannerTitle}>{world.subtitle}</Text>
+              </View>
+            );
+          })()}
+        </View>
 
         <Modal
           visible={modalVisible}
@@ -297,30 +340,52 @@ const s = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.50)',
   },
 
-  banner: {
-    marginHorizontal: 16,
-    marginTop: 8,
-    marginBottom: 10,
-    borderRadius: 18,
-    paddingHorizontal: 18,
-    paddingVertical: 12,
+  mapContainer: {
+    flex: 1,
+  },
+  headerOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 20,
+  },
+  mapScroll: {
+    flex: 1,
+  },
+  levelOverlay: {
+    position: 'absolute',
+    top: 128,
+    left: 14,
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.06)',
+  },
+  worldOverlay: {
+    position: 'absolute',
+    top: 128,
+    right: 14,
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.06)',
+    alignItems: 'flex-end',
   },
   bannerLabel: {
-    fontSize: 10,
+    fontSize: 9,
     fontFamily: 'Nunito_700Bold',
     letterSpacing: 1.5,
     textTransform: 'uppercase',
     color: Colors.muted,
   },
   bannerTitle: {
-    fontSize: 18,
+    fontSize: 17,
     fontFamily: 'Nunito_900Black',
     color: Colors.text,
     marginTop: 1,
-  },
-
-  mapScroll: {
-    flex: 1,
   },
 
   worldMarker: {

@@ -10,10 +10,10 @@ const VARIANTS: Record<Variant, { bg: string; color: string }> = {
   warm: { bg: '#FFE0C0',               color: '#C25E00' },
 };
 
-export function Pill({ variant, label, icon }: { variant: Variant; label: string; icon?: any }) {
+export function Pill({ variant, label, icon, bg }: { variant: Variant; label: string; icon?: any; bg?: string }) {
   const vs = VARIANTS[variant];
   return (
-    <View style={[s.pill, { backgroundColor: vs.bg }]}>
+    <View style={[s.pill, { backgroundColor: bg ?? vs.bg }]}>
       {icon && <Image source={icon} style={s.icon} resizeMode="contain" />}
       <Text style={[s.text, { color: vs.color }]}>{label}</Text>
     </View>

@@ -203,16 +203,16 @@ export default function LevelTransitionScreen() {
             transform: [{ translateY: labelAnim.interpolate({ inputRange: [0, 1], outputRange: [14, 0] }) }],
           }]}>
             <View style={s.strengthHeader}>
-              <Text style={[s.strengthLabel, { color: '#5d430a' }]}>
+              <Text style={[s.strengthLabel, { color: '#8B3FD9' }]}>
                 {DOMAIN_LABELS[domain]} Strength
               </Text>
-              <Text style={[s.strengthPcts, { color: '#9f710d' }]}>
+              <Text style={[s.strengthPcts, { color: '#8B3FD9' }]}>
                 {oldPct}% → {newPct}%
               </Text>
             </View>
             <View style={s.strengthTrack}>
               <Animated.View style={[s.strengthFill, {
-                backgroundColor: '#5d430a',
+                backgroundColor: '#8B3FD9',
                 width: barAnim.interpolate({ inputRange: [0, 100], outputRange: ['0%', '100%'] }),
               }]} />
             </View>
@@ -229,7 +229,7 @@ export default function LevelTransitionScreen() {
             activeOpacity={0.85}
           >
             <LinearGradient
-              colors={['#5d430a', '#5d430a']}
+              colors={['#8B3FD9', '#8B3FD9']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={s.btn}
@@ -358,7 +358,7 @@ const s = StyleSheet.create({
   strengthTrack: {
     width: '100%',
     height: 16,
-    backgroundColor: 'rgba(0,0,0,0.08)',
+    backgroundColor: 'rgba(255,107,53,0.14)',
     borderRadius: 8,
     overflow: 'hidden',
   },
@@ -373,7 +373,7 @@ const s = StyleSheet.create({
     paddingVertical: 19,
     borderRadius: 17,
     alignItems: 'center',
-    shadowColor: '#F97316',
+    shadowColor: '#8B3FD9',
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.28,
     shadowRadius: 14,

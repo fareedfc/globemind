@@ -8,7 +8,8 @@ import { LEVELS } from '../../data/levels';
 import { PATTERN_SETS, type PatternRound } from '../../data/patternSets';
 import { WinScreen, type WinData } from '../../components/games/WinScreen';
 import { FailScreen } from '../../components/games/FailScreen';
-import { calcPatternStars, MILES_PER_STAR } from '../../utils/scoring';
+import { calcPatternStars, calcActualPoints } from '../../utils/scoring';
+import { useProgressStore } from '../../stores/progressStore';
 import { pickInsight } from '../../data/brainInsights';
 
 const TOTAL_ROUNDS = 7;
@@ -17,9 +18,113 @@ const FAIL_THRESHOLD = 4;
 
 type Phase = 'watching' | 'answering' | 'feedback';
 type PipState = 'none' | 'ok' | 'err';
+type PatternMode = 'next' | 'missing' | 'flash' | 'break_it';
 
 const delay = (ms: number) => new Promise<void>(r => setTimeout(r, ms));
 
+// ── Active round type ─────────────────────────────────────────────────────────
+interface ActiveRound {
+  base: PatternRound;
+  mode: PatternMode;
+  displaySeq: string[];   // shown in sequence area (may contain ❓ or a planted wrong item)
+  answer: string;         // correct answer for this mode
+  choices: string[];      // 4 shuffled choices
+  specialIdx?: number;    // position of ❓ or broken item (missing / break_it)
+  wrongItem?: string;     // break_it: the planted wrong emoji
+}
+
+// ── Mode + round generation ───────────────────────────────────────────────────
+function pickPatternMode(levelId: number): PatternMode {
+  if (levelId <= 20) return 'next';
+  if (levelId <= 40) return Math.random() < 0.5 ? 'next' : 'missing';
+  if (levelId <= 70) {
+    const r = Math.random();
+    if (r < 0.35) return 'next';
+    if (r < 0.65) return 'missing';
+    return 'flash';
+  }
+  const modes: PatternMode[] = ['next', 'missing', 'flash', 'break_it'];
+  return modes[Math.floor(Math.random() * modes.length)];
+}
+
+function buildPatternRounds(sets: PatternRound[], count: number, levelId: number): ActiveRound[] {
+  const shuffled = [...sets].sort(() => Math.random() - 0.5);
+  const selected = shuffled.slice(0, count);
+  const allEmojis = sets.flatMap(s => [...s.seq, s.ans]);
+
+  // Shorter sequences for early levels (show 4 of 5 items → next = seq[4])
+  const seqLen = levelId <= 20 ? 4 : 5;
+
+  return selected.map(base => {
+    const mode = pickPatternMode(levelId);
+
+    // ── next / flash ────────────────────────────────────────────────────────
+    if (mode === 'next' || mode === 'flash') {
+      if (seqLen < base.seq.length) {
+        const answer = base.seq[seqLen];
+        const wrongs = allEmojis
+          .filter(e => e !== answer)
+          .sort(() => Math.random() - 0.5)
+          .slice(0, 3);
+        return {
+          base, mode,
+          displaySeq: base.seq.slice(0, seqLen),
+          answer,
+          choices: [...wrongs, answer].sort(() => Math.random() - 0.5),
+        };
+      }
+      return {
+        base, mode,
+        displaySeq: base.seq,
+        answer: base.ans,
+        choices: base.ch,
+      };
+    }
+
+    // ── missing: replace a middle position with ❓ ─────────────────────────
+    if (mode === 'missing') {
+      const idx = 1 + Math.floor(Math.random() * (base.seq.length - 2));
+      const answer = base.seq[idx];
+      const wrongs = allEmojis
+        .filter(e => e !== answer)
+        .sort(() => Math.random() - 0.5)
+        .slice(0, 3);
+      const displaySeq = [...base.seq];
+      displaySeq[idx] = '❓';
+      return {
+        base, mode,
+        displaySeq,
+        answer,
+        choices: [...wrongs, answer].sort(() => Math.random() - 0.5),
+        specialIdx: idx,
+      };
+    }
+
+    // ── break_it: plant a wrong emoji at a middle position ─────────────────
+    const idx = 1 + Math.floor(Math.random() * (base.seq.length - 2));
+    const correctItem = base.seq[idx];
+    const wrongPool = allEmojis.filter(e => e !== correctItem && !base.seq.includes(e));
+    const wrongItem = wrongPool.length > 0
+      ? wrongPool[Math.floor(Math.random() * wrongPool.length)]
+      : allEmojis.filter(e => e !== correctItem)[0];
+    const displaySeq = [...base.seq];
+    displaySeq[idx] = wrongItem;
+    const wrongs = allEmojis
+      .filter(e => e !== correctItem)
+      .sort(() => Math.random() - 0.5)
+      .slice(0, 3);
+    return {
+      base, mode,
+      displaySeq,
+      answer: correctItem,
+      choices: [...wrongs, correctItem].sort(() => Math.random() - 0.5),
+      specialIdx: idx,
+      wrongItem,
+    };
+  });
+}
+
+// ── Choice button ─────────────────────────────────────────────────────────────
 function PatternChoiceBtn({ choice, style, onPress, disabled, txtStyle, isCorrect }: {
   choice: string; style: any; onPress: () => void; disabled: boolean; txtStyle: any; isCorrect?: boolean;
 }) {
@@ -49,18 +154,18 @@ function PatternChoiceBtn({ choice, style, onPress, disabled, txtStyle, isCorrec
   );
 }
 
+// ── Screen ────────────────────────────────────────────────────────────────────
 export default function PatternGame() {
   const { levelId: rawId } = useLocalSearchParams<{ levelId: string }>();
   const levelId = parseInt(rawId ?? '5');
   const level = LEVELS.find(l => l.id === levelId) ?? LEVELS[4];
 
-  const rounds = useRef<PatternRound[]>(
-    [...PATTERN_SETS].sort(() => Math.random() - 0.5).slice(0, TOTAL_ROUNDS)
-  );
+  const rounds = useRef<ActiveRound[]>(buildPatternRounds(PATTERN_SETS, TOTAL_ROUNDS, levelId));
 
   const [currentRound, setCurrentRound] = useState(0);
   const [phase, setPhase] = useState<Phase>('watching');
   const [litIndex, setLitIndex] = useState(-1);
+  const [seqHidden, setSeqHidden] = useState(false);
   const [timerPct, setTimerPct] = useState(100);
   const [score, setScore] = useState(0);
   const [pips, setPips] = useState<PipState[]>(Array(TOTAL_ROUNDS).fill('none'));
@@ -89,9 +194,9 @@ export default function PatternGame() {
     stopAnswerTimer();
     cancelRef.current = true;
 
-    const round = rounds.current[currentRoundRef.current];
-    if (!round) return;
-    const correct = ans === round.ans;
+    const activeRound = rounds.current[currentRoundRef.current];
+    if (!activeRound) return;
+    const correct = ans === activeRound.answer;
 
     if (correct) {
       scoreRef.current += 1;
@@ -100,11 +205,9 @@ export default function PatternGame() {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       wrongCountRef.current += 1;
     } else {
-      // timeout counts as wrong
       wrongCountRef.current += 1;
     }
-    const newScore = scoreRef.current;
-    setScore(newScore);
+    setScore(scoreRef.current);
     setFeedbackAnswer(ans);
     setPhase('feedback');
     setPips(prev => {
@@ -114,12 +217,8 @@ export default function PatternGame() {
     });
 
     const willFail = !correct && wrongCountRef.current >= FAIL_THRESHOLD;
-
     setTimeout(() => {
-      if (willFail) {
-        setFailed(true);
-        return;
-      }
+      if (willFail) { setFailed(true); return; }
       const nextRound = currentRoundRef.current + 1;
       if (nextRound >= TOTAL_ROUNDS) {
         setWon(true);
@@ -142,14 +241,15 @@ export default function PatternGame() {
     }, 80);
   }, [stopAnswerTimer, handleAnswer]);
 
-  const playSequence = useCallback(async (round: PatternRound) => {
+  const playSequence = useCallback(async (activeRound: ActiveRound) => {
     cancelRef.current = false;
     setPhase('watching');
     setLitIndex(-1);
     setFeedbackAnswer(null);
     setTimerPct(100);
+    setSeqHidden(false);
 
-    for (let i = 0; i < round.seq.length; i++) {
+    for (let i = 0; i < activeRound.displaySeq.length; i++) {
       if (cancelRef.current) return;
       setLitIndex(i);
       await delay(550);
@@ -159,26 +259,31 @@ export default function PatternGame() {
     }
 
     if (cancelRef.current) return;
-    await delay(400);
-    if (cancelRef.current) return;
 
+    if (activeRound.mode === 'flash') {
+      // Sequence vanishes before answering
+      setSeqHidden(true);
+      await delay(200);
+    } else {
+      await delay(400);
+    }
+
+    if (cancelRef.current) return;
     setPhase('answering');
     startAnswerTimer();
   }, [startAnswerTimer]);
 
-  // Start sequence when round changes
   useEffect(() => {
     if (won) return;
-    const round = rounds.current[currentRound];
-    if (!round) return;
-    playSequence(round);
+    const activeRound = rounds.current[currentRound];
+    if (!activeRound) return;
+    playSequence(activeRound);
     return () => {
       cancelRef.current = true;
       stopAnswerTimer();
     };
   }, [currentRound, won]);
 
-  // Cleanup on unmount
   useEffect(() => () => {
     cancelRef.current = true;
     stopAnswerTimer();
@@ -187,10 +292,11 @@ export default function PatternGame() {
   const resetGame = () => {
     cancelRef.current = true;
     stopAnswerTimer();
-    rounds.current = [...PATTERN_SETS].sort(() => Math.random() - 0.5).slice(0, TOTAL_ROUNDS);
+    rounds.current = buildPatternRounds(PATTERN_SETS, TOTAL_ROUNDS, levelId);
     setCurrentRound(0);
     setPhase('watching');
     setLitIndex(-1);
+    setSeqHidden(false);
     setTimerPct(100);
     setScore(0);
     scoreRef.current = 0;
@@ -201,20 +307,23 @@ export default function PatternGame() {
     setFailed(false);
   };
 
-  const round = rounds.current[currentRound];
+  const activeRound = rounds.current[currentRound];
   const timerColor = timerPct > 50 ? Colors.teal : timerPct > 25 ? Colors.gold : Colors.coral;
 
   const winPct = Math.round((score / TOTAL_ROUNDS) * 100);
   const stars = calcPatternStars(score);
+  const isFirstClear = useProgressStore.getState().completions[levelId] === undefined;
+  const lastPlayedAt = useProgressStore.getState().lastPlayedAt?.[levelId];
+  const previewPts = calcActualPoints(stars, levelId, isFirstClear, lastPlayedAt);
   const winData: WinData = {
     type: 'pattern',
-    emoji: stars === 3 ? '🔮' : stars === 2 ? '🧩' : '🌱',
-    title: stars === 3 ? 'Pattern Master!' : stars === 2 ? 'Sharp Eye!' : 'Keep Practicing!',
+    emoji: stars === 5 ? '🔮' : stars === 4 ? '🌟' : stars === 3 ? '✨' : stars === 2 ? '🧩' : '🌱',
+    title: stars === 5 ? 'Pattern Master!' : stars === 4 ? 'Excellent!' : stars === 3 ? 'Sharp Eye!' : stars === 2 ? 'Good Effort!' : 'Keep Practicing!',
     sub: 'Pattern recognition sharpens how fast you read situations and make decisions.',
     stats: [
       { num: `${score}/${TOTAL_ROUNDS}`, lbl: 'Correct' },
       { num: `${winPct}%`, lbl: 'Accuracy' },
-      { num: `+${MILES_PER_STAR[stars]}`, lbl: 'Points' },
+      { num: `+${previewPts}`, lbl: 'Points' },
     ],
     insight: pickInsight('pattern'),
     stars,
@@ -236,7 +345,36 @@ export default function PatternGame() {
     );
   }
 
-  if (!round) return null;
+  if (!activeRound) return null;
+
+  const mode = activeRound.mode;
+  const isFeedbackOk = phase === 'feedback' && feedbackAnswer === activeRound.answer;
+  const isFeedbackErr = phase === 'feedback' && feedbackAnswer !== activeRound.answer;
+
+  const phaseLabel =
+    phase === 'watching' ? (
+      mode === 'flash'    ? '⚡ Memorise it — it vanishes!' :
+      mode === 'break_it' ? '🔍 Find the wrong item...' :
+      mode === 'missing'  ? '🧩 Something is hiding...' :
+                            '👀 Watch the sequence...'
+    ) :
+    phase === 'answering' ? (
+      mode === 'flash'    ? '🧠 What comes next? (from memory)' :
+      mode === 'break_it' ? '🔧 What should replace the wrong item?' :
+      mode === 'missing'  ? '❓ What is the missing piece?' :
+                            '🤔 What comes next?'
+    ) :
+    isFeedbackOk ? '✅ Correct!' : '❌ Not quite...';
+
+  const questionText =
+    phase === 'answering' ? (
+      mode === 'break_it' ? 'Pick what should be there instead:' :
+      mode === 'missing'  ? 'Choose the missing symbol:' :
+                            'Choose the next symbol in the pattern:'
+    ) :
+    phase === 'feedback' && !isFeedbackOk
+      ? `The answer was ${activeRound.answer}`
+      : '';
 
   return (
     <SafeAreaView style={s.container} edges={['top']}>
@@ -261,69 +399,73 @@ export default function PatternGame() {
         {/* Round pips */}
         <View style={s.pips}>
           {pips.map((pip, i) => (
-            <View
-              key={i}
-              style={[
-                s.pip,
-                pip === 'ok' && s.pipOk,
-                pip === 'err' && s.pipErr,
-                i === currentRound && pip === 'none' && s.pipActive,
-              ]}
-            />
+            <View key={i} style={[
+              s.pip,
+              pip === 'ok' && s.pipOk,
+              pip === 'err' && s.pipErr,
+              i === currentRound && pip === 'none' && s.pipActive,
+            ]} />
           ))}
         </View>
 
-        {/* Timer bar (shown during answering & feedback) */}
+        {/* Timer bar */}
         <View style={[s.timerWrap, phase === 'watching' && { opacity: 0 }]}>
           <View style={s.timerTrack}>
             <View style={[s.timerFill, { width: `${timerPct}%` as any, backgroundColor: timerColor }]} />
           </View>
         </View>
 
+        {/* Mode badge */}
+        {mode !== 'next' && (
+          <View style={s.modeBadge}>
+            <Text style={s.modeBadgeTxt}>
+              {mode === 'flash'    ? '⚡ Flash'   :
+               mode === 'missing'  ? '🧩 Missing' :
+                                     '🔧 Break It'}
+            </Text>
+          </View>
+        )}
+
         {/* Phase label */}
         <Text style={[s.phaseLabel, phase === 'watching' ? s.phaseWatch : s.phaseRecall]}>
-          {phase === 'watching' ? '👀 Watch the sequence...' :
-           phase === 'answering' ? '🤔 What comes next?' :
-           feedbackAnswer === round.ans ? '✅ Correct!' : '❌ Not quite...'}
+          {phaseLabel}
         </Text>
 
-        {/* Sequence symbols */}
-        <View style={s.seq}>
-          {round.seq.map((sym, i) => {
+        {/* Sequence */}
+        <View style={[s.seq, seqHidden && { opacity: 0 }]}>
+          {activeRound.displaySeq.map((sym, i) => {
             const isLit = phase === 'watching' && litIndex === i;
-            const isFeedbackOk = phase === 'feedback' && feedbackAnswer === round.ans;
-            const isFeedbackErr = phase === 'feedback' && feedbackAnswer !== round.ans;
+            const isBroken = mode === 'break_it' && i === activeRound.specialIdx;
+            const isMissing = sym === '❓';
             return (
-              <View
-                key={i}
-                style={[
-                  s.sym,
-                  isLit && s.symLit,
-                  isFeedbackOk && s.symOk,
-                  isFeedbackErr && s.symErr,
-                ]}
-              >
+              <View key={i} style={[
+                s.sym,
+                isLit && s.symLit,
+                isBroken && phase !== 'feedback' && s.symBroken,
+                isMissing && s.symMissing,
+                isFeedbackOk && s.symOk,
+                isFeedbackErr && s.symErr,
+              ]}>
                 <Text style={s.symTxt}>{sym}</Text>
               </View>
             );
           })}
-          {/* Question mark symbol */}
-          <View style={[s.sym, s.symQuestion]}>
-            <Text style={s.symQuestionTxt}>?</Text>
-          </View>
+          {/* ? end marker only for next / flash modes */}
+          {(mode === 'next' || mode === 'flash') && (
+            <View style={[s.sym, s.symQuestion]}>
+              <Text style={s.symQuestionTxt}>?</Text>
+            </View>
+          )}
         </View>
 
         {/* Question prompt */}
-        <Text style={s.question}>
-          {phase === 'answering' ? 'Choose the next symbol in the pattern:' :
-           phase === 'feedback' && feedbackAnswer !== round.ans ? `The answer was ${round.ans}` : ''}
-        </Text>
+        <Text style={s.question}>{questionText}</Text>
 
         {/* Choices — 2×2 grid */}
         <View style={s.choices}>
-          {round.ch.map((choice, i) => {
+          {activeRound.choices.map((choice, i) => {
             const isSelected = feedbackAnswer === choice;
-            const isCorrectAnswer = choice === round.ans;
+            const isCorrectAnswer = choice === activeRound.answer;
             const showCorrect = phase === 'feedback' && isCorrectAnswer;
             const showWrong = phase === 'feedback' && isSelected && !isCorrectAnswer;
             return (
@@ -357,17 +499,11 @@ const s = StyleSheet.create({
     borderBottomColor: Colors.border,
   },
   backBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
+    width: 38, height: 38, borderRadius: 19,
     backgroundColor: '#FFFFFF',
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
+    alignItems: 'center', justifyContent: 'center',
+    shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06, shadowRadius: 8, elevation: 2,
   },
   backTxt: { fontSize: 17, color: Colors.text, fontFamily: 'Nunito_700Bold' },
   headerTitle: { flex: 1, fontSize: 13, fontFamily: 'Nunito_800ExtraBold', color: Colors.text, lineHeight: 18 },
@@ -375,9 +511,9 @@ const s = StyleSheet.create({
   scoreTxt: { fontSize: 13, fontFamily: 'Nunito_800ExtraBold' },
 
   body: { flex: 1, paddingHorizontal: 16, paddingTop: 14 },
-  domainTag: { fontSize: 11, fontFamily: 'Nunito_700Bold', textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 8 },
+  domainTag: { fontSize: 16, fontFamily: 'Nunito_900Black', textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 8 },
   instr: { backgroundColor: 'rgba(0,0,0,0.03)', borderRadius: 11, padding: 10, marginBottom: 14 },
-  instrTxt: { fontSize: 13, fontFamily: 'Nunito_400Regular', color: Colors.muted, lineHeight: 20 },
+  instrTxt: { fontSize: 18, fontFamily: 'Nunito_700Bold', color: '#1A1A1A', lineHeight: 26 },
 
   pips: { flexDirection: 'row', gap: 5, justifyContent: 'center', marginBottom: 12 },
   pip: { width: 28, height: 6, borderRadius: 3, backgroundColor: 'rgba(0,0,0,0.08)' },
@@ -389,30 +525,37 @@ const s = StyleSheet.create({
   timerTrack: { height: 6, backgroundColor: 'rgba(0,0,0,0.08)', borderRadius: 3, overflow: 'hidden' },
   timerFill: { height: '100%', borderRadius: 3 },
 
+  modeBadge: {
+    alignSelf: 'center',
+    backgroundColor: 'rgba(0,201,167,0.12)',
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    marginBottom: 8,
+  },
+  modeBadgeTxt: { fontSize: 11, fontFamily: 'Nunito_700Bold', color: Colors.teal },
+
   phaseLabel: { fontSize: 13, fontFamily: 'Nunito_800ExtraBold', textAlign: 'center', minHeight: 22, marginBottom: 12 },
   phaseWatch: { color: Colors.teal },
   phaseRecall: { color: Colors.gold },
 
   seq: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, marginBottom: 14, flexWrap: 'wrap', minHeight: 52 },
   sym: {
-    width: 42,
-    height: 42,
+    width: 42, height: 42,
     borderRadius: 11,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: 'center', justifyContent: 'center',
     borderWidth: 2,
     borderColor: Colors.border,
     backgroundColor: '#FFFFFF',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06, shadowRadius: 8, elevation: 2,
   },
-  symLit: { borderColor: Colors.teal, backgroundColor: 'rgba(6,214,160,0.2)', transform: [{ scale: 1.15 }] },
-  symOk: { borderColor: Colors.teal, backgroundColor: 'rgba(6,214,160,0.2)' },
-  symErr: { borderColor: Colors.coral, backgroundColor: 'rgba(239,71,111,0.2)' },
-  symTxt: { fontSize: 24 },
+  symLit:      { borderColor: Colors.teal, backgroundColor: 'rgba(6,214,160,0.2)', transform: [{ scale: 1.15 }] },
+  symOk:       { borderColor: Colors.teal, backgroundColor: 'rgba(6,214,160,0.2)' },
+  symErr:      { borderColor: Colors.coral, backgroundColor: 'rgba(239,71,111,0.2)' },
+  symBroken:   { borderColor: Colors.coral, backgroundColor: 'rgba(239,71,111,0.12)' },
+  symMissing:  { borderColor: Colors.gold, backgroundColor: 'rgba(245,158,11,0.1)' },
+  symTxt:      { fontSize: 24 },
   symQuestion: { borderColor: 'rgba(245,158,11,0.4)', backgroundColor: 'rgba(245,158,11,0.07)' },
   symQuestionTxt: { fontSize: 16, fontFamily: 'Nunito_900Black', color: Colors.gold },
 
@@ -425,16 +568,12 @@ const s = StyleSheet.create({
     borderWidth: 2,
     borderColor: Colors.border,
     backgroundColor: '#FFFFFF',
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: 'center', justifyContent: 'center',
     height: 110,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06, shadowRadius: 8, elevation: 2,
   },
-  choiceOk: { borderColor: Colors.teal, backgroundColor: 'rgba(6,214,160,0.2)' },
+  choiceOk:  { borderColor: Colors.teal,  backgroundColor: 'rgba(6,214,160,0.2)' },
   choiceErr: { borderColor: Colors.coral, backgroundColor: 'rgba(239,71,111,0.15)' },
   choiceTxt: { fontSize: 48, color: Colors.text },
 });

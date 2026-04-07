@@ -10,15 +10,55 @@ import { calcSpeedStars } from '../../utils/scoring';
 import { pickInsight } from '../../data/brainInsights';
 
 const GRID_GAP = 9;
-
-const EMOJIS = ['🌸', '🌊', '🏔️', '🌺', '⭐', '🎯', '🌍', '🎭', '🦋', '🌙', '🎪', '🍀'];
 const TOTAL_MS = 30_000;
 
-function buildRound(pool: string[]): { target: string; options: string[] } {
+// Themed emoji pools — one per world (10 worlds, need ≥9 emoji each for 3×3 grid)
+const SPEED_POOLS: string[][] = [
+  ['🌸', '🌊', '🏔️', '🌺', '⭐', '🎯', '🌍', '🎭', '🦋', '🌙', '🎪', '🍀'], // W1 Nature
+  ['🐬', '🦈', '🐙', '🦀', '🐚', '🐠', '🦑', '🐡', '🦞', '🐟', '🐋', '🦭'], // W2 Ocean
+  ['🦁', '🐯', '🦊', '🐺', '🦝', '🐻', '🦌', '🐘', '🦒', '🦓', '🦏', '🐆'], // W3 Animals
+  ['🍕', '🍔', '🌮', '🍜', '🍣', '🍩', '🍦', '🎂', '🍇', '🥝', '🥐', '🍱'], // W4 Food
+  ['🚀', '🪐', '☄️', '🌟', '🛸', '🔭', '🌌', '💫', '🌙', '🛰️', '👾', '🌠'], // W5 Space
+  ['🍎', '🍊', '🍋', '🍇', '🍓', '🫐', '🍑', '🍒', '🥭', '🍍', '🥥', '🍈'], // W6 Fruits
+  ['☀️', '🌧️', '❄️', '🌈', '⚡', '🌪️', '🌤️', '🌫️', '🌊', '🌩️', '🌬️', '🌂'], // W7 Weather
+  ['⚽', '🏀', '🎾', '🏈', '⚾', '🏐', '🏉', '🎱', '🏓', '🥊', '🏸', '🎿'], // W8 Sports
+  ['🇫🇷', '🇩🇪', '🇮🇹', '🇯🇵', '🇧🇷', '🇦🇺', '🇨🇦', '🇲🇽', '🇰🇷', '🇬🇧', '🇪🇸', '🇮🇳'], // W9 Flags
+  ['♠️', '♥️', '♦️', '♣️', '🔴', '🟡', '🟢', '🔵', '🟣', '🟠', '⬛', '⬜'], // W10 Symbols
+];
+
+function getSpeedConfig(levelId: number): { pool: string[]; cols: number; rows: number } {
+  const worldIdx = Math.min(Math.floor((levelId - 1) / 10), SPEED_POOLS.length - 1);
+  const pool = SPEED_POOLS[worldIdx];
+  if (levelId <= 20) return { pool, cols: 2, rows: 2 }; // 4 cells — easy
+  if (levelId <= 60) return { pool, cols: 3, rows: 2 }; // 6 cells — medium
+  return { pool, cols: 3, rows: 3 };                    // 9 cells — hard
+}
+
+type GameMode = 'find' | 'oddone' | 'donttap';
+const MODES: GameMode[] = ['find', 'oddone', 'donttap'];
+
+const MODE_LABEL: Record<GameMode, string> = {
+  find:    'Find this →',
+  oddone:  'Tap the odd one!',
+  donttap: 'Don\'t tap this →',
+};
+
+function buildRound(pool: string[], count: number): { mode: GameMode; target: string; options: string[] } {
+  const mode = MODES[Math.floor(Math.random() * MODES.length)];
+
+  if (mode === 'oddone') {
+    const decoy = pool[Math.floor(Math.random() * pool.length)];
+    const rest  = pool.filter(e => e !== decoy);
+    const odd   = rest[Math.floor(Math.random() * rest.length)];
+    const options = [...Array(count - 1).fill(decoy), odd].sort(() => Math.random() - 0.5);
+    return { mode, target: odd, options };
+  }
+
+  // 'find' and 'donttap': target shown at top, present in grid
   const target = pool[Math.floor(Math.random() * pool.length)];
-  const others = pool.filter(e => e !== target).sort(() => Math.random() - 0.5).slice(0, 5);
+  const others = pool.filter(e => e !== target).sort(() => Math.random() - 0.5).slice(0, count - 1);
   const options = [...others, target].sort(() => Math.random() - 0.5);
-  return { target, options };
+  return { mode, target, options };
 }
 
 function SpeedOptionBtn({ emoji, style, onPress, disabled, txtStyle, isCorrect }: {
@@ -57,8 +97,10 @@ export default function SpeedGame() {
   const { levelId: rawId } = useLocalSearchParams<{ levelId: string }>();
   const levelId = parseInt(rawId ?? '4');
   const level = LEVELS.find(l => l.id === levelId) ?? LEVELS[3];
+  const { pool, cols, rows } = getSpeedConfig(levelId);
+  const cellCount = cols * rows;
 
-  const [round, setRound] = useState(() => buildRound(EMOJIS));
+  const [round, setRound] = useState(() => buildRound(pool, cellCount));
   const [score, setScore] = useState(0);
   const [combo, setCombo] = useState(0);
   const [maxCombo, setMaxCombo] = useState(0);
@@ -108,7 +150,12 @@ export default function SpeedGame() {
   const tapOption = useCallback((emoji: string, idx: number) => {
     if (!runningRef.current) return;
 
-    if (emoji === round.target) {
+    const { mode, target } = round;
+    // 'find' and 'oddone': correct = tapped the target
+    // 'donttap': correct = tapped anything except the target
+    const isCorrect = mode === 'donttap' ? emoji !== target : emoji === target;
+
+    if (isCorrect) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       setFlash({ idx, correct: true });
       setCorrect(p => p + 1);
@@ -122,7 +169,7 @@ export default function SpeedGame() {
       });
       setTimeout(() => {
         setFlash(null);
-        setRound(buildRound(EMOJIS));
+        setRound(buildRound(pool, cellCount));
         setComboText('');
       }, 180);
     } else {
@@ -130,16 +177,26 @@ export default function SpeedGame() {
       setFlash({ idx, correct: false });
       setWrong(p => p + 1);
       setCombo(0);
-      setComboText('');
-      setTimeout(() => setFlash(null), 400);
+      setComboText('❌ -5⭐');
+      setScore(s => Math.max(0, s - 5));
+      // 'donttap' always advances — any tap = decision made
+      if (mode === 'donttap') {
+        setTimeout(() => {
+          setFlash(null);
+          setRound(buildRound(pool, cellCount));
+          setComboText('');
+        }, 350);
+      } else {
+        setTimeout(() => { setFlash(null); setComboText(''); }, 400);
+      }
     }
-  }, [round.target]);
+  }, [round]);
 
   const timerColor = timerPct > 50 ? Colors.teal : timerPct > 25 ? Colors.gold : Colors.coral;
 
   const resetGame = () => {
     stopTimer();
-    setRound(buildRound(EMOJIS));
+    setRound(buildRound(pool, cellCount));
     setScore(0);
     setCombo(0);
     setMaxCombo(0);
@@ -164,9 +221,9 @@ export default function SpeedGame() {
   const stars = calcSpeedStars(score);
   const winData: WinData = {
     type: 'speed',
-    emoji: stars === 3 ? '⚡' : stars === 2 ? '🎯' : '🌱',
-    title: stars === 3 ? 'Blazing Fast!' : stars === 2 ? 'Sharp Reflexes!' : 'Good Warm-Up!',
-    sub: 'Processing speed is a core marker of brain health.',
+    emoji: stars === 5 ? '⚡' : stars === 4 ? '🌟' : stars === 3 ? '🎯' : stars === 2 ? '👍' : '🌱',
+    title: stars === 5 ? 'Blazing Fast!' : stars === 4 ? 'Excellent!' : stars === 3 ? 'Sharp Reflexes!' : stars === 2 ? 'Good Warm-Up!' : 'Keep Practicing!',
+    sub: 'Quick reflexes and sharp focus — you\'re on fire.',
     stats: [
       { num: `⭐ ${score}`, lbl: 'Total' },
       { num: `${acc}%`, lbl: 'Accuracy' },
@@ -214,19 +271,26 @@ export default function SpeedGame() {
 
         {/* Target & grid */}
         <View style={s.prompt}>
-          <Text style={s.findLbl}>Find this →</Text>
+          <Text style={[s.findLbl, round.mode === 'donttap' && { color: Colors.coral }]}>
+            {MODE_LABEL[round.mode]}
+          </Text>
 
-          <Animated.Text style={s.target}>
-            {round.target}
-          </Animated.Text>
+          {round.mode !== 'oddone' && (
+            <View style={s.targetWrap}>
+              <Animated.Text style={s.target}>{round.target}</Animated.Text>
+              {round.mode === 'donttap' && (
+                <Text style={s.noSign}>🚫</Text>
+              )}
+            </View>
+          )}
 
           <Text style={s.comboTxt}>{comboText}</Text>
 
           <View style={s.grid}>
-            {[0, 1].map(row => (
+            {Array.from({ length: rows }).map((_, row) => (
               <View key={row} style={s.gridRow}>
-                {round.options.slice(row * 3, row * 3 + 3).map((emoji, col) => {
-                  const idx = row * 3 + col;
+                {round.options.slice(row * cols, row * cols + cols).map((emoji, col) => {
+                  const idx = row * cols + col;
                   const isCorrect = flash?.idx === idx && flash.correct;
                   const isWrong = flash?.idx === idx && !flash.correct;
                   return (
@@ -236,7 +300,7 @@ export default function SpeedGame() {
                       style={[s.opt, isCorrect && s.optCorrect, isWrong && s.optWrong]}
                       onPress={() => tapOption(emoji, idx)}
                       disabled={!started || !running}
-                      txtStyle={s.optTxt}
+                      txtStyle={[s.optTxt, { fontSize: cols === 3 && rows === 3 ? 28 : 36 }]}
                       isCorrect={isCorrect}
                     />
                   );
@@ -287,9 +351,9 @@ const s = StyleSheet.create({
   scoreTxt: { fontSize: 13, fontFamily: 'Nunito_800ExtraBold' },
 
   body: { flex: 1, paddingHorizontal: 16, paddingTop: 14 },
-  domainTag: { fontSize: 11, fontFamily: 'Nunito_700Bold', textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 8 },
+  domainTag: { fontSize: 16, fontFamily: 'Nunito_900Black', textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 8 },
   instr: { backgroundColor: 'rgba(0,0,0,0.03)', borderRadius: 11, padding: 10, marginBottom: 14 },
-  instrTxt: { fontSize: 13, fontFamily: 'Nunito_400Regular', color: Colors.muted, lineHeight: 20 },
+  instrTxt: { fontSize: 18, fontFamily: 'Nunito_700Bold', color: '#1A1A1A', lineHeight: 26 },
 
   timerWrap: { marginBottom: 12 },
   timerTrack: { height: 7, backgroundColor: 'rgba(0,0,0,0.08)', borderRadius: 4, overflow: 'hidden' },
@@ -298,7 +362,9 @@ const s = StyleSheet.create({
 
   prompt: { flex: 1, justifyContent: 'center', gap: 14 },
   findLbl: { fontSize: 12, fontFamily: 'Nunito_700Bold', textTransform: 'uppercase', letterSpacing: 1.5, color: Colors.muted, alignSelf: 'center' },
+  targetWrap: { alignSelf: 'center', alignItems: 'center' },
   target: { fontSize: 74, lineHeight: 84, alignSelf: 'center' },
+  noSign: { fontSize: 28, position: 'absolute', bottom: -4, right: -24 },
   comboTxt: { fontSize: 13, fontFamily: 'Nunito_700Bold', color: Colors.gold, height: 20, alignSelf: 'center' },
 
   grid: {

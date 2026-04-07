@@ -28,7 +28,7 @@ Brain training apps exist (Lumosity, BrainHQ, Elevate) but they feel like homewo
 - As a new user, I want to understand what each game trains without it feeling academic
 
 ### Core Loop
-- As a player, I want to scroll a beautiful path and tap a level to play
+- As a player, I want to scroll a beautiful horizontal path and tap a level to play
 - As a player, I want a bottom sheet to appear with level info before I commit to playing
 - As a player, I want to complete a short game (2–5 min) and feel rewarded immediately
 - As a player, I want to see my score go up after each session
@@ -54,21 +54,23 @@ Brain training apps exist (Lumosity, BrainHQ, Elevate) but they feel like homewo
 ## Functional Requirements
 
 ### FR-001: Level Path
-- Scrollable **winding organic path** with **50 levels at launch** (scale to 200+)
-- PATH_HEIGHT = 6000px; node positions stored as fractions of (pathWidth, PATH_HEIGHT)
-- **5 worlds** of 10 levels each, each world sweeps right then arcs back left — organic S-curve feel
-- World themed backgrounds: W1 Forest (green), W2 Ocean (sky blue), W3 Desert (amber), W4 Mountain (purple), W5 Space (cyan-teal)
-- World LinearGradient bands + emoji decorations + world name labels overlay the path
+- Horizontal scrollable map (MAP_WIDTH = 16000px, MAP_HEIGHT = dynamic — fills screen)
+- **101 levels across 10 worlds** (100 main + 1 bonus) — scalable to 200+
+- Node positions stored as POS fractions of (MAP_WIDTH, MAP_HEIGHT); y-values trace per-world visual road
+- **10 worlds** of 10 levels each; each world has a dedicated background image (1600px wide slice):
+  - W1 Forest, W2 Ocean, W3 Desert, W4 Mountain, W5 Space, W6 Deep Ocean, W7 Volcanic, W8 Arctic, W9 Ancient Ruins, W10 Cosmic Finale
 - Road rendered as multi-layer SVG: drop shadow → world-coloured stroke → white highlight → dashed centreline
-- Each level node shows: emoji icon, star rating (0–3), locked/unlocked/current state — nodes are **64px** bubbles
+- Each level node: emoji icon, star rating (0–3), locked/unlocked/current state — 64px bubbles
 - Tapping unlocked node opens bottom sheet modal
-- Current level has pulsing glow + bob animation; springs in on mount (scale 0 → 1.3 → 1)
-- Locked levels are dimmed, non-interactive
-- Boss levels at 10, 20, 30, 40, 50
+- Current level has pulsing glow + bob animation; springs in on mount (scale 0 → 1.3 → 1); "▼ You're here" arrow
+- Locked levels dimmed, non-interactive
+- Boss levels at 10, 20, 30, 40, 50, 60, 70, 80, 90, 100
+- Auto-scrolls to current level on first load (animated, 400ms delay)
+- Tab bar floats (position: absolute) over map — content fills edge to edge
 
 ### FR-002: Level Modal
-- Slides up from bottom on level tap
-- Shows: level number, emoji, brain training area tag, description, Play button, dismiss option
+- Slides up from bottom on level tap; warm cream background (#FFECD4) matching stats page
+- Shows: level number, emoji, domain icon + tag, description, Play button, dismiss option
 - Dismiss by tapping outside modal or "Maybe later" button
 - Play gate: premium users bypass all limits → free users check daily cap (3/day) → then lives check
 
@@ -76,7 +78,7 @@ Brain training apps exist (Lumosity, BrainHQ, Elevate) but they feel like homewo
 - Grid of face-down cards (emoji on reveal)
 - Flip two cards: match = stay revealed, no match = flip back after 900ms delay
 - Lock input during flip-back animation
-- Difficulty scales with level: Level 1 = 3 pairs (6 cards), Final Boss (Level 50) = 9 pairs (18 cards)
+- Difficulty scales with level: Level 1 = 3 pairs (6 cards), Final Boss = 9 pairs (18 cards)
 - Pip indicators show pairs found
 - Win condition: all pairs matched
 - **Pop animation + haptic** on matched pair
@@ -85,7 +87,7 @@ Brain training apps exist (Lumosity, BrainHQ, Elevate) but they feel like homewo
 - 4 emoji shown in a 2×2 grid
 - 3 belong to a group, 1 doesn't — player taps the odd one out
 - 8 second answer timer per round
-- Correct: pip lights green, brief hint shown ("Not a fruit") + Light haptic
+- Correct: pip lights green, hint shown ("Not a fruit") + Light haptic
 - Wrong: pip lights red, correct answer highlighted, hint shown + Medium haptic
 - Time out = treated as wrong answer
 - 7 rounds per game; win condition: all 7 rounds complete
@@ -120,7 +122,7 @@ Brain training apps exist (Lumosity, BrainHQ, Elevate) but they feel like homewo
 - 10 emoji confetti particles burst on win
 - Brain insight card (domain-relevant, wellness language)
 - Stat cards: 3 game-specific metrics
-- Auto-continues after 2s progress bar → routes through FR-015 (or Journey if last level)
+- Auto-continues after 2s progress bar → routes through FR-016 (or Journey if last level)
 
 ### FR-008: Fail Screen
 - Triggered when player exceeds wrong answer threshold (FAIL_THRESHOLD = 4) or runs out of time
@@ -130,13 +132,15 @@ Brain training apps exist (Lumosity, BrainHQ, Elevate) but they feel like homewo
 
 ### FR-009: Stats Dashboard (Tab 2)
 - Tab name: **Stats** with 📊 icon
+- Background: landing-background.png with 50% white scrim (matches journey modal)
 - Score total: large number, weekly delta ("↑ +N pts this week"), percentile rank vs age group
-- Section title: **"Your Strengths"** (not "Brain Training Areas")
-- **4 domain bars: Memory, Speed, Logic, Pattern**
-- **Coach Tips: 32 tips (8 per domain), rotating daily** — motivational/positive tone, NOT tied to brain training language
+- Section title: **"Your Strengths"**
+- **4 domain bars: Memory, Speed, Logic, Pattern** — dark labels (#555555), dark tips (#9A6F00)
+- **Coach Tips: 32 tips (8 per domain), rotating daily** — motivational/positive tone
 - Day streak card
 - **Guest users**: gradient "Save your progress · Sign In →" banner → `/auth`
 - **Logged-in users**: account row "Signed in as [name]" + Log out
+- paddingBottom: 100 to clear floating tab bar
 
 ### FR-010: Lives System
 - 5 lives max; lose 1 on Play Now (if free user); refill 1 per 30 min
@@ -171,11 +175,11 @@ Brain training apps exist (Lumosity, BrainHQ, Elevate) but they feel like homewo
 
 ### FR-016: Level Transition Screen (`app/transition.tsx`)
 - Triggered by Win screen auto-continue when next level exists
-- Mini path scene: completed level node (gold) + next level node (teal), dashed bezier between them
-- **⭐ marker** travels from node A to node B (1.1s cubic easing, `useNativeDriver: true`)
+- Mini path scene: completed level node (gold) + next level node (teal), dashed horizontal bezier between them
+- **⭐ marker** travels left→right from node A to node B (1.1s cubic easing, `useNativeDriver: true`)
 - Haptic fires on arrival; next node springs in (0 → 1.3 → 1 scale) + continuous glow pulse
 - "Level N Unlocked!" + domain + description animate in; "Continue to Journey →" button springs last
-- On last level (50): routes directly to Journey (no transition)
+- On last level: routes directly to Journey (no transition)
 
 ### FR-017: Paywall (`app/paywall.tsx`)
 - Reason-aware header: "Daily limit reached" vs "You're out of lives"
@@ -216,15 +220,7 @@ Brain training apps exist (Lumosity, BrainHQ, Elevate) but they feel like homewo
 ## Game Content
 
 ### Level Rotation
-Levels cycle through game types; boss levels fixed at 10/20/30/40/50.
-```
-World 1 (1–10):   memory, logic, memory, speed, pattern, logic, memory, speed, pattern, memory*
-World 2 (11–20):  logic, speed, pattern, memory, logic, speed, pattern, memory, logic, speed*
-World 3 (21–30):  pattern, memory, logic, speed, pattern, memory, logic, speed, pattern, memory*
-World 4 (31–40):  logic, speed, pattern, memory, logic, speed, pattern, memory, logic, speed*
-World 5 (41–50):  pattern, memory, logic, speed, pattern, memory, logic, speed, pattern, memory*
-* = boss
-```
+Levels cycle through game types; boss levels fixed at 10/20/30/40/50/60/70/80/90/100.
 
 ### Odd One Out Sets — 55 sets ✅
 Categories: fruits, animals, transport, landmarks, sea creatures, flowers, instruments, vehicles, sky/space, food, insects, mountains, colours, sweet treats, flags, holidays, physical activity, planets, pets, winter, plants, gaming, drinks, dog family, buildings, natural elements, citrus, hats, water sports, birds, emergency vehicles, body parts, beach, study tools, exercise, cooking, cold things, reptiles, Asian countries, furniture, and more.
@@ -245,15 +241,15 @@ Landmarks, Travel, Nature, Ocean, Forest, Fruits, Space, Jungle, Food, Weather, 
 | Landing | `app/landing.tsx` | ✅ Centred logo, SVG cards, Track Progress → Stats (no auth wall) |
 | Auth | `app/auth.tsx` | ✅ Supabase, email confirmation state, forgot password |
 | Reset Password | `app/reset-password.tsx` | ✅ |
-| Explore (Journey) | `app/(tabs)/journey.tsx` | ✅ 50 levels, 5 worlds, organic winding path |
-| Level Transition | `app/transition.tsx` | ✅ Marker + unlock animation |
+| Explore (Journey) | `app/(tabs)/journey.tsx` | ✅ 101 levels, 10 worlds, horizontal map, per-world background images |
+| Level Transition | `app/transition.tsx` | ✅ Horizontal scene, star travels left→right |
 | Game — Memory | `app/game/memory.tsx` | ✅ |
 | Game — Logic | `app/game/logic.tsx` | ✅ |
 | Game — Speed | `app/game/speed.tsx` | ✅ |
 | Game — Pattern | `app/game/pattern.tsx` | ✅ Choice button flex fix |
 | Win Screen | `components/games/WinScreen.tsx` | ✅ POP! + score counter + auto-continue |
 | Fail Screen | `components/games/FailScreen.tsx` | ✅ Deflating bubble |
-| Stats Dashboard | `app/(tabs)/brain.tsx` | ✅ "Your Strengths", 32 rotating tips |
+| Stats Dashboard | `app/(tabs)/brain.tsx` | ✅ "Your Strengths", 32 rotating tips, dark labels |
 | Paywall | `app/paywall.tsx` | ✅ Feature table, reason-aware (mock purchase) |
 
 ---
@@ -276,27 +272,33 @@ Landmarks, Travel, Nature, Ocean, Forest, Fruits, Space, Jungle, Food, Weather, 
 - **Expo Notifications**: push notifications (not wired)
 - **PostHog / analytics**: not yet integrated
 
+### i18n Infrastructure — Built, Not Wired
+- `lib/i18n.ts` + `locales/en.ts` (~200 strings) — infrastructure installed, UI strings not yet extracted
+
 ---
 
 ## File / Folder Structure
 
 ```
 thinkpop/
-├── CLAUDE.md / PRD.md / HANDOFF.md / TESTPLAN.md
+├── CLAUDE.md / PRD.md / HANDOFF.md / TESTPLAN.md / store-listing.md
 ├── app/
 │   ├── index.tsx              ← Entry → /landing after onboarding check
 │   ├── landing.tsx            ← Entry lobby (Track Progress → Stats, no auth wall)
 │   ├── auth.tsx               ← Login/signup/forgot password/email confirmation state
 │   ├── reset-password.tsx     ← Password reset screen (deep link target)
-│   ├── transition.tsx         ← Level transition screen
+│   ├── transition.tsx         ← Level transition screen (horizontal scene)
 │   ├── paywall.tsx            ← Monetisation gate
 │   ├── (tabs)/
-│   │   ├── _layout.tsx        ← Explore + Stats tabs; deep link handler
-│   │   ├── journey.tsx        ← 50-level winding path
+│   │   ├── _layout.tsx        ← Explore + Stats tabs; absolute tab bar; contentStyle padding fix
+│   │   ├── journey.tsx        ← 101-level horizontal map, 10 world backgrounds
 │   │   └── brain.tsx          ← Stats dashboard
 │   ├── game/
 │   │   ├── memory.tsx / logic.tsx / speed.tsx / pattern.tsx
 │   └── onboarding/index.tsx
+├── assets/
+│   ├── landing-background.png ← Shared warm background (journey modal + stats page)
+│   └── worlds/                ← w1-forest.png … w10-cosmic.png (10 × 1600px each)
 ├── components/
 │   ├── path/LevelNode.tsx / PathSVG.tsx
 │   ├── games/WinScreen.tsx / FailScreen.tsx
@@ -310,23 +312,26 @@ thinkpop/
 ├── lib/
 │   ├── supabase.ts            ← Supabase client
 │   ├── sync.ts                ← push/pull functions (pure I/O, no store imports)
-│   └── userId.ts              ← userId singleton (breaks circular imports)
+│   ├── userId.ts              ← userId singleton (breaks circular imports)
+│   └── i18n.ts                ← i18n config (infrastructure only)
+├── locales/en.ts              ← ~200 English strings (not yet wired to UI)
 ├── data/
-│   ├── levels.ts              ← 50 levels + 50 POS entries (PATH_HEIGHT=6000)
+│   ├── levels.ts              ← 101 levels + 101 POS entries (per-world organic y-values)
 │   ├── oddOneSets.ts          ← 55 puzzle sets
 │   ├── patternSets.ts         ← 90 rounds
 │   ├── memoryEmojis.ts        ← 18 themed sets
 │   └── brainInsights.ts
+├── eas.json                   ← EAS build profiles (development/preview/production)
 ├── hooks/useLives.ts
 ├── utils/scoring.ts
 └── constants/
     ├── colors.ts
-    └── config.ts              ← PATH_HEIGHT=6000, NODE_SIZE=64, MAX_LIVES=5, FREE_DAILY_LEVELS=3
+    └── config.ts              ← MAP_WIDTH=16000, MAP_HEIGHT=600 (dynamic), NODE_SIZE=64
 ```
 
 ---
 
-## Build Status — Last Updated 2026-04-02
+## Build Status — Last Updated 2026-04-06
 
 ### Phase 1 MVP — COMPLETE ✅
 - [x] Onboarding (3 slides + baseline reveal → Landing)
@@ -334,35 +339,50 @@ thinkpop/
 - [x] Auth — Supabase email login/signup, shake on error, guest mode, forgot password
 - [x] Email confirmation flow — "Check your inbox" state, resend, deep link handling
 - [x] Password reset — forgot password → email → deep link → reset screen
-- [x] Explore tab — 50 levels, 5 worlds, organic winding path, world zone backgrounds
 - [x] All 4 games — Memory, Logic, Speed, Pattern — fully playable
 - [x] Fail screens — deflating bubble, life deduction
 - [x] POP! theme — correct answer spring + haptic in all games; POP! splash on win screen
-- [x] Level transition screen — ⭐ marker travel + next level unlock animation
+- [x] Level transition screen — horizontal ⭐ marker travel + next level unlock animation
 - [x] Win screen — POP! splash, confetti, score counter, "+N pts ⭐" badge, auto-continue
-- [x] Stats dashboard — 4 domains, guest banner, account row, 32 rotating coach tips
+- [x] Stats dashboard — 4 domains, dark labels/tips, guest banner, account row, 32 rotating coach tips
 - [x] Lives system + daily cap (3/day free) + paywall with feature table
 - [x] Supabase backend live — auth, profiles, completions, brain scores sync
 - [x] Monetisation scaffolding — isPremium, gates, paywall (mock purchase)
 - [x] 55 Odd One Out puzzle sets
 - [x] 90 Pattern rounds
 - [x] 18 themed Memory emoji sets
-- [x] Privacy policy generated (iubenda)
-- [x] Terms & Conditions (termsfeed.com — in progress)
+- [x] Privacy policy (iubenda): https://www.iubenda.com/privacy-policy/14041250
+- [x] Terms & Conditions: https://fareedfc.github.io/thinkpop-legal/terms.html
 
-### Phase 2 — App Store Submission
-- [ ] RevenueCat — wire real purchase in `app/paywall.tsx`
-- [ ] Privacy Policy + T&C URLs added to app and App Store Connect
-- [ ] EAS Build setup — production iOS build
-- [ ] App Store assets — 1024×1024 icon, screenshots, description, keywords
-- [ ] Apple Developer account active
+### Phase 2 — Journey Map Rebuild ✅
+- [x] Horizontal scroll map (MAP_WIDTH=16000, MAP_HEIGHT dynamic)
+- [x] 10 world background images tiled side-by-side (w1-forest → w10-cosmic)
+- [x] Per-world organic POS y-values tracing each image's visual road
+- [x] World markers (label + subtitle) pinned to each world zone
+- [x] Auto-scroll to current level on first load (animated)
+- [x] Floating absolute tab bar — map fills edge to edge, no gap
+- [x] Level modal — warm cream background (#FFECD4) matching stats page
+- [x] 101 levels (100 + bonus) across 10 worlds; boss levels at 10/20/…/100
+- [x] "▼ You're here" arrow on current level node
+- [x] EAS build config (eas.json) — development/preview/production profiles
+- [x] App Store listing copy (store-listing.md) — description, keywords, legal URLs
 
-### Phase 3 — Post-Launch
+### Phase 3 — App Store Submission (NEXT)
+- [ ] **RevenueCat** — wire real purchase in `app/paywall.tsx` (replace `setPremium(true)` mock)
+- [ ] **Apple Developer account** — $99/year, use a dedicated business Apple ID
+- [ ] **EAS project ID** — run `npx eas init` once Apple Developer account is active
+- [ ] **App Store assets** — 1024×1024 icon PNG, screenshots (6.7" + 6.5"), preview video optional
+- [ ] **App Store Connect** — fill in Privacy Policy URL + T&C URL
+- [ ] **Production build** — `npx eas build --platform ios --profile production`
+- [ ] **Submit** — `npx eas submit --platform ios`
+
+### Phase 4 — Post-Launch
 - [ ] Push notifications (Expo Notifications)
 - [ ] Leaderboards, daily challenges
 - [ ] Social sharing, referral loop
 - [ ] Premium level packs IAP
 - [ ] Analytics (PostHog)
+- [ ] Multilingual support (i18n infrastructure already built — Spanish, French, Hindi, Portuguese priority)
 
 ---
 
@@ -370,20 +390,39 @@ thinkpop/
 - RevenueCat **not integrated** — purchase is mocked with `setPremium(true)`
 - Push notifications not wired
 - Percentile rank vs age group in Stats tab is static/placeholder
-- Speed game card layout was previously buggy — resolved
+- i18n infrastructure built (`lib/i18n.ts`, `locales/en.ts`) but UI strings not yet extracted
+- Node y-positions (POS) trace approximate visual roads — may need manual fine-tuning per world
+- `app.json` EAS projectId is placeholder — needs `npx eas init`
+- **Scoring system needs a full rethink** — current pts (150/300/500 per star) and Speed combo multiplier feel arbitrary; needs a more considered, mature model that rewards consistency, speed, accuracy, and improvement over time — not just completion. See Open Questions #8.
 
 ---
 
 ## Recommended Next Priorities
 
 ### Immediate (App Store blockers)
-1. **RevenueCat** — wire paywall "Get Premium" button
-2. **Legal URLs** — add privacy policy + T&C URLs to auth screen and App Store Connect
-3. **EAS Build** — configure production build
-4. **App Store assets** — icon, screenshots, copy
+1. **Apple Developer account** — create dedicated business account at developer.apple.com
+2. **RevenueCat** — wire paywall "Get Premium" button (Apple tests purchase in review)
+3. **EAS init** — `npx eas init` to get projectId, then update `app.json`
+4. **App Store assets** — 1024×1024 icon, screenshots on real device
+5. **Production build + submit** — `npx eas build --platform ios --profile production`
 
-### Phase 3 — Growth
+### Phase 4 — Growth
 - Leaderboards, daily challenges, social sharing, referral loop, premium level packs IAP
+- Multilingual (Spanish, French, Hindi, Portuguese) — infrastructure already in place
+
+---
+
+## App Store Info
+
+| Field | Value |
+|---|---|
+| App Name | ThinkPop |
+| Subtitle | Train Your Brain Daily |
+| Bundle ID | com.thinkpop.app |
+| Category | Games → Puzzle |
+| Age Rating | 4+ |
+| Privacy Policy | https://www.iubenda.com/privacy-policy/14041250 |
+| Terms & Conditions | https://fareedfc.github.io/thinkpop-legal/terms.html |
 
 ---
 
@@ -407,3 +446,4 @@ thinkpop/
 4. Partnership with a neuroscientist / university for credibility?
 5. A/B test "brain training" vs "wellness game" framing in ads?
 6. ~~RevenueCat before or after TestFlight?~~ — **Before — Apple tests purchase flow in review**
+7. Multilingual launch or English-only v1?

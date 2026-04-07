@@ -22,7 +22,7 @@ Existing brain training apps (Lumosity, BrainHQ) feel like homework. ThinkPop fe
 
 ## Navigation Structure
 2 tabs:
-1. **Explore** (🗺️) — Main Candy Crush-style scrolling path with 50 level nodes
+1. **Explore** (🗺️) — Main Candy Crush-style scrolling path with 101 level nodes
 2. **Stats** (📊) — Domain scores and weekly report
 
 ## Entry Flow
@@ -32,16 +32,18 @@ Existing brain training apps (Lumosity, BrainHQ) feel like homework. ThinkPop fe
 - After winning a level: Win screen → **Level Transition screen** → Journey (with next level unlocked)
 
 ## The Level Path
-- Winding organic path, PATH_HEIGHT = 6000px, 50 levels across 5 worlds
-- Each world sweeps right then arcs back left — creates S-curve feel, not strict zigzag
-- World zones have themed LinearGradient backgrounds + emoji decorations + world labels
-- Level nodes are 64px bubbles; node positions stored as POS fractions in `data/levels.ts`
+- **Horizontal** scrolling map (not vertical), MAP_WIDTH = 16000px, 101 levels across 10 worlds
+- Each world occupies 1600px of horizontal canvas; player scrolls left→right
+- World background images tiled side by side at 90% opacity; `landing-background.png` scrim behind
+- Level nodes are 80px bubbles; node positions stored as POS fractions in `data/levels.ts`
 - Tapping a node opens a bottom sheet modal with level info + Play button
-- Stars (1–3) shown under completed nodes
+- **Stars (1–5)** shown under completed nodes (display ready; scoring awards up to 5)
 - Current level: glowing pulse + bob animation; springs in on mount
-- Boss levels at 10, 20, 30, 40, 50
-- World themes: W1 Forest (green), W2 Ocean (sky blue), W3 Desert (amber), W4 Mountain (purple), W5 Space (cyan-teal)
+- Boss levels at 10, 20, 30, 40, 50, 60, 70, 80, 90, 100
+- World themes: W1 Nature, W2 Ocean, W3 Animals, W4 Food, W5 Space, W6 Fruits, W7 Weather, W8 Sports, W9 Flags, W10 Symbols
 - Road is multi-layered SVG: drop shadow → world-coloured road → white highlight → dashed centreline
+- **Floating overlays** (non-scrolling): "YOUR JOURNEY · Level N of 101" pill (top-left); world name + subtitle pill (top-right, updates as player scrolls)
+- All levels unlocked for dev testing via `isLocked = false` flag in `LevelNode.tsx` — revert before shipping
 
 ## Level Transition Screen (`app/transition.tsx`)
 - Shown between Win screen and Journey (when next level exists)
@@ -56,27 +58,41 @@ Existing brain training apps (Lumosity, BrainHQ) feel like homework. ThinkPop fe
 ### 1. Memory Match — Memory
 - Classic card flip-and-match; emoji on reveal
 - Pop animation + haptic on matched pair
-- Board scales: Level 1 = 3 pairs, Final Boss (L50) = 9 pairs
+- Board scales: Level 1 = 3 pairs, Final Boss (L100) = 9 pairs
 - Win: find all pairs
 
 ### 2. Odd One Out — Logic
-- 4 emoji in 2×2 grid; tap the one that doesn't belong
-- 8s timer per round; hint shown after each ("Not a fruit")
-- 7 rounds per game; win: complete all 7
-- Bouncy spring pop on tap; Light haptic correct / Medium haptic wrong
+- **3 rotating modes** (randomised per round, unlocked by level):
+  - **Find Odd** (🤔) — 2×2 grid, tap the 1 item that doesn't belong (levels 1–20 only)
+  - **Find It** (🔍) — 2×2 grid, category shown ("Find the FRUIT"), 1 correct + 3 wrong-category decoys (levels 21+)
+  - **Find All** (🎯) — 2×3 grid, 2 odd ones from different categories, tap both to complete (levels 41+)
+- **Timer scales with level**: 8s (1–30) → 6s (31–60) → 5s (61+)
+- Hint shown after each round; "N / 2 found" progress counter for Find All mode
+- 7 rounds per game; 4 wrong answers = fail
+- Mode badge shown when not in default Find Odd mode
 
 ### 3. Speed Match — Speed
-- Target symbol at top; 6 options in 3×2 grid
-- 30s timer: teal→gold→coral; combo multiplier for consecutive correct
-- Bouncy spring pop on tap; Light haptic correct / Medium haptic wrong
+- **3 rotating mechanics** (randomised per round):
+  - **Find this →** — target shown at top, find it in grid (original mechanic)
+  - **Tap the odd one!** — grid has N-1 identical + 1 different, tap the odd one
+  - **Don't tap this →** — target shown with 🚫, tap anything EXCEPT it; wrong tap = -5pts and advances
+- **Themed emoji pools per world** (10 pools, one per world): Nature → Ocean → Animals → Food → Space → Fruits → Weather → Sports → Flags → Symbols
+- **Grid size scales with level**: 2×2 (levels 1–20) → 2×3 (21–60) → 3×3 (61+)
+- 30s timer: teal→gold→coral; combo multiplier for consecutive correct; wrong tap = -5pts + combo reset
+- Don't Tap mode: any tap advances the round (correct = +pts, wrong = -5pts)
 - Win: timer expires
 
 ### 4. Pattern Pulse — Pattern
-- Sequence lights up one by one; player picks what comes next from 4 choices
-- 8s answer timer; 7 rounds per game
-- Choice buttons: NO flex:1 on Animated.View (caused invisible text bug on new arch) — use minHeight:64 + justifyContent:center instead
-- Bouncy spring pop on tap; Light haptic correct / Medium haptic wrong
-- Win: complete all 7 rounds
+- **4 rotating modes** (randomised per round, unlocked by level):
+  - **Next** (👀) — classic: watch sequence, pick what comes next (all levels)
+  - **Missing** (🧩) — ❓ hides a middle position, pick the missing piece (levels 21+)
+  - **Flash** (⚡) — sequence animates then vanishes; answer from memory (levels 41+)
+  - **Break It** (🔧) — wrong item planted at middle position (red border), pick what should replace it (levels 71+)
+- **Sequence length scales**: 4 items shown (levels 1–20) → 5 items (levels 21+)
+- For shorter sequences, answer = seq[4] with auto-generated choices (not round.ans)
+- Mode badge shown for non-default modes; phase label changes per mode
+- 8s answer timer; 7 rounds per game; 4 wrong answers = fail
+- Choice buttons: NO flex:1 on Animated.View (caused invisible text bug on new arch) — use height:110 + justifyContent:center instead
 
 ## POP! Features (across all games)
 - **Correct answer**: spring scale burst (1→1.2→1) + Light haptic
@@ -138,12 +154,12 @@ Existing brain training apps (Lumosity, BrainHQ) feel like homework. ThinkPop fe
 
 ## What Has Been Built
 A fully working React Native (Expo SDK 54) app in `app/` with:
-- All 4 games playable end-to-end
-- **50 levels** across 5 worlds, winding organic path, world zone backgrounds, boss levels at 10/20/30/40/50
-- **55 Odd One Out puzzle sets**, **90 Pattern sets**, **18 themed Memory emoji sets**
+- All 4 games playable end-to-end with **multi-mode variety systems**
+- **101 levels** across 10 worlds, horizontal scrolling map, world background images, boss levels at 10/20/.../100
+- **55 Odd One Out puzzle sets**, **90 Pattern sets**, **18 themed Memory emoji sets**, **10 themed Speed emoji pools**
 - POP! animations and haptics across all 4 games
 - Fail screens (deflating bubble), Win screen (POP! splash, confetti, score counter, "+N pts ⭐" badge)
-- Level transition screen (marker travel + next level unlock)
+- Level transition screen (marker travel + next level unlock); "Continue to Journey" button in purple (#8B3FD9)
 - Stats tab: 4 domains, guest banner, account row, 32 rotating coach tips
 - Lives system (5 hearts, 30-min refill, premium bypass), day streak tracking
 - Daily level cap (3 free/day), paywall with feature table
@@ -154,16 +170,21 @@ A fully working React Native (Expo SDK 54) app in `app/` with:
 - Onboarding (3 slides + baseline reveal → Landing)
 
 Key files:
-- `data/levels.ts` — 50 levels + 50 POS entries (PATH_HEIGHT=6000)
-- `data/oddOneSets.ts` — 55 puzzle sets
-- `data/patternSets.ts` — 90 pattern rounds
-- `data/memoryEmojis.ts` — 18 themed emoji sets
-- `constants/config.ts` — PATH_HEIGHT=6000, NODE_SIZE=64
-- `app/transition.tsx` — level transition screen
+- `data/levels.ts` — 101 levels + POS entries (horizontal map)
+- `data/oddOneSets.ts` — 55 puzzle sets (used by Logic game)
+- `data/patternSets.ts` — 90 pattern rounds (used by Pattern game)
+- `data/memoryEmojis.ts` — 18 themed emoji sets (used by Memory game)
+- `constants/config.ts` — MAP_WIDTH=16000, NODE_SIZE=80
+- `app/(tabs)/journey.tsx` — horizontal map, floating overlays, world banner
+- `app/transition.tsx` — level transition screen (purple CTA + purple strength bar)
 - `app/paywall.tsx` — monetisation gate (mock purchase)
 - `app/reset-password.tsx` — password reset screen
+- `app/game/speed.tsx` — Speed game with 3 modes + 10 themed pools + dynamic grid
+- `app/game/logic.tsx` — Logic game with 3 modes + timer scaling
+- `app/game/pattern.tsx` — Pattern game with 4 modes + sequence length scaling
 - `components/games/WinScreen.tsx` — POP! + score counter + transition routing
 - `components/games/FailScreen.tsx` — deflating bubble fail state
+- `components/path/LevelNode.tsx` — 80px nodes, 5-star display, all unlocked for dev
 - `components/path/PathSVG.tsx` — world-coloured SVG road
 - `lib/supabase.ts` — Supabase client
 - `lib/sync.ts` — push/pull functions (pure I/O, no store imports)

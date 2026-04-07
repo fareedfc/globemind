@@ -10,13 +10,105 @@ import { LEVELS } from '../../data/levels';
 import { ODD_ONE_SETS, type OddOneSet } from '../../data/oddOneSets';
 import { WinScreen, type WinData } from '../../components/games/WinScreen';
 import { FailScreen } from '../../components/games/FailScreen';
-import { calcPatternStars, MILES_PER_STAR } from '../../utils/scoring';
+import { calcPatternStars, calcActualPoints } from '../../utils/scoring';
+import { useProgressStore } from '../../stores/progressStore';
 import { pickInsight } from '../../data/brainInsights';
 
 const TOTAL_ROUNDS = 7;
-const ANSWER_MS = 8_000;
-const FAIL_THRESHOLD = 4; // wrong answers before game over
+const FAIL_THRESHOLD = 4;
 
+// ── Mode system ───────────────────────────────────────────────────────────────
+type LogicMode = 'find_odd' | 'find_belongs' | 'find_all';
+type Phase = 'answering' | 'feedback';
+type PipState = 'none' | 'ok' | 'err';
+
+interface LogicRoundData {
+  mode: LogicMode;
+  items: string[];
+  targets: string[];   // correct items to tap
+  prompt: string;
+  hint: string;
+  cols: number;
+  rows: number;
+}
+
+function getAnswerMs(levelId: number): number {
+  if (levelId > 60) return 5000;
+  if (levelId > 30) return 6000;
+  return 8000;
+}
+
+function pickLogicMode(levelId: number): LogicMode {
+  if (levelId <= 20) return 'find_odd';
+  if (levelId <= 40) return Math.random() < 0.5 ? 'find_odd' : 'find_belongs';
+  const r = Math.random();
+  return r < 0.4 ? 'find_odd' : r < 0.7 ? 'find_belongs' : 'find_all';
+}
+
+function parseCategory(hint: string): string {
+  return hint.replace(/^Not an? /i, '').toUpperCase();
+}
+
+function buildLogicRounds(sets: OddOneSet[], count: number, levelId: number): LogicRoundData[] {
+  const shuffled = [...sets].sort(() => Math.random() - 0.5);
+  const result: LogicRoundData[] = [];
+  let i = 0;
+
+  while (result.length < count && i < shuffled.length) {
+    const mode = pickLogicMode(levelId);
+
+    if (mode === 'find_odd') {
+      const set = shuffled[i++];
+      result.push({
+        mode,
+        items: [...set.items].sort(() => Math.random() - 0.5),
+        targets: [set.odd],
+        prompt: "🤔 Which one doesn't belong?",
+        hint: set.hint,
+        cols: 2, rows: 2,
+      });
+
+    } else if (mode === 'find_belongs') {
+      const set = shuffled[i++];
+      const category = parseCategory(set.hint);
+      const correctItems = set.items.filter(x => x !== set.odd);
+      const answer = correctItems[Math.floor(Math.random() * correctItems.length)];
+      // Decoys: odd items from other sets (things that don't belong to this category)
+      const decoys = shuffled
+        .filter((_, j) => j !== i - 1)
+        .map(s => s.odd)
+        .sort(() => Math.random() - 0.5)
+        .slice(0, 3);
+      result.push({
+        mode,
+        items: [...decoys, answer].sort(() => Math.random() - 0.5),
+        targets: [answer],
+        prompt: `🔍 Find the ${category}`,
+        hint: `The ${category.toLowerCase()} was ${answer}`,
+        cols: 2, rows: 2,
+      });
+
+    } else {
+      // find_all — needs 2 sets, 2×3 grid, 2 odd ones to find
+      if (i + 1 >= shuffled.length) { i++; continue; }
+      const setA = shuffled[i++];
+      const setB = shuffled[i++];
+      const correctA = setA.items.filter(x => x !== setA.odd).slice(0, 2);
+      const correctB = setB.items.filter(x => x !== setB.odd).slice(0, 2);
+      result.push({
+        mode,
+        items: [...correctA, setA.odd, ...correctB, setB.odd].sort(() => Math.random() - 0.5),
+        targets: [setA.odd, setB.odd],
+        prompt: '🎯 Find ALL the odd ones! (2)',
+        hint: `${setA.hint} · ${setB.hint}`,
+        cols: 3, rows: 2,
+      });
+    }
+  }
+  return result;
+}
+
+// ── CellButton ────────────────────────────────────────────────────────────────
 function CellButton({ item, style, onPress, disabled, emojiStyle, isCorrect }: {
   item: string;
   style: any;
@@ -43,8 +135,6 @@ function CellButton({ item, style, onPress, disabled, emojiStyle, isCorrect }: {
     onPress();
   };
 
-  // TouchableOpacity is the direct flex child (flex: 1 + aspectRatio from style).
-  // Animated.View sits inside purely for the scale transform.
   return (
     <TouchableOpacity onPress={handlePress} disabled={disabled} activeOpacity={1} style={style}>
       <Animated.View style={[s.cellInner, { transform: [{ scale }] }]}>
@@ -54,17 +144,14 @@ function CellButton({ item, style, onPress, disabled, emojiStyle, isCorrect }: {
   );
 }
 
-type Phase = 'answering' | 'feedback';
-type PipState = 'none' | 'ok' | 'err';
-
+// ── Screen ────────────────────────────────────────────────────────────────────
 export default function LogicGame() {
   const { levelId: rawId } = useLocalSearchParams<{ levelId: string }>();
   const levelId = parseInt(rawId ?? '2');
   const level = LEVELS.find(l => l.id === levelId) ?? LEVELS[1];
+  const answerMs = getAnswerMs(levelId);
 
-  const rounds = useRef<OddOneSet[]>(
-    [...ODD_ONE_SETS].sort(() => Math.random() - 0.5).slice(0, TOTAL_ROUNDS)
-  );
+  const rounds = useRef<LogicRoundData[]>(buildLogicRounds(ODD_ONE_SETS, TOTAL_ROUNDS, levelId));
 
   const [currentRound, setCurrentRound] = useState(0);
   const [phase, setPhase] = useState<Phase>('answering');
@@ -72,14 +159,16 @@ export default function LogicGame() {
   const [score, setScore] = useState(0);
   const [pips, setPips] = useState<PipState[]>(Array(TOTAL_ROUNDS).fill('none'));
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
+  const [foundTargets, setFoundTargets] = useState<string[]>([]);
   const [won, setWon] = useState(false);
   const [failed, setFailed] = useState(false);
-  const wrongCountRef = useRef(0);
 
+  const wrongCountRef = useRef(0);
   const answerTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const answerStartRef = useRef(0);
   const currentRoundRef = useRef(0);
   const scoreRef = useRef(0);
+  const foundTargetsRef = useRef<string[]>([]);
 
   currentRoundRef.current = currentRound;
   scoreRef.current = score;
@@ -91,12 +180,77 @@ export default function LogicGame() {
     }
   }, []);
 
+  const advanceRound = useCallback((correct: boolean) => {
+    const willFail = !correct && wrongCountRef.current >= FAIL_THRESHOLD;
+    setTimeout(() => {
+      if (willFail) { setFailed(true); return; }
+      const nextRound = currentRoundRef.current + 1;
+      if (nextRound >= TOTAL_ROUNDS) {
+        setWon(true);
+      } else {
+        setCurrentRound(nextRound);
+        setPhase('answering');
+        setSelectedAnswer(null);
+        setTimerPct(100);
+        foundTargetsRef.current = [];
+        setFoundTargets([]);
+      }
+    }, 1200);
+  }, []);
+
   const handleAnswer = useCallback((ans: string | null) => {
-    stopTimer();
     const round = rounds.current[currentRoundRef.current];
     if (!round) return;
-    const correct = ans === round.odd;
 
+    // ── find_all: accumulate taps until all targets found ──────────────────
+    if (round.mode === 'find_all') {
+      if (
+        ans !== null &&
+        round.targets.includes(ans) &&
+        !foundTargetsRef.current.includes(ans)
+      ) {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        const newFound = [...foundTargetsRef.current, ans];
+        foundTargetsRef.current = newFound;
+        setFoundTargets([...newFound]);
+
+        if (newFound.length === round.targets.length) {
+          stopTimer();
+          scoreRef.current += 1;
+          setScore(scoreRef.current);
+          setPhase('feedback');
+          setSelectedAnswer('__all__');
+          setPips(prev => { const n = [...prev]; n[currentRoundRef.current] = 'ok'; return n; });
+          advanceRound(true);
+        }
+        return; // don't advance yet — wait for more taps
+      }
+
+      if (ans !== null && !round.targets.includes(ans)) {
+        // Wrong tap in find_all
+        stopTimer();
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+        wrongCountRef.current += 1;
+        setSelectedAnswer(ans);
+        setPhase('feedback');
+        setPips(prev => { const n = [...prev]; n[currentRoundRef.current] = 'err'; return n; });
+        advanceRound(false);
+        return;
+      }
+
+      // Timeout
+      stopTimer();
+      wrongCountRef.current += 1;
+      setPhase('feedback');
+      setSelectedAnswer(null);
+      setPips(prev => { const n = [...prev]; n[currentRoundRef.current] = 'err'; return n; });
+      advanceRound(false);
+      return;
+    }
+
+    // ── find_odd / find_belongs: single correct answer ─────────────────────
+    stopTimer();
+    const correct = ans !== null && round.targets.includes(ans);
     if (correct) {
       scoreRef.current += 1;
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -107,43 +261,22 @@ export default function LogicGame() {
     setScore(scoreRef.current);
     setSelectedAnswer(ans);
     setPhase('feedback');
-    setPips(prev => {
-      const next = [...prev];
-      next[currentRoundRef.current] = correct ? 'ok' : 'err';
-      return next;
-    });
-
-    const willFail = !correct && wrongCountRef.current >= FAIL_THRESHOLD;
-
-    setTimeout(() => {
-      if (willFail) {
-        setFailed(true);
-        return;
-      }
-      const nextRound = currentRoundRef.current + 1;
-      if (nextRound >= TOTAL_ROUNDS) {
-        setWon(true);
-      } else {
-        setCurrentRound(nextRound);
-        setPhase('answering');
-        setSelectedAnswer(null);
-        setTimerPct(100);
-      }
-    }, 1200);
-  }, [stopTimer]);
+    setPips(prev => { const n = [...prev]; n[currentRoundRef.current] = correct ? 'ok' : 'err'; return n; });
+    advanceRound(correct);
+  }, [stopTimer, advanceRound]);
 
   const startTimer = useCallback(() => {
     answerStartRef.current = Date.now();
     answerTimerRef.current = setInterval(() => {
       const elapsed = Date.now() - answerStartRef.current;
-      const remaining = Math.max(0, ANSWER_MS - elapsed);
-      setTimerPct((remaining / ANSWER_MS) * 100);
+      const remaining = Math.max(0, answerMs - elapsed);
+      setTimerPct((remaining / answerMs) * 100);
       if (remaining <= 0) {
         stopTimer();
         handleAnswer(null);
       }
     }, 80);
-  }, [stopTimer, handleAnswer]);
+  }, [stopTimer, handleAnswer, answerMs]);
 
   useEffect(() => {
     if (won) return;
@@ -155,7 +288,7 @@ export default function LogicGame() {
 
   const resetGame = () => {
     stopTimer();
-    rounds.current = [...ODD_ONE_SETS].sort(() => Math.random() - 0.5).slice(0, TOTAL_ROUNDS);
+    rounds.current = buildLogicRounds(ODD_ONE_SETS, TOTAL_ROUNDS, levelId);
     setCurrentRound(0);
     setPhase('answering');
     setTimerPct(100);
@@ -164,6 +297,8 @@ export default function LogicGame() {
     wrongCountRef.current = 0;
     setPips(Array(TOTAL_ROUNDS).fill('none'));
     setSelectedAnswer(null);
+    foundTargetsRef.current = [];
+    setFoundTargets([]);
     setWon(false);
     setFailed(false);
   };
@@ -172,15 +307,18 @@ export default function LogicGame() {
   const timerColor = timerPct > 50 ? Colors.teal : timerPct > 25 ? Colors.gold : Colors.coral;
   const stars = calcPatternStars(score);
 
+  const isFirstClear = useProgressStore.getState().completions[levelId] === undefined;
+  const lastPlayedAt = useProgressStore.getState().lastPlayedAt?.[levelId];
+  const previewPts = calcActualPoints(stars, levelId, isFirstClear, lastPlayedAt);
   const winData: WinData = {
     type: 'logic',
-    emoji: stars === 3 ? '🧠' : stars === 2 ? '💡' : '🌱',
-    title: stars === 3 ? 'Sharp Thinker!' : stars === 2 ? 'Good Reasoning!' : 'Keep Going!',
-    sub: 'Spotting what doesn\'t belong sharpens your judgement and decision-making every day.',
+    emoji: stars === 5 ? '🏆' : stars === 4 ? '🌟' : stars === 3 ? '💡' : stars === 2 ? '👍' : '🌱',
+    title: stars === 5 ? 'Sharp Thinker!' : stars === 4 ? 'Excellent!' : stars === 3 ? 'Good Reasoning!' : stars === 2 ? 'Good Effort!' : 'Keep Going!',
+    sub: "Spotting what doesn't belong sharpens your focus and decision-making every day.",
     stats: [
       { num: `${score}/${TOTAL_ROUNDS}`, lbl: 'Correct' },
       { num: `${Math.round((score / TOTAL_ROUNDS) * 100)}%`, lbl: 'Accuracy' },
-      { num: `+${MILES_PER_STAR[stars]}`, lbl: 'Points' },
+      { num: `+${previewPts}`, lbl: 'Points' },
     ],
     insight: pickInsight('logic'),
     stars,
@@ -204,8 +342,19 @@ export default function LogicGame() {
 
   if (!round) return null;
 
-  // Shuffle items once per round (stable via ref)
-  const items = round.items;
+  const isAllFound = phase === 'feedback' && selectedAnswer === '__all__';
+  const emojiSize = round.cols === 3 ? 40 : 60;
+
+  const getPromptText = () => {
+    if (phase === 'answering') return round.prompt;
+    if (round.mode === 'find_all') {
+      return isAllFound
+        ? `✅ Both found! · ${round.hint}`
+        : `❌ Not quite · ${round.hint}`;
+    }
+    const isCorrect = selectedAnswer !== null && round.targets.includes(selectedAnswer);
+    return isCorrect ? `✅ Correct! · ${round.hint}` : `❌ Not quite · ${round.hint}`;
+  };
 
   return (
     <SafeAreaView style={s.container} edges={['top']}>
@@ -226,15 +375,12 @@ export default function LogicGame() {
         {/* Round pips */}
         <View style={s.pips}>
           {pips.map((pip, i) => (
-            <View
-              key={i}
-              style={[
-                s.pip,
-                pip === 'ok' && s.pipOk,
-                pip === 'err' && s.pipErr,
-                i === currentRound && pip === 'none' && s.pipActive,
-              ]}
-            />
+            <View key={i} style={[
+              s.pip,
+              pip === 'ok' && s.pipOk,
+              pip === 'err' && s.pipErr,
+              i === currentRound && pip === 'none' && s.pipActive,
+            ]} />
           ))}
         </View>
 
@@ -245,40 +391,56 @@ export default function LogicGame() {
           </View>
         </View>
 
+        {/* Mode badge */}
+        {round.mode !== 'find_odd' && (
+          <View style={s.modeBadge}>
+            <Text style={s.modeBadgeTxt}>
+              {round.mode === 'find_belongs' ? '🔍 Find It' : '🎯 Find All'}
+            </Text>
+          </View>
+        )}
+
         {/* Prompt */}
         <View style={s.promptWrap}>
-          <Text style={s.promptTxt}>
-            {phase === 'answering'
-              ? '🤔 Which one doesn\'t belong?'
-              : selectedAnswer === round.odd
-                ? `✅ Correct! · ${round.hint}`
-                : `❌ Not quite · ${round.hint}`}
-          </Text>
+          <Text style={s.promptTxt}>{getPromptText()}</Text>
         </View>
 
-        {/* 2×2 grid — two explicit rows so flex: 1 resolves correctly */}
+        {/* find_all progress */}
+        {round.mode === 'find_all' && phase === 'answering' && (
+          <Text style={s.progressLbl}>{foundTargets.length} / {round.targets.length} found</Text>
+        )}
+
+        {/* Dynamic grid */}
         <View style={s.grid}>
-          {[0, 1].map(row => (
+          {Array.from({ length: round.rows }).map((_, row) => (
             <View key={row} style={s.gridRow}>
-              {items.slice(row * 2, row * 2 + 2).map((item, col) => {
-                const i = row * 2 + col;
-                const isSelected = selectedAnswer === item;
-                const isOdd = item === round.odd;
-                const showCorrect = phase === 'feedback' && isOdd;
-                const showWrong = phase === 'feedback' && isSelected && !isOdd;
+              {round.items.slice(row * round.cols, row * round.cols + round.cols).map((item, col) => {
+                const isTarget = round.targets.includes(item);
+                const isFoundSoFar = foundTargets.includes(item);
+
+                const showCorrect = phase === 'feedback' && isTarget;
+                const showWrong = phase === 'feedback' && selectedAnswer === item && !isTarget;
+                const showDim = phase === 'feedback' && !showCorrect && !showWrong;
+                const showPartial = round.mode === 'find_all' && phase === 'answering' && isFoundSoFar;
+
                 return (
                   <CellButton
-                    key={`${currentRound}-${i}`}
+                    key={`${currentRound}-${row}-${col}`}
                     item={item}
                     style={[
                       s.cell,
                       showCorrect && s.cellOk,
                       showWrong && s.cellErr,
-                      phase === 'feedback' && !showCorrect && !showWrong && s.cellDim,
+                      showDim && s.cellDim,
+                      showPartial && s.cellPartial,
                     ]}
-                    onPress={() => phase === 'answering' && handleAnswer(item)}
+                    onPress={() => {
+                      if (phase !== 'answering') return;
+                      if (round.mode === 'find_all' && isFoundSoFar) return;
+                      handleAnswer(item);
+                    }}
                     disabled={phase !== 'answering'}
-                    emojiStyle={s.cellEmoji}
+                    emojiStyle={[s.cellEmoji, { fontSize: emojiSize }]}
                     isCorrect={showCorrect}
                   />
                 );
@@ -306,17 +468,11 @@ const s = StyleSheet.create({
     borderBottomColor: Colors.border,
   },
   backBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
+    width: 38, height: 38, borderRadius: 19,
     backgroundColor: '#FFFFFF',
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
+    alignItems: 'center', justifyContent: 'center',
+    shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06, shadowRadius: 8, elevation: 2,
   },
   backTxt: { fontSize: 17, color: Colors.text, fontFamily: 'Nunito_700Bold' },
   headerTitle: { flex: 1, fontSize: 13, fontFamily: 'Nunito_800ExtraBold', color: Colors.text, lineHeight: 18 },
@@ -324,7 +480,7 @@ const s = StyleSheet.create({
   scoreTxt: { fontSize: 13, fontFamily: 'Nunito_800ExtraBold' },
 
   body: { flex: 1, paddingHorizontal: 20, paddingTop: 20 },
-  domainTag: { fontSize: 11, fontFamily: 'Nunito_700Bold', textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 16, alignSelf: 'center' },
+  domainTag: { fontSize: 16, fontFamily: 'Nunito_900Black', textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 16, alignSelf: 'center' },
 
   pips: { flexDirection: 'row', gap: 5, marginBottom: 14, alignSelf: 'center' },
   pip: { width: 28, height: 6, borderRadius: 3, backgroundColor: 'rgba(0,0,0,0.08)' },
@@ -332,12 +488,30 @@ const s = StyleSheet.create({
   pipErr: { backgroundColor: Colors.coral },
   pipActive: { backgroundColor: 'rgba(0,0,0,0.2)' },
 
-  timerWrap: { marginBottom: 20 },
+  timerWrap: { marginBottom: 16 },
   timerTrack: { height: 6, backgroundColor: 'rgba(0,0,0,0.08)', borderRadius: 3, overflow: 'hidden' },
   timerFill: { height: '100%', borderRadius: 3 },
 
-  promptWrap: { marginBottom: 32, minHeight: 28 },
-  promptTxt: { fontSize: 16, fontFamily: 'Nunito_800ExtraBold', color: Colors.text, textAlign: 'center', alignSelf: 'center' },
+  modeBadge: {
+    alignSelf: 'center',
+    backgroundColor: 'rgba(0,201,167,0.12)',
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    marginBottom: 8,
+  },
+  modeBadgeTxt: { fontSize: 11, fontFamily: 'Nunito_700Bold', color: Colors.teal },
+
+  promptWrap: { marginBottom: 12, minHeight: 28 },
+  promptTxt: { fontSize: 20, fontFamily: 'Nunito_800ExtraBold', color: '#1A1A1A', textAlign: 'center' },
+
+  progressLbl: {
+    textAlign: 'center',
+    fontSize: 12,
+    fontFamily: 'Nunito_700Bold',
+    color: Colors.teal,
+    marginBottom: 8,
+  },
 
   grid: { gap: CELL_GAP },
   gridRow: { flexDirection: 'row', gap: CELL_GAP },
@@ -360,6 +534,7 @@ const s = StyleSheet.create({
   cellOk: { borderColor: Colors.teal, backgroundColor: 'rgba(6,214,160,0.2)' },
   cellErr: { borderColor: Colors.coral, backgroundColor: 'rgba(239,71,111,0.15)' },
   cellDim: { opacity: 0.35 },
+  cellPartial: { borderColor: Colors.teal, backgroundColor: 'rgba(6,214,160,0.08)' },
   cellEmoji: { fontSize: 60 },
 
   roundLbl: { marginTop: 28, fontSize: 12, fontFamily: 'Nunito_700Bold', color: Colors.muted, alignSelf: 'center' },

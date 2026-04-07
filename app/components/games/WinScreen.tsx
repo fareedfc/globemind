@@ -98,7 +98,7 @@ export function WinScreen({ data, levelId, onExit }: Props) {
 
   const isFirstClear = useRef(useProgressStore.getState().completions[levelId] === undefined).current;
   const lastPlayedAt = useRef(useProgressStore.getState().lastPlayedAt[levelId]).current;
-  const pointsEarned = useRef(calcActualPoints(data.stars, isFirstClear, lastPlayedAt)).current;
+  const pointsEarned = useRef(calcActualPoints(data.stars, levelId, isFirstClear, lastPlayedAt)).current;
   const rewarded = useRef(false);
   const oldDomainPct = useRef(useBrainStore.getState().domains[data.type]).current;
 
@@ -110,6 +110,8 @@ export function WinScreen({ data, levelId, onExit }: Props) {
   // Animated values
   const burstAnim = useRef(new Animated.Value(0)).current;
   const starAnims = useRef([
+    new Animated.Value(0),
+    new Animated.Value(0),
     new Animated.Value(0),
     new Animated.Value(0),
     new Animated.Value(0),
@@ -199,7 +201,7 @@ export function WinScreen({ data, levelId, onExit }: Props) {
           friction: 5,
           useNativeDriver: true,
         }).start();
-      }, 600 + i * 200);
+      }, 600 + i * 150);
     });
   }, []);
 
@@ -227,16 +229,16 @@ export function WinScreen({ data, levelId, onExit }: Props) {
       >
       {/* Stars */}
       <View style={s.starsRow}>
-        {[0, 1, 2].map(i => {
+        {[0, 1, 2, 3, 4].map(i => {
           const filled = i < data.stars;
           return (
             <Animated.View
               key={i}
               style={{
                 transform: [
-                  { scale: starAnims[i] },
+                  { scale: starAnims[i] ?? new Animated.Value(filled ? 1 : 0) },
                   {
-                    rotate: starAnims[i].interpolate({
+                    rotate: (starAnims[i] ?? new Animated.Value(1)).interpolate({
                       inputRange: [0, 0.6, 1],
                       outputRange: ['-20deg', '10deg', '0deg'],
                     }),
@@ -280,7 +282,7 @@ export function WinScreen({ data, levelId, onExit }: Props) {
 
       {/* Brain insight */}
       <View style={s.insight}>
-        <Text style={s.insightLbl}>🧠 Brain insight</Text>
+        <Text style={s.insightLbl}>💡 Today's insight</Text>
         <Text style={s.insightTxt}>{data.insight}</Text>
       </View>
 
@@ -335,7 +337,7 @@ const s = StyleSheet.create({
     gap: 12,
     marginBottom: 16,
   },
-  star: { width: 48, height: 48 },
+  star: { width: 36, height: 36 },
 
   emoji: {
     fontSize: 76,
@@ -421,9 +423,9 @@ const s = StyleSheet.create({
 
   insight: {
     width: '100%',
-    backgroundColor: 'rgba(6,214,160,0.07)',
+    backgroundColor: 'rgba(139,63,217,0.07)',
     borderWidth: 1,
-    borderColor: 'rgba(6,214,160,0.18)',
+    borderColor: 'rgba(139,63,217,0.18)',
     borderRadius: 13,
     padding: 13,
     marginBottom: 12,
@@ -431,7 +433,7 @@ const s = StyleSheet.create({
   insightLbl: {
     fontSize: 11,
     fontFamily: 'Nunito_700Bold',
-    color: Colors.teal,
+    color: '#8B3FD9',
     textTransform: 'uppercase',
     letterSpacing: 1,
     marginBottom: 3,
@@ -455,7 +457,7 @@ const s = StyleSheet.create({
   progressBar: {
     height: '100%',
     borderRadius: 4,
-    backgroundColor: Colors.teal,
+    backgroundColor: '#8B3FD9',
   },
   progressLbl: {
     fontSize: 12,

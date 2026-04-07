@@ -16,10 +16,11 @@ import { usePlayerStore, MAX_LIVES } from '../stores/playerStore';
 const PREMIUM_MONTHLY_ID = 'thinkpop_premium_monthly';
 
 const FEATURES = [
-  { label: 'Lives',            free: `${MAX_LIVES}, slow refill`,   premium: 'Generous refill' },
+  { label: 'Levels',           free: 'Unlimited',                   premium: 'Unlimited' },
+  { label: 'Lives',            free: `${MAX_LIVES}, slow refill`,   premium: 'Unlimited ♾️' },
   { label: 'Strengths',        free: 'Basic summary',               premium: 'Full breakdown' },
   { label: 'Weekly Report',    free: 'Highlights only',             premium: 'Detailed analysis' },
-  { label: 'All 4 game modes', free: '✓',                           premium: '✓ + future modes' },
+  { label: 'Game modes',       free: 'All 4',                       premium: 'All 4 + future' },
 ];
 
 export default function PaywallScreen() {
@@ -94,7 +95,7 @@ export default function PaywallScreen() {
         <View style={s.successBody}>
           <Text style={s.successEmoji}>👑</Text>
           <Text style={s.successTitle}>You're Premium!</Text>
-          <Text style={s.successSub}>Unlimited levels, more lives, full brain reports. Enjoy!</Text>
+          <Text style={s.successSub}>Unlimited lives, full stats breakdown, detailed weekly reports. Enjoy!</Text>
           <TouchableOpacity
             onPress={() => router.replace('/(tabs)/journey')}
             activeOpacity={0.85}
@@ -114,8 +115,6 @@ export default function PaywallScreen() {
     );
   }
 
-  const isDaily = reason === 'daily';
-
   return (
     <SafeAreaView style={s.container} edges={['top', 'bottom']}>
       <TouchableOpacity style={s.back} onPress={() => router.back()} activeOpacity={0.7}>
@@ -128,35 +127,23 @@ export default function PaywallScreen() {
       >
         {/* Header block */}
         <Animated.View style={[s.header, { opacity: scaleAnim, transform: [{ scale: scaleAnim }] }]}>
-          {isDaily ? (
-            <>
-              <Text style={s.headerEmoji}>📅</Text>
-              <Text style={s.headerTitle}>Keep going with Premium</Text>
-              <Text style={s.headerSub}>
-                Premium unlocks extra perks and a smoother play experience whenever you want it.
+          {/* Hearts row */}
+          <View style={s.heartsRow}>
+            {Array.from({ length: MAX_LIVES }, (_, i) => (
+              <Text key={i} style={[s.heart, i < lives && s.heartFull]}>
+                {i < lives ? '❤️' : '🖤'}
               </Text>
-            </>
-          ) : (
-            <>
-              {/* Hearts row */}
-              <View style={s.heartsRow}>
-                {Array.from({ length: MAX_LIVES }, (_, i) => (
-                  <Text key={i} style={[s.heart, i < lives && s.heartFull]}>
-                    {i < lives ? '❤️' : '🖤'}
-                  </Text>
-                ))}
-              </View>
-              <Text style={s.headerTitle}>You're out of lives</Text>
-              <Text style={s.headerSub}>
-                Lives refill automatically — one every 30 minutes. Or go Premium for a generous refill and unlimited play.
-              </Text>
-              {timeUntilNext && (
-                <View style={s.timerCard}>
-                  <Text style={s.timerLbl}>Next free life in</Text>
-                  <Text style={s.timerNum}>{timeUntilNext}</Text>
-                </View>
-              )}
-            </>
+            ))}
+          </View>
+          <Text style={s.headerTitle}>You're out of lives</Text>
+          <Text style={s.headerSub}>
+            Lives refill automatically — one every 30 minutes. Or go Premium for unlimited lives and richer insights.
+          </Text>
+          {timeUntilNext && (
+            <View style={s.timerCard}>
+              <Text style={s.timerLbl}>Next free life in</Text>
+              <Text style={s.timerNum}>{timeUntilNext}</Text>
+            </View>
           )}
         </Animated.View>
 
@@ -190,7 +177,7 @@ export default function PaywallScreen() {
               ) : (
                 <>
                   <Text style={s.premiumBtnTxt}>Get Premium — $6.99/mo</Text>
-                  <Text style={s.premiumBtnSub}>Unlimited play · Full Brain reports</Text>
+                  <Text style={s.premiumBtnSub}>Unlimited lives · Full stats & reports</Text>
                 </>
               )}
             </LinearGradient>

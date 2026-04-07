@@ -49,7 +49,7 @@ function Bubble({ level }: { level: Level }) {
 export function LevelNode({ level, x, y, onPress }: Props) {
   const isCurr = !!level.curr;
   const isLocked = !level.done && !isCurr && !level.boss;
-  const isInteractive = level.done || isCurr;
+  const isInteractive = level.done || isCurr || !!level.boss;
 
   const bob = useRef(new Animated.Value(0)).current;
   const ring = useRef(new Animated.Value(0)).current;
@@ -93,9 +93,9 @@ export function LevelNode({ level, x, y, onPress }: Props) {
     transform: [{ scale: ring.interpolate({ inputRange: [0, 1], outputRange: [1, 1.18] }) }],
   };
 
-  const stars = level.done
-    ? `${'⭐'.repeat(level.stars ?? 3)}${'☆'.repeat(3 - (level.stars ?? 3))}`
-    : '☆☆☆';
+  const MAX_STARS = 5;
+  const earned = level.done ? Math.min(level.stars ?? MAX_STARS, MAX_STARS) : 0;
+  const stars = '⭐'.repeat(earned) + '☆'.repeat(MAX_STARS - earned);
 
   return (
     <TouchableOpacity
@@ -120,6 +120,7 @@ export function LevelNode({ level, x, y, onPress }: Props) {
           <Text key={i} style={s.star}>{star}</Text>
         ))}
       </View>
+
     </TouchableOpacity>
   );
 }
@@ -168,10 +169,20 @@ const s = StyleSheet.create({
   },
   stars: {
     flexDirection: 'row',
-    gap: 2,
+    gap: 1,
     marginTop: 4,
   },
   star: {
-    fontSize: 11,
+    fontSize: 9,
+  },
+  levelLabel: {
+    marginTop: 2,
+    fontSize: 10,
+    fontFamily: 'Nunito_700Bold',
+    color: 'rgba(255,255,255,0.92)',
+    textShadowColor: 'rgba(0,0,0,0.5)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
+    letterSpacing: 0.3,
   },
 });

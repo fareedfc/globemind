@@ -143,90 +143,90 @@ export const POS = [
   // ── World 1 · Forest ──────────────────────────────────────────────────────
   // Dirt path enters centre-left, dips lower through the forest floor,
   // then arcs upward through the tree canopy gap toward the right.
-  { x: 0.010, y: 0.58 }, // L1  — path enters, slightly below centre
-  { x: 0.020, y: 0.63 }, // L2  — dips into forest floor
+  { x: 0.010, y: 0.25 }, // L1  — path enters, slightly below centre
+  { x: 0.020, y: 0.48 }, // L2  — dips into forest floor
   { x: 0.030, y: 0.67 }, // L3  — lowest point, dense undergrowth
-  { x: 0.039, y: 0.65 }, // L4
-  { x: 0.049, y: 0.57 }, // L5  — path begins rising
-  { x: 0.059, y: 0.49 }, // L6  — centre, clearing
-  { x: 0.069, y: 0.42 }, // L7  — trail climbs
+  { x: 0.040, y: 0.57 }, // L4
+  { x: 0.049, y: 0.77 }, // L5  — path begins rising
+  { x: 0.059, y: 0.53 }, // L6  — centre, clearing
+  { x: 0.070, y: 0.50 }, // L7  — trail climbs
   { x: 0.079, y: 0.37 }, // L8  — upper canopy level
-  { x: 0.088, y: 0.40 }, // L9  — slight descent to boss
-  { x: 0.098, y: 0.45 }, // L10 boss — hilltop clearing
+  { x: 0.089, y: 0.50 }, // L9  — slight descent to boss
+  { x: 0.099, y: 0.50 }, // L10 boss — hilltop clearing
 
   // ── World 2 · Ocean ───────────────────────────────────────────────────────
   // Sandy beach strip runs almost flat; gentle coastal undulation.
-  { x: 0.108, y: 0.50 }, // L11 — beach entry, centre
+  { x: 0.107, y: 0.63 }, // L11 — beach entry, centre
   { x: 0.118, y: 0.53 }, // L12
-  { x: 0.127, y: 0.55 }, // L13 — slight dip toward shoreline
-  { x: 0.137, y: 0.53 }, // L14
-  { x: 0.147, y: 0.50 }, // L15 — centre again
+  { x: 0.127, y: 0.75 }, // L13 — slight dip toward shoreline
+  { x: 0.137, y: 0.76 }, // L14
+  { x: 0.147, y: 0.70 }, // L15 — centre again
   { x: 0.157, y: 0.47 }, // L16
-  { x: 0.167, y: 0.45 }, // L17 — rises toward dune ridge
-  { x: 0.176, y: 0.47 }, // L18
-  { x: 0.186, y: 0.50 }, // L19
-  { x: 0.196, y: 0.50 }, // L20 boss — pier end, flat
+  { x: 0.167, y: 0.75 }, // L17 — rises toward dune ridge
+  { x: 0.177, y: 0.67 }, // L18
+  { x: 0.188, y: 0.60 }, // L19
+  { x: 0.199, y: 0.48 }, // L20 boss — pier end, flat
 
   // ── World 3 · Desert ──────────────────────────────────────────────────────
   // Big S-curve winding road: enters low, rises dramatically to midpoint,
   // then descends back down toward the far dunes.
-  { x: 0.206, y: 0.65 }, // L21 — enters low, sandy valley
-  { x: 0.216, y: 0.68 }, // L22 — deepest point
-  { x: 0.225, y: 0.65 }, // L23 — road climbs out of valley
-  { x: 0.235, y: 0.56 }, // L24
+  { x: 0.204, y: 0.40 }, // L21 — enters low, sandy valley
+  { x: 0.215, y: 0.48 }, // L22 — deepest point
+  { x: 0.225, y: 0.50 }, // L23 — road climbs out of valley
+  { x: 0.235, y: 0.52 }, // L24
   { x: 0.245, y: 0.45 }, // L25 — midpoint, rising fast
-  { x: 0.255, y: 0.38 }, // L26 — peak of S-curve
-  { x: 0.265, y: 0.42 }, // L27 — starts descending
-  { x: 0.275, y: 0.50 }, // L28
-  { x: 0.284, y: 0.56 }, // L29 — back down toward dunes
-  { x: 0.294, y: 0.55 }, // L30 boss — plateau lookout
+  { x: 0.255, y: 0.58 }, // L26 — peak of S-curve
+  { x: 0.265, y: 0.72 }, // L27 — starts descending
+  { x: 0.275, y: 0.70 }, // L28
+  { x: 0.285, y: 0.66 }, // L29 — back down toward dunes
+  { x: 0.299, y: 0.69 }, // L30 boss — plateau lookout
 
   // ── World 4 · Mountain ────────────────────────────────────────────────────
   // Trail winds through the mountain: gradual descent into valley,
   // then steady climb back up toward the summit.
-  { x: 0.304, y: 0.52 }, // L31 — trail start, upper foothills
-  { x: 0.314, y: 0.58 }, // L32
-  { x: 0.324, y: 0.63 }, // L33 — valley floor
+  { x: 0.305, y: 0.63 }, // L31 — trail start, upper foothills
+  { x: 0.312, y: 0.50 }, // L32
+  { x: 0.324, y: 0.52 }, // L33 — valley floor
   { x: 0.333, y: 0.65 }, // L34 — lowest, narrow gorge
-  { x: 0.343, y: 0.60 }, // L35
-  { x: 0.353, y: 0.52 }, // L36 — centre, bridge
-  { x: 0.363, y: 0.44 }, // L37 — trail climbs
-  { x: 0.373, y: 0.40 }, // L38 — rocky switchback
-  { x: 0.382, y: 0.44 }, // L39 — short descent before summit
-  { x: 0.392, y: 0.48 }, // L40 boss — mountain peak
+  { x: 0.343, y: 0.66 }, // L35
+  { x: 0.353, y: 0.60 }, // L36 — centre, bridge
+  { x: 0.363, y: 0.51 }, // L37 — trail climbs
+  { x: 0.373, y: 0.45 }, // L38 — rocky switchback
+  { x: 0.382, y: 0.48 }, // L39 — short descent before summit
+  { x: 0.395, y: 0.58 }, // L40 boss — mountain peak
 
   // ── World 5 · Space ───────────────────────────────────────────────────────
   // Clear glowing S-curve: path starts at the bottom of the star field,
   // sweeps up through the nebula, then curves back down.
-  { x: 0.402, y: 0.62 }, // L41 — low orbit entry
+  { x: 0.404, y: 0.60 }, // L41 — low orbit entry
   { x: 0.412, y: 0.65 }, // L42 — deepest point of arc
-  { x: 0.422, y: 0.62 }, // L43
-  { x: 0.431, y: 0.52 }, // L44 — path crosses midplane
-  { x: 0.441, y: 0.42 }, // L45 — rising through nebula
-  { x: 0.451, y: 0.35 }, // L46 — highest point, deep space
-  { x: 0.461, y: 0.40 }, // L47 — begins descent
-  { x: 0.471, y: 0.50 }, // L48
-  { x: 0.480, y: 0.58 }, // L49 — curving back down
-  { x: 0.490, y: 0.62 }, // L50 boss — re-entry point
+  { x: 0.422, y: 0.58 }, // L43
+  { x: 0.431, y: 0.42 }, // L44 — path crosses midplane
+  { x: 0.441, y: 0.37 }, // L45 — rising through nebula
+  { x: 0.451, y: 0.55 }, // L46 — highest point, deep space
+  { x: 0.461, y: 0.70 }, // L47 — begins descent
+  { x: 0.472, y: 0.55 }, // L48
+  { x: 0.483, y: 0.35 }, // L49 — curving back down
+  { x: 0.495, y: 0.38 }, // L50 boss — re-entry point
 
   // ── World 6 · Deep Ocean ──────────────────────────────────────────────────
   // Snaking bioluminescent path: starts near the top, dips to centre-low,
   // then rises again — inverse of World 5.
-  { x: 0.500, y: 0.40 }, // L51 — near surface, upper path
-  { x: 0.510, y: 0.45 }, // L52
-  { x: 0.520, y: 0.52 }, // L53 — descending into the deep
-  { x: 0.529, y: 0.60 }, // L54
-  { x: 0.539, y: 0.64 }, // L55 — deepest trench
-  { x: 0.549, y: 0.60 }, // L56
+  { x: 0.504, y: 0.49 }, // L51 — near surface, upper path
+  { x: 0.513, y: 0.62 }, // L52
+  { x: 0.522, y: 0.52 }, // L53 — descending into the deep
+  { x: 0.531, y: 0.45 }, // L54
+  { x: 0.540, y: 0.42 }, // L55 — deepest trench
+  { x: 0.549, y: 0.55 }, // L56
   { x: 0.559, y: 0.52 }, // L57 — rising again
-  { x: 0.569, y: 0.45 }, // L58
-  { x: 0.578, y: 0.40 }, // L59 — back near surface
-  { x: 0.588, y: 0.42 }, // L60 boss — abyssal platform
+  { x: 0.569, y: 0.55 }, // L58
+  { x: 0.578, y: 0.63 }, // L59 — back near surface
+  { x: 0.588, y: 0.48 }, // L60 boss — abyssal platform
 
   // ── World 7 · Volcanic ────────────────────────────────────────────────────
   // Stone S-curve: path skirts the lava fields at the bottom,
   // climbs over the volcanic ridge, then drops toward the caldera.
-  { x: 0.598, y: 0.65 }, // L61 — lava field base
+  { x: 0.598, y: 0.40 }, // L61 — lava field base
   { x: 0.608, y: 0.68 }, // L62 — hottest point, lowest path
   { x: 0.618, y: 0.63 }, // L63 — climbing out
   { x: 0.627, y: 0.54 }, // L64
@@ -234,12 +234,12 @@ export const POS = [
   { x: 0.647, y: 0.38 }, // L66 — summit view
   { x: 0.657, y: 0.42 }, // L67 — descending toward caldera
   { x: 0.667, y: 0.50 }, // L68
-  { x: 0.676, y: 0.58 }, // L69 — caldera rim
+  { x: 0.676, y: 0.28 }, // L69 — caldera rim
   { x: 0.686, y: 0.62 }, // L70 boss — crater edge
 
   // ── World 8 · Arctic ──────────────────────────────────────────────────────
   // Icy path almost straight across; subtle undulation like frozen tundra.
-  { x: 0.696, y: 0.52 }, // L71
+  { x: 0.696, y: 0.65 }, // L71
   { x: 0.706, y: 0.49 }, // L72
   { x: 0.716, y: 0.46 }, // L73 — slight rise over ice ridge
   { x: 0.725, y: 0.44 }, // L74
@@ -254,28 +254,28 @@ export const POS = [
   // Circular stone plaza path: gentle oval arc through the ruins,
   // bowing slightly above and below centre.
   { x: 0.794, y: 0.50 }, // L81 — ruins entrance
-  { x: 0.804, y: 0.55 }, // L82
-  { x: 0.814, y: 0.58 }, // L83 — outer arc, lower
-  { x: 0.824, y: 0.55 }, // L84
-  { x: 0.833, y: 0.50 }, // L85 — centre altar
-  { x: 0.843, y: 0.45 }, // L86
-  { x: 0.853, y: 0.42 }, // L87 — upper arc
-  { x: 0.863, y: 0.45 }, // L88
+  { x: 0.806, y: 0.88 }, // L82
+  { x: 0.814, y: 0.70 }, // L83 — outer arc, lower
+  { x: 0.824, y: 0.50 }, // L84
+  { x: 0.833, y: 0.39 }, // L85 — centre altar
+  { x: 0.843, y: 0.40 }, // L86
+  { x: 0.853, y: 0.58 }, // L87 — upper arc
+  { x: 0.863, y: 0.65 }, // L88
   { x: 0.873, y: 0.50 }, // L89 — completes the arc
-  { x: 0.882, y: 0.50 }, // L90 boss — throne room
+  { x: 0.882, y: 0.30 }, // L90 boss — throne room
 
   // ── World 10 · Cosmic Finale ──────────────────────────────────────────────
   // Galactic band runs through centre; path pulses above and below
   // like the rhythm of the cosmos.
-  { x: 0.892, y: 0.50 }, // L91
-  { x: 0.902, y: 0.46 }, // L92
-  { x: 0.912, y: 0.43 }, // L93 — drifts upward
+  { x: 0.894, y: 0.60 }, // L91
+  { x: 0.902, y: 0.50 }, // L92
+  { x: 0.912, y: 0.51 }, // L93 — drifts upward
   { x: 0.922, y: 0.46 }, // L94
   { x: 0.931, y: 0.50 }, // L95 — galactic centre
   { x: 0.941, y: 0.54 }, // L96
   { x: 0.951, y: 0.57 }, // L97 — drifts downward
   { x: 0.961, y: 0.54 }, // L98
-  { x: 0.971, y: 0.50 }, // L99 — converges to centre
-  { x: 0.980, y: 0.50 }, // L100 FINAL BOSS — the cosmic nexus
-  { x: 0.990, y: 0.50 }, // L101 Bonus 🍀
+  { x: 0.971, y: 0.52 }, // L99 — converges to centre
+  { x: 0.982, y: 0.48 }, // L100 FINAL BOSS — the cosmic nexus
+  { x: 0.995, y: 0.50 }, // L101 Bonus 🍀
 ];
