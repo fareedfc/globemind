@@ -7,9 +7,8 @@ import { usePlayerStore } from '../../stores/playerStore';
 
 const SCREEN_BACKGROUND = require('../../assets/landing-background.png');
 
-// Placeholder URLs — replace with real ones before App Store submission
-const PRIVACY_URL = 'https://www.iubenda.com/privacy-policy/thinkpop';
-const TERMS_URL   = 'https://www.termsfeed.com/terms-conditions/thinkpop';
+const PRIVACY_URL = 'https://www.iubenda.com/privacy-policy/14041250';
+const TERMS_URL   = 'https://fareedfc.github.io/thinkpop-legal/terms.html';
 const APP_STORE_URL = 'https://apps.apple.com/app/thinkpop'; // replace with real ID
 
 
