@@ -1,5 +1,7 @@
 import { useEffect, useRef } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Animated, ImageBackground } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Animated, ImageBackground, Image } from 'react-native';
+
+const BALLOON = require('../../assets/icons/balloon.png');
 import * as Haptics from 'expo-haptics';
 import { Colors } from '../../constants/colors';
 import { usePlayerStore } from '../../stores/playerStore';
@@ -29,17 +31,13 @@ export function FailScreen({ type, levelId, onTryAgain, onExit }: Props) {
   const worldBg = WORLD_BGS[Math.min(Math.floor((levelId - 1) / 10), 9)];
   const { useLive } = usePlayerStore();
   const { recordFail } = useBrainStore();
-  // The "almost pop" bubble
-  const bubbleScale = useRef(new Animated.Value(0)).current;
+  const bubbleScale   = useRef(new Animated.Value(0)).current;
   const bubbleOpacity = useRef(new Animated.Value(1)).current;
-  const bubbleRotate = useRef(new Animated.Value(0)).current;
-
-  // "Pop..." text that fades in then dims
-  const textScale = useRef(new Animated.Value(0)).current;
-  const textOpacity = useRef(new Animated.Value(0)).current;
+  const bubbleRotate  = useRef(new Animated.Value(0)).current;
+  const wobble        = useRef(new Animated.Value(0)).current;
 
   // Content below
-  const contentOpacity = useRef(new Animated.Value(0)).current;
+  const contentOpacity   = useRef(new Animated.Value(0)).current;
   const contentTranslate = useRef(new Animated.Value(16)).current;
 
   useEffect(() => {
@@ -47,121 +45,61 @@ export function FailScreen({ type, levelId, onTryAgain, onExit }: Props) {
     useLive();
     recordFail(type);
 
-    // 1. Bubble springs up to 0.85 — almost there but not quite
     Animated.sequence([
-      Animated.spring(bubbleScale, {
-        toValue: 0.85,
-        tension: 160,
-        friction: 5,
-        useNativeDriver: true,
-      }),
-      // 2. Hold briefly, then slowly deflate + droop
-      Animated.delay(280),
+      // 1. Balloon inflates quickly — about to pop
+      Animated.spring(bubbleScale, { toValue: 1.25, tension: 200, friction: 4, useNativeDriver: true }),
+      // 2. Tremble — suspense moment
+      Animated.sequence([
+        Animated.timing(wobble, { toValue: 1,    duration: 55, useNativeDriver: true }),
+        Animated.timing(wobble, { toValue: -1,   duration: 55, useNativeDriver: true }),
+        Animated.timing(wobble, { toValue: 0.7,  duration: 55, useNativeDriver: true }),
+        Animated.timing(wobble, { toValue: -0.7, duration: 55, useNativeDriver: true }),
+        Animated.timing(wobble, { toValue: 0.4,  duration: 55, useNativeDriver: true }),
+        Animated.timing(wobble, { toValue: 0,    duration: 45, useNativeDriver: true }),
+      ]),
+      // 3. Brief hold at peak
+      Animated.delay(100),
+      // 4. Slowly deflate + droop
       Animated.parallel([
-        Animated.timing(bubbleScale, {
-          toValue: 0.38,
-          duration: 620,
-          useNativeDriver: true,
-        }),
-        Animated.timing(bubbleRotate, {
-          toValue: 1,
-          duration: 620,
-          useNativeDriver: true,
-        }),
-        Animated.timing(bubbleOpacity, {
-          toValue: 0.45,
-          duration: 620,
-          useNativeDriver: true,
-        }),
+        Animated.timing(bubbleScale,   { toValue: 0.38, duration: 700, useNativeDriver: true }),
+        Animated.timing(bubbleRotate,  { toValue: 1,    duration: 700, useNativeDriver: true }),
+        Animated.timing(bubbleOpacity, { toValue: 0.45, duration: 700, useNativeDriver: true }),
       ]),
     ]).start();
 
-    // 3. "Pop..." text appears mid-deflate, stays faded
-    setTimeout(() => {
-      Animated.sequence([
-        Animated.spring(textScale, {
-          toValue: 1,
-          tension: 140,
-          friction: 8,
-          useNativeDriver: true,
-        }),
-        Animated.timing(textOpacity, {
-          toValue: 0.38,
-          duration: 0,
-          useNativeDriver: true,
-        }),
-      ]).start();
-      textOpacity.setValue(0.38);
-      Animated.spring(textScale, {
-        toValue: 1,
-        tension: 140,
-        friction: 8,
-        useNativeDriver: true,
-      }).start();
-    }, 300);
-
-    // 4. Content fades in after the deflation
+    // Content slides up after deflation
     setTimeout(() => {
       Animated.parallel([
-        Animated.timing(contentOpacity, {
-          toValue: 1,
-          duration: 320,
-          useNativeDriver: true,
-        }),
-        Animated.spring(contentTranslate, {
-          toValue: 0,
-          tension: 120,
-          friction: 10,
-          useNativeDriver: true,
-        }),
+        Animated.timing(contentOpacity, { toValue: 1, duration: 320, useNativeDriver: true }),
+        Animated.spring(contentTranslate, { toValue: 0, tension: 120, friction: 10, useNativeDriver: true }),
       ]).start();
-    }, 820);
+    }, 1000);
   }, []);
 
-  const rotate = bubbleRotate.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['0deg', '-12deg'],
-  });
+  const droop = bubbleRotate.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '-18deg'] });
+  const shake = wobble.interpolate({ inputRange: [-1, 0, 1], outputRange: ['-10deg', '0deg', '10deg'] });
 
   return (
     <ImageBackground source={worldBg} style={s.container} resizeMode="cover">
-      <View style={s.bgScrim} />
-      {/* Almost-pop bubble */}
-      <Animated.Text
-        style={[
-          s.bubble,
-          {
-            transform: [{ scale: bubbleScale }, { rotate }],
-            opacity: bubbleOpacity,
-          },
-        ]}
-      >
-        🫧
-      </Animated.Text>
+      {/* World art fills the float zone */}
+      <View style={s.floatZone} />
 
-      {/* "Pop..." — starts to form, stays dim */}
-      <Animated.Text
-        style={[
-          s.almostText,
-          {
-            transform: [{ scale: textScale }],
-            opacity: textOpacity,
-          },
-        ]}
-      >
-        Pop...
-      </Animated.Text>
-
-      {/* Content */}
+      {/* Content section — high opacity */}
       <Animated.View
         style={[
-          s.content,
-          {
-            opacity: contentOpacity,
-            transform: [{ translateY: contentTranslate }],
-          },
+          s.topSection,
+          { opacity: contentOpacity, transform: [{ translateY: contentTranslate }] },
         ]}
       >
+        {/* Balloon sits above "So close!" inside the white section */}
+        <Animated.Image
+          source={BALLOON}
+          style={[s.balloon, {
+            transform: [{ scale: bubbleScale }, { rotate: droop }, { rotate: shake }],
+            opacity: bubbleOpacity,
+          }]}
+          resizeMode="contain"
+        />
         <Text style={s.title}>So close!</Text>
         <Text style={s.sub}>
           You were warming up.{'\n'}Give it another pop.
@@ -174,38 +112,38 @@ export function FailScreen({ type, levelId, onTryAgain, onExit }: Props) {
           <Text style={s.btnSecondaryTxt}>Back to Journey</Text>
         </TouchableOpacity>
       </Animated.View>
+
+      <View style={s.bottomSection} />
     </ImageBackground>
   );
 }
 
 const s = StyleSheet.create({
-  container: {
+  container: { flex: 1 },
+
+  floatZone: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 28,
-  },
-  bgScrim: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(255,255,255,0.50)',
   },
 
-  bubble: {
-    fontSize: 96,
-    marginBottom: 4,
+  balloon: {
+    width: 120,
+    height: 140,
+    marginBottom: 12,
   },
 
-  almostText: {
-    fontSize: 38,
-    fontFamily: 'Nunito_900Black',
-    color: Colors.muted,
-    marginBottom: 32,
-    letterSpacing: -0.5,
-  },
-
-  content: {
+  topSection: {
+    backgroundColor: 'rgba(255,255,255,0.95)',
     width: '100%',
     alignItems: 'center',
+    paddingHorizontal: 28,
+    paddingTop: 32,
+    paddingBottom: 20,
+  },
+  bottomSection: {
+    height: 32,
+    backgroundColor: 'rgba(255,255,255,0.05)',
   },
 
   title: {
@@ -227,7 +165,7 @@ const s = StyleSheet.create({
   btnPrimary: {
     width: '100%',
     paddingVertical: 17,
-    backgroundColor: Colors.coral,
+    backgroundColor: '#8B3FD9',
     borderRadius: 15,
     alignItems: 'center',
     marginBottom: 10,

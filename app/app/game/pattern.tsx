@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Animated, ImageBackground } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Animated, Easing, ImageBackground } from 'react-native';
 
 const WORLD_BGS = [
   require('../../assets/worlds/w1-forest.png'),
@@ -179,7 +179,7 @@ export default function PatternGame() {
   const [phase, setPhase] = useState<Phase>('watching');
   const [litIndex, setLitIndex] = useState(-1);
   const [seqHidden, setSeqHidden] = useState(false);
-  const [timerPct, setTimerPct] = useState(100);
+  const timerAnim = useRef(new Animated.Value(1)).current;
   const [score, setScore] = useState(0);
   const [pips, setPips] = useState<PipState[]>(Array(TOTAL_ROUNDS).fill('none'));
   const [feedbackAnswer, setFeedbackAnswer] = useState<string | null>(null);
@@ -188,8 +188,6 @@ export default function PatternGame() {
 
   const cancelRef = useRef(false);
   const wrongCountRef = useRef(0);
-  const answerTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const answerStartRef = useRef(0);
   const currentRoundRef = useRef(0);
   const scoreRef = useRef(0);
 
@@ -197,11 +195,8 @@ export default function PatternGame() {
   scoreRef.current = score;
 
   const stopAnswerTimer = useCallback(() => {
-    if (answerTimerRef.current) {
-      clearInterval(answerTimerRef.current);
-      answerTimerRef.current = null;
-    }
-  }, []);
+    timerAnim.stopAnimation();
+  }, [timerAnim]);
 
   const handleAnswer = useCallback((ans: string | null) => {
     stopAnswerTimer();
@@ -242,24 +237,23 @@ export default function PatternGame() {
   }, [stopAnswerTimer]);
 
   const startAnswerTimer = useCallback(() => {
-    answerStartRef.current = Date.now();
-    answerTimerRef.current = setInterval(() => {
-      const elapsed = Date.now() - answerStartRef.current;
-      const remaining = Math.max(0, ANSWER_MS - elapsed);
-      setTimerPct((remaining / ANSWER_MS) * 100);
-      if (remaining <= 0) {
-        stopAnswerTimer();
-        handleAnswer(null);
-      }
-    }, 80);
-  }, [stopAnswerTimer, handleAnswer]);
+    timerAnim.setValue(1);
+    Animated.timing(timerAnim, {
+      toValue: 0,
+      duration: ANSWER_MS,
+      easing: Easing.linear,
+      useNativeDriver: false,
+    }).start(({ finished }) => {
+      if (finished) handleAnswer(null);
+    });
+  }, [timerAnim, handleAnswer]);
 
   const playSequence = useCallback(async (activeRound: ActiveRound) => {
     cancelRef.current = false;
     setPhase('watching');
     setLitIndex(-1);
     setFeedbackAnswer(null);
-    setTimerPct(100);
+    timerAnim.setValue(1);
     setSeqHidden(false);
 
     for (let i = 0; i < activeRound.displaySeq.length; i++) {
@@ -310,7 +304,7 @@ export default function PatternGame() {
     setPhase('watching');
     setLitIndex(-1);
     setSeqHidden(false);
-    setTimerPct(100);
+    timerAnim.setValue(1);
     setScore(0);
     scoreRef.current = 0;
     wrongCountRef.current = 0;
@@ -321,7 +315,11 @@ export default function PatternGame() {
   };
 
   const activeRound = rounds.current[currentRound];
-  const timerColor = timerPct > 50 ? Colors.teal : timerPct > 25 ? Colors.gold : Colors.coral;
+  const timerWidth = timerAnim.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] });
+  const timerColor = timerAnim.interpolate({
+    inputRange: [0, 0.25, 0.5, 1],
+    outputRange: [Colors.coral, Colors.coral, Colors.gold, Colors.teal],
+  });
 
   const winPct = Math.round((score / TOTAL_ROUNDS) * 100);
   const stars = calcPatternStars(score);
@@ -428,7 +426,7 @@ export default function PatternGame() {
         {/* Timer bar */}
         <View style={[s.timerWrap, phase === 'watching' && { opacity: 0 }]}>
           <View style={s.timerTrack}>
-            <View style={[s.timerFill, { width: `${timerPct}%` as any, backgroundColor: timerColor }]} />
+            <Animated.View style={[s.timerFill, { width: timerWidth, backgroundColor: timerColor }]} />
           </View>
         </View>
 

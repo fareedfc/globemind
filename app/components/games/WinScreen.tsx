@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Animated, Dimensions, Image, ImageBackground, ImageSourcePropType } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Animated, Dimensions, Image, ImageBackground, ImageSourcePropType } from 'react-native';
 
 const WORLD_BGS = [
   require('../../assets/worlds/w1-forest.png'),
@@ -220,8 +220,6 @@ export function WinScreen({ data, levelId, onExit }: Props) {
 
   return (
     <ImageBackground source={worldBg} style={s.root} resizeMode="cover">
-      <View style={s.bgScrim} />
-
       {/* POP! splash overlay */}
       {!popGone && (
         <Animated.View
@@ -236,95 +234,95 @@ export function WinScreen({ data, levelId, onExit }: Props) {
         </Animated.View>
       )}
       <Confetti />
-      <ScrollView
-        contentContainerStyle={s.container}
-        showsVerticalScrollIndicator={false}
-      >
-      {/* Stars */}
-      <View style={s.starsRow}>
-        {[0, 1, 2, 3, 4].map(i => {
-          const filled = i < data.stars;
-          return (
-            <Animated.View
-              key={i}
-              style={{
-                transform: [
-                  { scale: starAnims[i] ?? new Animated.Value(filled ? 1 : 0) },
-                  {
-                    rotate: (starAnims[i] ?? new Animated.Value(1)).interpolate({
-                      inputRange: [0, 0.6, 1],
-                      outputRange: ['-20deg', '10deg', '0deg'],
-                    }),
-                  },
-                ],
-                opacity: filled ? 1 : 0.2,
-              }}
-            >
-              <Image source={ICON_STAR} style={s.star} resizeMode="contain" />
-            </Animated.View>
-          );
-        })}
-      </View>
 
-      {/* Emoji */}
-      <Animated.View style={{ transform: [{ scale: burstAnim }] }}>
-        <Text style={s.emoji}>{data.emoji}</Text>
-      </Animated.View>
-
-      <Text style={s.title}>{data.title}</Text>
-
-      {/* Score counter */}
-      <View style={s.scoreDelta}>
-        <Text style={s.scoreDeltaNum}>{displayScore.toLocaleString()}</Text>
-        <View style={s.scoreDeltaBadge}>
-          <Text style={s.scoreDeltaBadgeTxt}>+{pointsEarned} ⭐</Text>
+      {/* Stars float above the content section, against world bg */}
+      <View style={s.starsWrap}>
+        <View style={s.starsRow}>
+          {[0, 1, 2, 3, 4].map(i => {
+            const filled = i < data.stars;
+            return (
+              <Animated.View
+                key={i}
+                style={{
+                  transform: [
+                    { scale: starAnims[i] ?? new Animated.Value(filled ? 1 : 0) },
+                    {
+                      rotate: (starAnims[i] ?? new Animated.Value(1)).interpolate({
+                        inputRange: [0, 0.6, 1],
+                        outputRange: ['-20deg', '10deg', '0deg'],
+                      }),
+                    },
+                  ],
+                  opacity: filled ? 1 : 0.2,
+                }}
+              >
+                <Image source={ICON_STAR} style={s.star} resizeMode="contain" />
+              </Animated.View>
+            );
+          })}
         </View>
       </View>
 
-      <Text style={s.sub}>{data.sub}</Text>
+      {/* Content section — high opacity for readability */}
+      <View style={s.topSection}>
+        {/* Emoji */}
+        <Animated.View style={[s.emojiWrap, { transform: [{ scale: burstAnim }] }]}>
+          <Text style={s.emoji}>{data.emoji}</Text>
+        </Animated.View>
 
-      {/* Stat cards */}
-      <View style={s.statsRow}>
-        {data.stats.map((stat, i) => (
-          <View key={i} style={s.statCard}>
-            <Text style={s.statNum}>{stat.num}</Text>
-            <Text style={s.statLbl}>{stat.lbl}</Text>
+        <Text style={s.title}>{data.title}</Text>
+
+        {/* Score counter */}
+        <View style={s.scoreDelta}>
+          <Text style={s.scoreDeltaNum}>{displayScore.toLocaleString()}</Text>
+          <View style={s.scoreDeltaBadge}>
+            <Text style={s.scoreDeltaBadgeTxt}>+{pointsEarned} ⭐</Text>
           </View>
-        ))}
+        </View>
+
+        <Text style={s.sub}>{data.sub}</Text>
+
+        {/* Stat cards */}
+        <View style={s.statsRow}>
+          {data.stats.map((stat, i) => (
+            <View key={i} style={s.statCard}>
+              <Text style={s.statNum}>{stat.num}</Text>
+              <Text style={s.statLbl}>{stat.lbl}</Text>
+            </View>
+          ))}
+        </View>
+
+        {/* Brain insight */}
+        <View style={s.insight}>
+          <Text style={s.insightLbl}>💡 Today's insight</Text>
+          <Text style={s.insightTxt}>{data.insight}</Text>
+        </View>
+
+        {/* Auto-continue bar */}
+        <View style={s.progressWrap}>
+          <Animated.View
+            style={[
+              s.progressBar,
+              {
+                width: progressAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: ['0%', '100%'],
+                }),
+              },
+            ]}
+          />
+        </View>
+        <Text style={s.progressLbl}>Continuing to Journey...</Text>
       </View>
 
-      {/* Brain insight */}
-      <View style={s.insight}>
-        <Text style={s.insightLbl}>💡 Today's insight</Text>
-        <Text style={s.insightTxt}>{data.insight}</Text>
-      </View>
-
-      {/* Auto-continue bar */}
-      <View style={s.progressWrap}>
-        <Animated.View
-          style={[
-            s.progressBar,
-            {
-              width: progressAnim.interpolate({
-                inputRange: [0, 1],
-                outputRange: ['0%', '100%'],
-              }),
-            },
-          ]}
-        />
-      </View>
-      <Text style={s.progressLbl}>Continuing to Journey...</Text>
-      </ScrollView>
+      {/* Bottom world art strip */}
+      <View style={s.bottomSection} />
     </ImageBackground>
   );
 }
 
 const s = StyleSheet.create({
   root: { flex: 1 },
-  bgScrim: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(255,255,255,0.50)',
-  },
 
   popOverlay: {
     ...StyleSheet.absoluteFillObject,
@@ -337,25 +335,34 @@ const s = StyleSheet.create({
     height: 140,
   },
 
-  container: {
-    flexGrow: 1,
+  // Stars float above the white section against the world bg
+  starsWrap: {
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 24,
-    paddingVertical: 28,
+    paddingTop: 28,
+    paddingBottom: 16,
   },
-
   starsRow: {
     flexDirection: 'row',
     gap: 12,
-    marginBottom: 16,
   },
   star: { width: 36, height: 36 },
 
+  topSection: {
+    backgroundColor: 'rgba(255,255,255,0.95)',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    paddingTop: 20,
+    paddingBottom: 16,
+  },
+  bottomSection: {
+    flex: 1,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+  },
+
+  emojiWrap: { marginBottom: 12 },
   emoji: {
     fontSize: 76,
     textAlign: 'center',
-    marginBottom: 12,
   },
   title: {
     fontSize: 28,

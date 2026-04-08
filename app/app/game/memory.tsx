@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Animated, ScrollView, ImageBackground } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Animated, Easing, ScrollView, ImageBackground } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -86,9 +86,27 @@ function MemCard({ card, onFlip }: { card: Card; onFlip: () => void }) {
   );
 }
 
+function calcPairs(levelId: number): number {
+  if (levelId <= 5)  return 3;
+  if (levelId <= 15) return 4;
+  if (levelId <= 25) return 5;
+  if (levelId <= 35) return 6;
+  if (levelId <= 50) return 7;
+  if (levelId <= 65) return 8;
+  if (levelId <= 80) return 9;
+  if (levelId <= 92) return 10;
+  return 12;
+}
+
+function calcTimeLimit(pairs: number, levelId: number): number {
+  if (levelId > 65) return pairs * 6;
+  if (levelId > 35) return pairs * 8;
+  return pairs * 10;
+}
+
 function buildDeck(levelId: number): Card[] {
   const setIdx = (levelId - 1) % MEMORY_SETS.length;
-  const pairCount = Math.min(3 + Math.floor(levelId / 2.5), 9);
+  const pairCount = calcPairs(levelId);
   const pairs = MEMORY_SETS[setIdx].slice(0, pairCount);
   return [
     ...pairs.map((e, i) => ({ id: -1, emoji: e, pairId: i, flipped: false, matched: false })),
@@ -98,18 +116,13 @@ function buildDeck(levelId: number): Card[] {
     .map((c, i) => ({ ...c, id: i }));
 }
 
-// Time limit: pairs × 20 seconds
-function calcTimeLimit(pairs: number) {
-  return pairs * 20;
-}
-
 export default function MemoryGame() {
   const { levelId: rawId } = useLocalSearchParams<{ levelId: string }>();
   const levelId = parseInt(rawId ?? '1');
   const level = LEVELS.find(l => l.id === levelId) ?? LEVELS[0];
 
-  const totalPairs = Math.min(3 + Math.floor(levelId / 2.5), 9);
-  const timeLimit = calcTimeLimit(totalPairs);
+  const totalPairs = calcPairs(levelId);
+  const timeLimit = calcTimeLimit(totalPairs, levelId);
 
   const [deck, setDeck] = useState<Card[]>(() => buildDeck(levelId));
   const [flippedIdx, setFlippedIdx] = useState<number[]>([]);
@@ -120,22 +133,34 @@ export default function MemoryGame() {
   const [failed, setFailed] = useState(false);
   const [timeLeft, setTimeLeft] = useState(timeLimit);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const timerAnim = useRef(new Animated.Value(1)).current;
   const startTimeRef = useRef<number>(Date.now());
 
-  // Countdown timer
+  // Countdown timer — interval for seconds text, Animated for smooth bar
   useEffect(() => {
     if (won || failed) return;
     startTimeRef.current = Date.now();
+    timerAnim.setValue(1);
+    Animated.timing(timerAnim, {
+      toValue: 0,
+      duration: timeLimit * 1000,
+      easing: Easing.linear,
+      useNativeDriver: false,
+    }).start(({ finished }) => {
+      if (finished) setFailed(true);
+    });
     timerRef.current = setInterval(() => {
       const elapsed = Math.floor((Date.now() - startTimeRef.current) / 1000);
       const remaining = Math.max(0, timeLimit - elapsed);
       setTimeLeft(remaining);
       if (remaining <= 0) {
         if (timerRef.current) clearInterval(timerRef.current);
-        setFailed(true);
       }
     }, 500);
-    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+    return () => {
+      timerAnim.stopAnimation();
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
   }, [won, failed]);
 
   // Handle two flipped cards
@@ -185,7 +210,9 @@ export default function MemoryGame() {
   }, [locked, flippedIdx.length]);
 
   const resetGame = () => {
+    timerAnim.stopAnimation();
     if (timerRef.current) clearInterval(timerRef.current);
+    timerAnim.setValue(1);
     setDeck(buildDeck(levelId));
     setFlippedIdx([]);
     setMatchedCount(0);
@@ -196,7 +223,7 @@ export default function MemoryGame() {
     setTimeLeft(timeLimit);
   };
 
-  const numCols = deck.length <= 6 ? 3 : 4;
+  const numCols = totalPairs <= 3 ? 3 : 4;
   const numRows = Math.ceil(deck.length / numCols);
 
   const stars = calcMemoryStars(wrongFlips, totalPairs);
@@ -262,12 +289,15 @@ export default function MemoryGame() {
         {/* Countdown timer bar */}
         <View style={s.timerWrap}>
           <View style={s.timerTrack}>
-            <View
+            <Animated.View
               style={[
                 s.timerFill,
                 {
-                  width: `${(timeLeft / timeLimit) * 100}%` as any,
-                  backgroundColor: timeLeft > timeLimit * 0.5 ? Colors.teal : timeLeft > timeLimit * 0.25 ? Colors.gold : Colors.coral,
+                  width: timerAnim.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] }),
+                  backgroundColor: timerAnim.interpolate({
+                    inputRange: [0, 0.25, 0.5, 1],
+                    outputRange: [Colors.coral, Colors.coral, Colors.gold, Colors.teal],
+                  }),
                 },
               ]}
             />

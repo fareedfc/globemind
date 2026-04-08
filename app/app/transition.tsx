@@ -4,10 +4,22 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
-const LANDING_BACKGROUND = require('../assets/landing-background.png');
+const WORLD_BGS = [
+  require('../assets/worlds/w1-forest.png'),
+  require('../assets/worlds/w2-ocean.png'),
+  require('../assets/worlds/w3-desert.png'),
+  require('../assets/worlds/w4-mountain.png'),
+  require('../assets/worlds/w5-space.png'),
+  require('../assets/worlds/w6-deep-ocean.png'),
+  require('../assets/worlds/w7-volcanic.png'),
+  require('../assets/worlds/w8-arctic.png'),
+  require('../assets/worlds/w9-ruins.png'),
+  require('../assets/worlds/w10-cosmic.png'),
+];
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import Svg, { Path } from 'react-native-svg';
+const AnimatedSvgPath = Animated.createAnimatedComponent(Path);
 import * as Haptics from 'expo-haptics';
 import { Colors } from '../constants/colors';
 import { LEVELS, POS } from '../data/levels';
@@ -29,12 +41,12 @@ const DOMAIN_LABELS: Record<GameType, string> = {
 };
 
 // Horizontal scene: two nodes side by side, star travels left → right
-const SCENE_W = 300;
-const SCENE_H = NODE_SIZE + 80; // room for node + tag above/below
+const SCENE_W = 260;
+const SCENE_H = NODE_SIZE + 60;
 const HALF    = NODE_SIZE / 2;
-const X1      = 48;              // left node centre x
-const X2      = SCENE_W - 48;   // right node centre x
-const CY      = SCENE_H / 2;    // shared vertical centre
+const X1      = 44;
+const X2      = SCENE_W - 44;
+const CY      = SCENE_H / 2;
 
 export default function LevelTransitionScreen() {
   const { levelId: rawId, domain: rawDomain, oldPct: rawOldPct } = useLocalSearchParams<{ levelId: string; domain: string; oldPct: string }>();
@@ -56,6 +68,7 @@ export default function LevelTransitionScreen() {
   const btnAnim       = useRef(new Animated.Value(0)).current;
   const barAnim       = useRef(new Animated.Value(oldPct)).current;
   const glowPulse     = useRef(new Animated.Value(0)).current;
+  const flowAnim      = useRef(new Animated.Value(0)).current;
 
   // Star travels left → right (horizontal)
   const markerTX = progress.interpolate({ inputRange: [0, 1], outputRange: [0, X2 - X1] });
@@ -70,6 +83,23 @@ export default function LevelTransitionScreen() {
       router.replace('/(tabs)/journey');
       return;
     }
+
+    // Flowing dash animation — starts immediately
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(flowAnim, {
+          toValue: -20,
+          duration: 500,
+          easing: Easing.linear,
+          useNativeDriver: false,
+        }),
+        Animated.timing(flowAnim, {
+          toValue: 0,
+          duration: 0,
+          useNativeDriver: false,
+        }),
+      ])
+    ).start();
 
     // 450ms pause → marker travels → node pops → label → button
     setTimeout(() => {
@@ -112,152 +142,174 @@ export default function LevelTransitionScreen() {
 
   if (!current || !next) return null;
 
+  const worldBg = WORLD_BGS[Math.min(Math.floor((levelId - 1) / 10), 9)];
+
   // Horizontal dashed path between the two node centres
   const pathD = `M${X1} ${CY} C${(X1 + X2) / 2} ${CY},${(X1 + X2) / 2} ${CY},${X2} ${CY}`;
 
   return (
-    <SafeAreaView style={s.container} edges={['top', 'bottom']}>
-      <ImageBackground source={LANDING_BACKGROUND} style={StyleSheet.absoluteFill} resizeMode="cover">
-        <View style={s.bgScrim} />
-      </ImageBackground>
+    <ImageBackground source={worldBg} style={s.container} resizeMode="cover">
+      <SafeAreaView style={s.safe} edges={['top', 'bottom']}>
 
-      <View style={s.inner}>
-        <View style={s.titleWrap}>
-          <Text style={s.header}>Level {levelId} Complete!</Text>
-          <Text style={s.subHeader}>You're on a roll 🔥</Text>
-        </View>
-
-        {/* ── Mini path scene (horizontal) ── */}
-        <View style={[s.scene, { width: SCENE_W, height: SCENE_H }]}>
-
-          {/* Dashed connecting path */}
-          <Svg style={StyleSheet.absoluteFill} width={SCENE_W} height={SCENE_H}>
-            <Path
-              d={pathD}
-              fill="none"
-              stroke="rgba(143,104,15,0.4)"
-              strokeWidth={3.5}
-              strokeDasharray="9 6"
-              strokeLinecap="round"
-            />
-          </Svg>
-
-          {/* Current level node — completed (gold), left side */}
-          <View style={[s.node, s.nodeDone, { left: X1 - HALF, top: CY - HALF }]}>
-            <Text style={s.nodeEmoji}>{current.e}</Text>
+        {/* Float zone — title + scene against world art */}
+        <View style={s.floatZone}>
+          <View style={s.titleCard}>
+            <Text style={s.header}>Level {levelId} Complete!</Text>
+            <Text style={s.subHeader}>You're on a roll 🔥</Text>
           </View>
-          <Text style={[s.nodeTag, { left: X1 - 28, top: CY + HALF + 5 }]}>
-            L{levelId} ✅
-          </Text>
 
-          {/* Glow ring around next node */}
-          <Animated.View style={[s.glow, {
-            left:    X2 - HALF - 14,
-            top:     CY - HALF - 14,
-            opacity: glowOp,
-            transform: [{ scale: glowScale }],
-          }]} />
+          {/* ── Mini path scene (horizontal) ── */}
+          <View style={s.sceneCard}>
+          <View style={[s.scene, { width: SCENE_W, height: SCENE_H }]}>
+            <Svg style={StyleSheet.absoluteFill} width={SCENE_W} height={SCENE_H}>
+              {/* Flowing animated dashes */}
+              <AnimatedSvgPath
+                d={pathD}
+                fill="none"
+                stroke={domainColor}
+                strokeWidth={3.5}
+                strokeDasharray="12 8"
+                strokeDashoffset={flowAnim}
+                strokeLinecap="round"
+              />
+              {/* Arrowhead at destination */}
+              <Path
+                d={`M${X2 - 13} ${CY - 8} L${X2 + 1} ${CY} L${X2 - 13} ${CY + 8}`}
+                fill="none"
+                stroke={domainColor}
+                strokeWidth={3}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </Svg>
 
-          {/* Next level node — unlocking (teal), right side */}
-          <Animated.View style={[s.node, s.nodeNext, {
-            left:    X2 - HALF,
-            top:     CY - HALF,
-            opacity: unlockOpacity,
-            transform: [{ scale: unlockScale }],
-          }]}>
-            <Text style={s.nodeEmoji}>{next.e}</Text>
-          </Animated.View>
-          <Animated.Text style={[s.nodeTag, {
-            left:    X2 - 28,
-            top:     CY + HALF + 5,
-            color:   Colors.teal,
-            opacity: unlockOpacity,
-          }]}>
-            L{nextId} 🔓
-          </Animated.Text>
+            <View style={[s.node, s.nodeDone, { left: X1 - HALF, top: CY - HALF }]}>
+              <Text style={s.nodeEmoji}>{current.e}</Text>
+            </View>
+            <Text style={[s.nodeTag, { left: X1 - 28, top: CY + HALF + 5 }]}>
+              L{levelId} ✅
+            </Text>
 
-          {/* Travelling star — moves left → right */}
-          <Animated.Text style={[s.marker, {
-            left: X1 - 14,
-            top:  CY - HALF - 20,
-            transform: [{ translateX: markerTX }, { translateY: markerTY }],
-          }]}>
-            ⭐
-          </Animated.Text>
+            <Animated.View style={[s.glow, {
+              left: X2 - HALF - 14, top: CY - HALF - 14,
+              opacity: glowOp, transform: [{ scale: glowScale }],
+            }]} />
+
+            <Animated.View style={[s.node, s.nodeNext, {
+              left: X2 - HALF, top: CY - HALF,
+              opacity: unlockOpacity, transform: [{ scale: unlockScale }],
+            }]}>
+              <Text style={s.nodeEmoji}>{next.e}</Text>
+            </Animated.View>
+            <Animated.Text style={[s.nodeTag, {
+              left: X2 - 28, top: CY + HALF + 5,
+              color: Colors.teal, opacity: unlockOpacity,
+            }]}>
+              L{nextId} 🔓
+            </Animated.Text>
+
+            <Animated.Text style={[s.marker, {
+              left: X1 - 14, top: CY - HALF - 20,
+              transform: [{ translateX: markerTX }, { translateY: markerTY }],
+            }]}>
+              ⭐
+            </Animated.Text>
+          </View>
+          </View>
         </View>
 
-        {/* ── Unlock label ── */}
-        <Animated.View style={[s.unlockWrap, {
-          opacity: labelAnim,
-          transform: [{ translateY: labelAnim.interpolate({ inputRange: [0, 1], outputRange: [14, 0] }) }],
-        }]}>
-          <Text style={s.unlockTitle}>Level {nextId} Unlocked!</Text>
-          <Text style={s.unlockDomain}>{next.domain}</Text>
-          <Text style={s.unlockDesc} numberOfLines={2}>{next.desc}</Text>
-        </Animated.View>
-
-        {/* ── Strength bar ── */}
-        {domain && (
-          <Animated.View style={[s.strengthWrap, {
+        {/* Content section — high opacity */}
+        <View style={s.topSection}>
+          {/* ── Unlock label ── */}
+          <Animated.View style={[s.unlockWrap, {
             opacity: labelAnim,
             transform: [{ translateY: labelAnim.interpolate({ inputRange: [0, 1], outputRange: [14, 0] }) }],
           }]}>
-            <View style={s.strengthHeader}>
-              <Text style={[s.strengthLabel, { color: '#8B3FD9' }]}>
-                {DOMAIN_LABELS[domain]} Strength
-              </Text>
-              <Text style={[s.strengthPcts, { color: '#8B3FD9' }]}>
-                {oldPct}% → {newPct}%
-              </Text>
-            </View>
-            <View style={s.strengthTrack}>
-              <Animated.View style={[s.strengthFill, {
-                backgroundColor: '#8B3FD9',
-                width: barAnim.interpolate({ inputRange: [0, 100], outputRange: ['0%', '100%'] }),
-              }]} />
-            </View>
+            <Text style={s.unlockTitle}>Level {nextId} Unlocked!</Text>
+            <Text style={s.unlockDomain}>{next.domain}</Text>
+            <Text style={s.unlockDesc} numberOfLines={2}>{next.desc}</Text>
           </Animated.View>
-        )}
 
-        {/* ── Continue button ── */}
-        <Animated.View style={[s.btnWrap, {
-          opacity: btnAnim,
-          transform: [{ translateY: btnAnim.interpolate({ inputRange: [0, 1], outputRange: [18, 0] }) }],
-        }]}>
-          <TouchableOpacity
-            onPress={() => router.replace('/(tabs)/journey')}
-            activeOpacity={0.85}
-          >
-            <LinearGradient
-              colors={['#8B3FD9', '#8B3FD9']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={s.btn}
-            >
-              <Text style={s.btnTxt}>Continue to Journey →</Text>
-            </LinearGradient>
-          </TouchableOpacity>
-        </Animated.View>
-      </View>
-    </SafeAreaView>
+          {/* ── Strength bar ── */}
+          {domain && (
+            <Animated.View style={[s.strengthWrap, {
+              opacity: labelAnim,
+              transform: [{ translateY: labelAnim.interpolate({ inputRange: [0, 1], outputRange: [14, 0] }) }],
+            }]}>
+              <View style={s.strengthHeader}>
+                <Text style={[s.strengthLabel, { color: '#8B3FD9' }]}>
+                  {DOMAIN_LABELS[domain]} Strength
+                </Text>
+                <Text style={[s.strengthPcts, { color: '#8B3FD9' }]}>
+                  {oldPct}% → {newPct}%
+                </Text>
+              </View>
+              <View style={s.strengthTrack}>
+                <Animated.View style={[s.strengthFill, {
+                  backgroundColor: '#8B3FD9',
+                  width: barAnim.interpolate({ inputRange: [0, 100], outputRange: ['0%', '100%'] }),
+                }]} />
+              </View>
+            </Animated.View>
+          )}
+
+          {/* ── Continue button ── */}
+          <Animated.View style={[s.btnWrap, {
+            opacity: btnAnim,
+            transform: [{ translateY: btnAnim.interpolate({ inputRange: [0, 1], outputRange: [18, 0] }) }],
+          }]}>
+            <TouchableOpacity onPress={() => router.replace('/(tabs)/journey')} activeOpacity={0.85}>
+              <LinearGradient
+                colors={['#8B3FD9', '#8B3FD9']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={s.btn}
+              >
+                <Text style={s.btnTxt}>Continue to Journey →</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          </Animated.View>
+        </View>
+
+        <View style={s.bottomSection} />
+      </SafeAreaView>
+    </ImageBackground>
   );
 }
 
 const s = StyleSheet.create({
   container: { flex: 1 },
-  bgScrim: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(255,255,255,0.50)',
-  },
-  inner: {
+  safe: { flex: 1 },
+
+  floatZone: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 24,
     paddingHorizontal: 28,
-    gap: 32,
+    paddingBottom: 12,
   },
 
-  titleWrap: { alignItems: 'center', gap: 4 },
+  topSection: {
+    backgroundColor: 'rgba(255,255,255,0.95)',
+    paddingHorizontal: 28,
+    paddingTop: 24,
+    paddingBottom: 20,
+    gap: 20,
+  },
+  bottomSection: {
+    height: 32,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+  },
+
+  titleCard: {
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(255,255,255,0.82)',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 18,
+  },
   header: {
     fontSize: 26,
     fontFamily: 'Nunito_900Black',
@@ -272,6 +324,13 @@ const s = StyleSheet.create({
   },
 
   // ── Scene ──────────────────────────────────────────────────────────────────
+  sceneCard: {
+    backgroundColor: 'rgba(255,255,255,0.82)',
+    borderRadius: 22,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    alignItems: 'center',
+  },
   scene: { position: 'relative' },
 
   node: {
@@ -295,9 +354,9 @@ const s = StyleSheet.create({
     position: 'absolute',
     width: 56,
     textAlign: 'center',
-    fontSize: 11,
-    fontFamily: 'Nunito_700Bold',
-    color: Colors.muted,
+    fontSize: 14,
+    fontFamily: 'Nunito_800ExtraBold',
+    color: '#000000',
   },
 
   glow: {

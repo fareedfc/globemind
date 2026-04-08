@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Animated, ImageBackground } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Animated, Easing, ImageBackground } from 'react-native';
 
 const WORLD_BGS = [
   require('../../assets/worlds/w1-forest.png'),
@@ -119,7 +119,7 @@ export default function SpeedGame() {
   const [maxCombo, setMaxCombo] = useState(0);
   const [correct, setCorrect] = useState(0);
   const [wrong, setWrong] = useState(0);
-  const [timerPct, setTimerPct] = useState(100);
+  const timerAnim = useRef(new Animated.Value(1)).current;
   const [timerSecs, setTimerSecs] = useState(30);
   const [running, setRunning] = useState(false);
   const [started, setStarted] = useState(false);
@@ -132,33 +132,47 @@ export default function SpeedGame() {
   const runningRef = useRef(false);
 
   const stopTimer = useCallback(() => {
+    timerAnim.stopAnimation();
     if (timerRef.current) clearInterval(timerRef.current);
     timerRef.current = null;
     runningRef.current = false;
     setRunning(false);
-  }, []);
+  }, [timerAnim]);
 
   const startTimer = useCallback(() => {
     startTimeRef.current = Date.now();
     runningRef.current = true;
     setRunning(true);
-    timerRef.current = setInterval(() => {
-      const elapsed = Date.now() - startTimeRef.current;
-      const remaining = Math.max(0, TOTAL_MS - elapsed);
-      const pct = (remaining / TOTAL_MS) * 100;
-      setTimerPct(pct);
-      setTimerSecs(Math.ceil(remaining / 1000));
-      if (remaining <= 0) {
-        if (timerRef.current) clearInterval(timerRef.current);
-        timerRef.current = null;
+    // Smooth bar via Animated.timing
+    timerAnim.setValue(1);
+    Animated.timing(timerAnim, {
+      toValue: 0,
+      duration: TOTAL_MS,
+      easing: Easing.linear,
+      useNativeDriver: false,
+    }).start(({ finished }) => {
+      if (finished) {
         runningRef.current = false;
         setRunning(false);
         setWon(true);
       }
-    }, 100);
-  }, []);
+    });
+    // Seconds countdown for display only (1s interval)
+    timerRef.current = setInterval(() => {
+      const elapsed = Date.now() - startTimeRef.current;
+      const remaining = Math.max(0, TOTAL_MS - elapsed);
+      setTimerSecs(Math.ceil(remaining / 1000));
+      if (remaining <= 0) {
+        if (timerRef.current) clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+    }, 500);
+  }, [timerAnim]);
 
-  useEffect(() => () => { if (timerRef.current) clearInterval(timerRef.current); }, []);
+  useEffect(() => () => {
+    timerAnim.stopAnimation();
+    if (timerRef.current) clearInterval(timerRef.current);
+  }, [timerAnim]);
 
   const tapOption = useCallback((emoji: string, idx: number) => {
     if (!runningRef.current) return;
@@ -205,7 +219,11 @@ export default function SpeedGame() {
     }
   }, [round]);
 
-  const timerColor = timerPct > 50 ? Colors.teal : timerPct > 25 ? Colors.gold : Colors.coral;
+  const timerWidth = timerAnim.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] });
+  const timerColor = timerAnim.interpolate({
+    inputRange: [0, 0.25, 0.5, 1],
+    outputRange: [Colors.coral, Colors.coral, Colors.gold, Colors.teal],
+  });
 
   const resetGame = () => {
     stopTimer();
@@ -215,7 +233,7 @@ export default function SpeedGame() {
     setMaxCombo(0);
     setCorrect(0);
     setWrong(0);
-    setTimerPct(100);
+    timerAnim.setValue(1);
     setTimerSecs(30);
     setRunning(false);
     setStarted(false);
@@ -280,7 +298,7 @@ export default function SpeedGame() {
         {/* Timer bar */}
         <View style={s.timerWrap}>
           <View style={s.timerTrack}>
-            <View style={[s.timerFill, { width: `${timerPct}%` as any, backgroundColor: timerColor }]} />
+            <Animated.View style={[s.timerFill, { width: timerWidth, backgroundColor: timerColor }]} />
           </View>
           <Text style={s.timerLbl}>{timerSecs}s</Text>
         </View>

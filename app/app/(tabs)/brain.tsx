@@ -82,11 +82,11 @@ const COACH_TIPS: Record<GameType, string[]> = {
     "Your mind is more capable than you give it credit for.",
     "Patterns are everywhere — you're learning to see them all.",
     "Keep noticing, keep connecting. It's working.",
-    "Every level you play is rewiring you for the better.",
+    "Every level you play is making you sharper.",
     "You're building an eye for detail that most people never develop.",
     "The best insights come to prepared minds — and yours is getting there.",
     "Stay curious. That's what keeps the mind young.",
-    "You're making connections your brain will thank you for later.",
+    "You're making connections that will pay off in everyday life.",
   ],
 };
 

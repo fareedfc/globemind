@@ -2,28 +2,28 @@ import { Level } from './levels';
 
 export const BRAIN_INSIGHTS: Record<Level['type'], string[]> = {
   memory: [
-    "Working memory is the brain's sticky notepad — training it helps you remember names, directions, and details in daily life.",
-    "Research shows working memory training can increase fluid intelligence — the ability to reason through novel problems.",
-    "Your hippocampus fired hard just now. Regular memory training strengthens the neural pathways that encode new information.",
-    "Working memory capacity is a stronger predictor of academic and professional success than raw IQ.",
+    "Your mental notepad gets stronger every time you train. Sharper memory means remembering names, directions, and details without struggling.",
+    "Regular memory training helps you think more clearly and reason through new problems faster.",
+    "That was a solid workout for your memory. Train consistently and you'll notice the difference in everyday moments.",
+    "A strong memory is one of the most useful skills you can build — it shows up in everything you do.",
   ],
   logic: [
-    "Spotting what doesn't belong is a core thinking skill — it trains your brain to categorise, compare, and decide faster.",
-    "Reasoning exercises like this one activate the prefrontal cortex, the part of your brain that weighs options and makes judgements.",
+    "Spotting what doesn't belong is a core thinking skill — it trains your mind to categorise, compare, and decide faster.",
+    "Exercises like this train the part of your mind that weighs options and makes sharper judgements.",
     "People who regularly practise logic puzzles show stronger decision-making and problem-solving in everyday life.",
     "Every odd-one-out round builds the same mental muscle you use when reading a situation, spotting a risk, or making a quick call.",
   ],
   speed: [
-    "Processing speed is one of the first mental abilities to slow with age. Speed Match training keeps your brain reacting faster in real life.",
-    "Faster processing speed correlates with better decision-making, driving safety, and reaction to unexpected events.",
-    "Studies show processing speed training can reduce crash risk in older drivers by up to 50%.",
-    "Your brain just fired at high speed. Consistent speed training strengthens the myelin sheaths that conduct neural signals.",
+    "Your reaction speed is a use-it-or-lose-it skill. Regular speed training keeps your mind sharp and your responses quick.",
+    "The faster your mind works, the better you handle decisions, surprises, and fast-moving situations.",
+    "Keeping your reactions sharp has real-world payoffs — from driving to catching a glass before it falls.",
+    "Your mind just fired at full speed. Keep training and those quick reactions become your new normal.",
   ],
   pattern: [
     "Pattern recognition is deeply linked to problem-solving, planning ahead, and reading social situations.",
-    "The same mental system you just used lets you read facial expressions, follow narratives, and anticipate outcomes.",
-    "Pattern recognition training activates the prefrontal cortex — the region responsible for executive function and judgment.",
-    "Fluid intelligence — your ability to solve new problems — is directly tied to pattern recognition ability.",
+    "The same mental skill you just used helps you read people, follow conversations, and anticipate what comes next.",
+    "Spotting patterns trains the part of your mind that plans ahead, stays focused, and makes good calls.",
+    "The sharper your pattern sense, the better you get at solving problems you've never seen before.",
   ],
 };
 
