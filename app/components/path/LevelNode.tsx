@@ -48,8 +48,8 @@ function Bubble({ level }: { level: Level }) {
 
 export function LevelNode({ level, x, y, onPress }: Props) {
   const isCurr = !!level.curr;
-  const isLocked = false;
-  const isInteractive = true;
+  const isLocked = !level.done && !level.curr && !level.boss;
+  const isInteractive = !isLocked;
 
   const bob = useRef(new Animated.Value(0)).current;
   const ring = useRef(new Animated.Value(0)).current;
