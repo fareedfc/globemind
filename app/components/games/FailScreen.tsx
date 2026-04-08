@@ -5,13 +5,28 @@ import { Colors } from '../../constants/colors';
 import { usePlayerStore } from '../../stores/playerStore';
 import { useBrainStore, type GameType } from '../../stores/brainStore';
 
+const WORLD_BGS = [
+  require('../../assets/worlds/w1-forest.png'),
+  require('../../assets/worlds/w2-ocean.png'),
+  require('../../assets/worlds/w3-desert.png'),
+  require('../../assets/worlds/w4-mountain.png'),
+  require('../../assets/worlds/w5-space.png'),
+  require('../../assets/worlds/w6-deep-ocean.png'),
+  require('../../assets/worlds/w7-volcanic.png'),
+  require('../../assets/worlds/w8-arctic.png'),
+  require('../../assets/worlds/w9-ruins.png'),
+  require('../../assets/worlds/w10-cosmic.png'),
+];
+
 interface Props {
   type: GameType;
+  levelId: number;
   onTryAgain: () => void;
   onExit: () => void;
 }
 
-export function FailScreen({ type, onTryAgain, onExit }: Props) {
+export function FailScreen({ type, levelId, onTryAgain, onExit }: Props) {
+  const worldBg = WORLD_BGS[Math.min(Math.floor((levelId - 1) / 10), 9)];
   const { useLive } = usePlayerStore();
   const { recordFail } = useBrainStore();
   // The "almost pop" bubble
@@ -109,7 +124,7 @@ export function FailScreen({ type, onTryAgain, onExit }: Props) {
   });
 
   return (
-    <ImageBackground source={require('../../assets/landing-background.png')} style={s.container} resizeMode="cover">
+    <ImageBackground source={worldBg} style={s.container} resizeMode="cover">
       <View style={s.bgScrim} />
       {/* Almost-pop bubble */}
       <Animated.Text

@@ -1,5 +1,18 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Animated } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Animated, ImageBackground } from 'react-native';
+
+const WORLD_BGS = [
+  require('../../assets/worlds/w1-forest.png'),
+  require('../../assets/worlds/w2-ocean.png'),
+  require('../../assets/worlds/w3-desert.png'),
+  require('../../assets/worlds/w4-mountain.png'),
+  require('../../assets/worlds/w5-space.png'),
+  require('../../assets/worlds/w6-deep-ocean.png'),
+  require('../../assets/worlds/w7-volcanic.png'),
+  require('../../assets/worlds/w8-arctic.png'),
+  require('../../assets/worlds/w9-ruins.png'),
+  require('../../assets/worlds/w10-cosmic.png'),
+];
 import * as Haptics from 'expo-haptics';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -233,6 +246,8 @@ export default function SpeedGame() {
     stars,
   };
 
+  const worldBg = WORLD_BGS[Math.min(Math.floor((levelId - 1) / 10), 9)];
+
   if (won) {
     return (
       <SafeAreaView style={s.container} edges={['top', 'bottom']}>
@@ -242,7 +257,8 @@ export default function SpeedGame() {
   }
 
   return (
-    <SafeAreaView style={s.container} edges={['top']}>
+    <ImageBackground source={worldBg} style={s.container} resizeMode="cover">
+    <SafeAreaView style={s.safeArea} edges={['top']}>
       {/* Header */}
       <View style={s.header}>
         <TouchableOpacity style={s.backBtn} onPress={() => router.back()}>
@@ -317,11 +333,13 @@ export default function SpeedGame() {
         )}
       </View>
     </SafeAreaView>
+    </ImageBackground>
   );
 }
 
 const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.bg },
+  container: { flex: 1 },
+  safeArea: { flex: 1, backgroundColor: 'rgba(255,255,255,0.85)' },
 
   header: {
     flexDirection: 'row',
@@ -353,7 +371,7 @@ const s = StyleSheet.create({
   body: { flex: 1, paddingHorizontal: 16, paddingTop: 14 },
   domainTag: { fontSize: 16, fontFamily: 'Nunito_900Black', textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 8 },
   instr: { backgroundColor: 'rgba(0,0,0,0.03)', borderRadius: 11, padding: 10, marginBottom: 14 },
-  instrTxt: { fontSize: 18, fontFamily: 'Nunito_700Bold', color: '#1A1A1A', lineHeight: 26 },
+  instrTxt: { fontSize: 16, fontFamily: 'Nunito_700Bold', color: '#1A1A1A', lineHeight: 26 },
 
   timerWrap: { marginBottom: 12 },
   timerTrack: { height: 7, backgroundColor: 'rgba(0,0,0,0.08)', borderRadius: 4, overflow: 'hidden' },
@@ -361,7 +379,7 @@ const s = StyleSheet.create({
   timerLbl: { fontSize: 11, fontFamily: 'Nunito_700Bold', color: Colors.muted, textAlign: 'right', marginTop: 3 },
 
   prompt: { flex: 1, justifyContent: 'center', gap: 14 },
-  findLbl: { fontSize: 12, fontFamily: 'Nunito_700Bold', textTransform: 'uppercase', letterSpacing: 1.5, color: Colors.muted, alignSelf: 'center' },
+  findLbl: { fontSize: 16, fontFamily: 'Nunito_700Bold', textTransform: 'uppercase', letterSpacing: 1.5, color: Colors.text, alignSelf: 'center' },
   targetWrap: { alignSelf: 'center', alignItems: 'center' },
   target: { fontSize: 74, lineHeight: 84, alignSelf: 'center' },
   noSign: { fontSize: 28, position: 'absolute', bottom: -4, right: -24 },
@@ -398,7 +416,7 @@ const s = StyleSheet.create({
     marginTop: 16,
     marginBottom: 24,
     paddingVertical: 17,
-    backgroundColor: Colors.gold,
+    backgroundColor: '#8B3FD9',
     borderRadius: 16,
     alignItems: 'center',
   },

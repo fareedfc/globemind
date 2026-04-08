@@ -1,7 +1,20 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Animated } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Animated, Easing, ImageBackground } from 'react-native';
 
 const CELL_GAP = 14;
+
+const WORLD_BGS = [
+  require('../../assets/worlds/w1-forest.png'),
+  require('../../assets/worlds/w2-ocean.png'),
+  require('../../assets/worlds/w3-desert.png'),
+  require('../../assets/worlds/w4-mountain.png'),
+  require('../../assets/worlds/w5-space.png'),
+  require('../../assets/worlds/w6-deep-ocean.png'),
+  require('../../assets/worlds/w7-volcanic.png'),
+  require('../../assets/worlds/w8-arctic.png'),
+  require('../../assets/worlds/w9-ruins.png'),
+  require('../../assets/worlds/w10-cosmic.png'),
+];
 import * as Haptics from 'expo-haptics';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -155,7 +168,7 @@ export default function LogicGame() {
 
   const [currentRound, setCurrentRound] = useState(0);
   const [phase, setPhase] = useState<Phase>('answering');
-  const [timerPct, setTimerPct] = useState(100);
+  const timerAnim = useRef(new Animated.Value(1)).current;
   const [score, setScore] = useState(0);
   const [pips, setPips] = useState<PipState[]>(Array(TOTAL_ROUNDS).fill('none'));
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
@@ -164,8 +177,6 @@ export default function LogicGame() {
   const [failed, setFailed] = useState(false);
 
   const wrongCountRef = useRef(0);
-  const answerTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const answerStartRef = useRef(0);
   const currentRoundRef = useRef(0);
   const scoreRef = useRef(0);
   const foundTargetsRef = useRef<string[]>([]);
@@ -174,11 +185,8 @@ export default function LogicGame() {
   scoreRef.current = score;
 
   const stopTimer = useCallback(() => {
-    if (answerTimerRef.current) {
-      clearInterval(answerTimerRef.current);
-      answerTimerRef.current = null;
-    }
-  }, []);
+    timerAnim.stopAnimation();
+  }, [timerAnim]);
 
   const advanceRound = useCallback((correct: boolean) => {
     const willFail = !correct && wrongCountRef.current >= FAIL_THRESHOLD;
@@ -191,7 +199,6 @@ export default function LogicGame() {
         setCurrentRound(nextRound);
         setPhase('answering');
         setSelectedAnswer(null);
-        setTimerPct(100);
         foundTargetsRef.current = [];
         setFoundTargets([]);
       }
@@ -266,17 +273,16 @@ export default function LogicGame() {
   }, [stopTimer, advanceRound]);
 
   const startTimer = useCallback(() => {
-    answerStartRef.current = Date.now();
-    answerTimerRef.current = setInterval(() => {
-      const elapsed = Date.now() - answerStartRef.current;
-      const remaining = Math.max(0, answerMs - elapsed);
-      setTimerPct((remaining / answerMs) * 100);
-      if (remaining <= 0) {
-        stopTimer();
-        handleAnswer(null);
-      }
-    }, 80);
-  }, [stopTimer, handleAnswer, answerMs]);
+    timerAnim.setValue(1);
+    Animated.timing(timerAnim, {
+      toValue: 0,
+      duration: answerMs,
+      easing: Easing.linear,
+      useNativeDriver: false,
+    }).start(({ finished }) => {
+      if (finished) handleAnswer(null);
+    });
+  }, [timerAnim, handleAnswer, answerMs]);
 
   useEffect(() => {
     if (won) return;
@@ -291,7 +297,7 @@ export default function LogicGame() {
     rounds.current = buildLogicRounds(ODD_ONE_SETS, TOTAL_ROUNDS, levelId);
     setCurrentRound(0);
     setPhase('answering');
-    setTimerPct(100);
+    timerAnim.setValue(1);
     setScore(0);
     scoreRef.current = 0;
     wrongCountRef.current = 0;
@@ -304,7 +310,11 @@ export default function LogicGame() {
   };
 
   const round = rounds.current[currentRound];
-  const timerColor = timerPct > 50 ? Colors.teal : timerPct > 25 ? Colors.gold : Colors.coral;
+  const timerWidth = timerAnim.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] });
+  const timerColor = timerAnim.interpolate({
+    inputRange: [0, 0.25, 0.5, 1],
+    outputRange: [Colors.coral, Colors.coral, Colors.gold, Colors.teal],
+  });
   const stars = calcPatternStars(score);
 
   const isFirstClear = useProgressStore.getState().completions[levelId] === undefined;
@@ -335,7 +345,7 @@ export default function LogicGame() {
   if (failed) {
     return (
       <SafeAreaView style={s.container} edges={['top', 'bottom']}>
-        <FailScreen type="logic" onTryAgain={resetGame} onExit={() => router.replace('/(tabs)/journey')} />
+        <FailScreen type="logic" levelId={levelId} onTryAgain={resetGame} onExit={() => router.replace('/(tabs)/journey')} />
       </SafeAreaView>
     );
   }
@@ -344,6 +354,7 @@ export default function LogicGame() {
 
   const isAllFound = phase === 'feedback' && selectedAnswer === '__all__';
   const emojiSize = round.cols === 3 ? 40 : 60;
+  const worldBg = WORLD_BGS[Math.min(Math.floor((levelId - 1) / 10), 9)];
 
   const getPromptText = () => {
     if (phase === 'answering') return round.prompt;
@@ -357,106 +368,115 @@ export default function LogicGame() {
   };
 
   return (
-    <SafeAreaView style={s.container} edges={['top']}>
-      {/* Header */}
-      <View style={s.header}>
-        <TouchableOpacity style={s.backBtn} onPress={() => router.back()}>
-          <Text style={s.backTxt}>←</Text>
-        </TouchableOpacity>
-        <Text style={s.headerTitle} numberOfLines={1}>Level {level.id} · {level.domain}</Text>
-        <View style={[s.scorePill, { backgroundColor: 'rgba(0,201,167,0.15)' }]}>
-          <Text style={[s.scoreTxt, { color: Colors.teal }]}>{score}/{TOTAL_ROUNDS}</Text>
-        </View>
-      </View>
-
-      <View style={s.body}>
-        <Text style={[s.domainTag, { color: Colors.teal }]}>Logic</Text>
-
-        {/* Round pips */}
-        <View style={s.pips}>
-          {pips.map((pip, i) => (
-            <View key={i} style={[
-              s.pip,
-              pip === 'ok' && s.pipOk,
-              pip === 'err' && s.pipErr,
-              i === currentRound && pip === 'none' && s.pipActive,
-            ]} />
-          ))}
-        </View>
-
-        {/* Timer bar */}
-        <View style={s.timerWrap}>
-          <View style={s.timerTrack}>
-            <View style={[s.timerFill, { width: `${timerPct}%` as any, backgroundColor: timerColor }]} />
+    <ImageBackground source={worldBg} style={s.container} resizeMode="cover">
+    <SafeAreaView style={s.safeArea} edges={['top']}>
+      <View style={s.topSection}>
+        {/* Header */}
+        <View style={s.header}>
+          <TouchableOpacity style={s.backBtn} onPress={() => router.back()}>
+            <Text style={s.backTxt}>←</Text>
+          </TouchableOpacity>
+          <Text style={s.headerTitle} numberOfLines={1}>Level {level.id} · {level.domain}</Text>
+          <View style={[s.scorePill, { backgroundColor: 'rgba(0,201,167,0.15)' }]}>
+            <Text style={[s.scoreTxt, { color: Colors.teal }]}>{score}/{TOTAL_ROUNDS}</Text>
           </View>
         </View>
 
-        {/* Mode badge */}
-        {round.mode !== 'find_odd' && (
-          <View style={s.modeBadge}>
-            <Text style={s.modeBadgeTxt}>
-              {round.mode === 'find_belongs' ? '🔍 Find It' : '🎯 Find All'}
-            </Text>
+        <View style={s.body}>
+          <Text style={[s.domainTag, { color: Colors.teal }]}>Logic</Text>
+
+          {/* Round pips */}
+          <View style={s.pips}>
+            {pips.map((pip, i) => (
+              <View key={i} style={[
+                s.pip,
+                pip === 'ok' && s.pipOk,
+                pip === 'err' && s.pipErr,
+                i === currentRound && pip === 'none' && s.pipActive,
+              ]} />
+            ))}
           </View>
-        )}
 
-        {/* Prompt */}
-        <View style={s.promptWrap}>
-          <Text style={s.promptTxt}>{getPromptText()}</Text>
-        </View>
-
-        {/* find_all progress */}
-        {round.mode === 'find_all' && phase === 'answering' && (
-          <Text style={s.progressLbl}>{foundTargets.length} / {round.targets.length} found</Text>
-        )}
-
-        {/* Dynamic grid */}
-        <View style={s.grid}>
-          {Array.from({ length: round.rows }).map((_, row) => (
-            <View key={row} style={s.gridRow}>
-              {round.items.slice(row * round.cols, row * round.cols + round.cols).map((item, col) => {
-                const isTarget = round.targets.includes(item);
-                const isFoundSoFar = foundTargets.includes(item);
-
-                const showCorrect = phase === 'feedback' && isTarget;
-                const showWrong = phase === 'feedback' && selectedAnswer === item && !isTarget;
-                const showDim = phase === 'feedback' && !showCorrect && !showWrong;
-                const showPartial = round.mode === 'find_all' && phase === 'answering' && isFoundSoFar;
-
-                return (
-                  <CellButton
-                    key={`${currentRound}-${row}-${col}`}
-                    item={item}
-                    style={[
-                      s.cell,
-                      showCorrect && s.cellOk,
-                      showWrong && s.cellErr,
-                      showDim && s.cellDim,
-                      showPartial && s.cellPartial,
-                    ]}
-                    onPress={() => {
-                      if (phase !== 'answering') return;
-                      if (round.mode === 'find_all' && isFoundSoFar) return;
-                      handleAnswer(item);
-                    }}
-                    disabled={phase !== 'answering'}
-                    emojiStyle={[s.cellEmoji, { fontSize: emojiSize }]}
-                    isCorrect={showCorrect}
-                  />
-                );
-              })}
+          {/* Timer bar */}
+          <View style={s.timerWrap}>
+            <View style={s.timerTrack}>
+              <Animated.View style={[s.timerFill, { width: timerWidth, backgroundColor: timerColor }]} />
             </View>
-          ))}
-        </View>
+          </View>
 
-        <Text style={s.roundLbl}>Round {currentRound + 1} of {TOTAL_ROUNDS}</Text>
+          {/* Mode badge */}
+          {round.mode !== 'find_odd' && (
+            <View style={s.modeBadge}>
+              <Text style={s.modeBadgeTxt}>
+                {round.mode === 'find_belongs' ? '🔍 Find It' : '🎯 Find All'}
+              </Text>
+            </View>
+          )}
+
+          {/* Prompt */}
+          <View style={s.promptWrap}>
+            <Text style={s.promptTxt}>{getPromptText()}</Text>
+          </View>
+
+          {/* find_all progress */}
+          {round.mode === 'find_all' && phase === 'answering' && (
+            <Text style={s.progressLbl}>{foundTargets.length} / {round.targets.length} found</Text>
+          )}
+
+          {/* Dynamic grid */}
+          <View style={s.grid}>
+            {Array.from({ length: round.rows }).map((_, row) => (
+              <View key={row} style={s.gridRow}>
+                {round.items.slice(row * round.cols, row * round.cols + round.cols).map((item, col) => {
+                  const isTarget = round.targets.includes(item);
+                  const isFoundSoFar = foundTargets.includes(item);
+
+                  const showCorrect = phase === 'feedback' && isTarget;
+                  const showWrong = phase === 'feedback' && selectedAnswer === item && !isTarget;
+                  const showDim = phase === 'feedback' && !showCorrect && !showWrong;
+                  const showPartial = round.mode === 'find_all' && phase === 'answering' && isFoundSoFar;
+
+                  return (
+                    <CellButton
+                      key={`${currentRound}-${row}-${col}`}
+                      item={item}
+                      style={[
+                        s.cell,
+                        showCorrect && s.cellOk,
+                        showWrong && s.cellErr,
+                        showDim && s.cellDim,
+                        showPartial && s.cellPartial,
+                      ]}
+                      onPress={() => {
+                        if (phase !== 'answering') return;
+                        if (round.mode === 'find_all' && isFoundSoFar) return;
+                        handleAnswer(item);
+                      }}
+                      disabled={phase !== 'answering'}
+                      emojiStyle={[s.cellEmoji, { fontSize: emojiSize }]}
+                      isCorrect={showCorrect}
+                    />
+                  );
+                })}
+              </View>
+            ))}
+          </View>
+
+          <Text style={s.roundLbl}>Round {currentRound + 1} of {TOTAL_ROUNDS}</Text>
+        </View>
       </View>
+
+      <View style={s.bottomSection} />
     </SafeAreaView>
+    </ImageBackground>
   );
 }
 
 const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.bg },
+  container: { flex: 1 },
+  safeArea: { flex: 1 },
+  topSection: { backgroundColor: 'rgba(255,255,255,0.95)' },
+  bottomSection: { flex: 1, backgroundColor: 'rgba(255,255,255,0.05)' },
 
   header: {
     flexDirection: 'row',
@@ -479,7 +499,7 @@ const s = StyleSheet.create({
   scorePill: { paddingVertical: 5, paddingHorizontal: 12, borderRadius: 20 },
   scoreTxt: { fontSize: 13, fontFamily: 'Nunito_800ExtraBold' },
 
-  body: { flex: 1, paddingHorizontal: 20, paddingTop: 20 },
+  body: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 12 },
   domainTag: { fontSize: 16, fontFamily: 'Nunito_900Black', textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 16, alignSelf: 'center' },
 
   pips: { flexDirection: 'row', gap: 5, marginBottom: 14, alignSelf: 'center' },
@@ -503,7 +523,7 @@ const s = StyleSheet.create({
   modeBadgeTxt: { fontSize: 11, fontFamily: 'Nunito_700Bold', color: Colors.teal },
 
   promptWrap: { marginBottom: 12, minHeight: 28 },
-  promptTxt: { fontSize: 20, fontFamily: 'Nunito_800ExtraBold', color: '#1A1A1A', textAlign: 'center' },
+  promptTxt: { fontSize: 16, fontFamily: 'Nunito_800ExtraBold', color: '#1A1A1A', textAlign: 'center' },
 
   progressLbl: {
     textAlign: 'center',

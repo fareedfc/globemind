@@ -1,7 +1,18 @@
 import { useEffect, useRef, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Animated, Dimensions, Image, ImageBackground, ImageSourcePropType } from 'react-native';
 
-const LANDING_BACKGROUND = require('../../assets/landing-background.png');
+const WORLD_BGS = [
+  require('../../assets/worlds/w1-forest.png'),
+  require('../../assets/worlds/w2-ocean.png'),
+  require('../../assets/worlds/w3-desert.png'),
+  require('../../assets/worlds/w4-mountain.png'),
+  require('../../assets/worlds/w5-space.png'),
+  require('../../assets/worlds/w6-deep-ocean.png'),
+  require('../../assets/worlds/w7-volcanic.png'),
+  require('../../assets/worlds/w8-arctic.png'),
+  require('../../assets/worlds/w9-ruins.png'),
+  require('../../assets/worlds/w10-cosmic.png'),
+];
 
 const GAME_ICONS: Record<string, ImageSourcePropType> = {
   memory:  require('../../assets/icons/icon-memory.png'),
@@ -205,8 +216,10 @@ export function WinScreen({ data, levelId, onExit }: Props) {
     });
   }, []);
 
+  const worldBg = WORLD_BGS[Math.min(Math.floor((levelId - 1) / 10), 9)];
+
   return (
-    <ImageBackground source={LANDING_BACKGROUND} style={s.root} resizeMode="cover">
+    <ImageBackground source={worldBg} style={s.root} resizeMode="cover">
       <View style={s.bgScrim} />
 
       {/* POP! splash overlay */}

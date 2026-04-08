@@ -10,12 +10,15 @@ import {
   Platform,
   ScrollView,
   ActivityIndicator,
+  ImageBackground,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { Colors } from '../constants/colors';
 import { useAuthStore } from '../stores/authStore';
+
+const BACKGROUND = require('../assets/landing-background.png');
 
 type Mode = 'login' | 'signup';
 
@@ -89,7 +92,9 @@ export default function AuthScreen() {
 
   if (awaitingConfirmation) {
     return (
-      <SafeAreaView style={s.container} edges={['top', 'bottom']}>
+      <ImageBackground source={BACKGROUND} style={{ flex: 1 }} resizeMode="cover">
+        <View style={s.bgScrim} />
+        <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
         <View style={s.confirmBody}>
           <Text style={s.confirmEmoji}>📬</Text>
           <Text style={s.confirmTitle}>Check your inbox</Text>
@@ -119,12 +124,15 @@ export default function AuthScreen() {
             <Text style={s.loginLinkTxt}>Already confirmed? Log in →</Text>
           </TouchableOpacity>
         </View>
-      </SafeAreaView>
+        </SafeAreaView>
+      </ImageBackground>
     );
   }
 
   return (
-    <SafeAreaView style={s.container} edges={['top', 'bottom']}>
+    <ImageBackground source={BACKGROUND} style={{ flex: 1 }} resizeMode="cover">
+      <View style={s.bgScrim} />
+      <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -141,11 +149,11 @@ export default function AuthScreen() {
 
           {/* Header */}
           <View style={s.header}>
-            <Text style={s.headerEmoji}>📊</Text>
-            <Text style={s.headerTitle}>Track Your Progress</Text>
+            <Text style={s.headerEmoji}>🧩</Text>
+            <Text style={s.headerTitle}>Save Your Progress</Text>
             <Text style={s.headerSub}>
               {isSignup
-                ? 'Create an account to save your miles, brain stats, and streak.'
+                ? 'Create an account to save your scores, stars, and streak.'
                 : 'Welcome back — log in to see your progress.'}
             </Text>
           </View>
@@ -260,7 +268,7 @@ export default function AuthScreen() {
             {/* Submit */}
             <TouchableOpacity onPress={handleSubmit} activeOpacity={0.88} disabled={loading}>
               <LinearGradient
-                colors={['#FFAA00', '#FF8C00']}
+                colors={isSignup ? ['#9333EA', '#6B21A8'] : ['#FFAA00', '#FF8C00']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={s.submitBtn}
@@ -290,12 +298,16 @@ export default function AuthScreen() {
           </Text>
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+      </SafeAreaView>
+    </ImageBackground>
   );
 }
 
 const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.bg },
+  bgScrim: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(255,255,255,0.50)',
+  },
   scroll: {
     flexGrow: 1,
     paddingHorizontal: 24,

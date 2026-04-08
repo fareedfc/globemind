@@ -212,26 +212,6 @@ export default function JourneyScreen() {
 
           <PathSVG width={MAP_VIEW_WIDTH} height={mapH} />
 
-          {/* World markers pinned near top of each world zone */}
-          {WORLD_MARKERS.map((world) => {
-            const pos = POS[world.start - 1];
-            if (!pos) return null;
-            return (
-              <View
-                key={world.label}
-                style={[
-                  s.worldMarker,
-                  {
-                    left: pos.x * MAP_VIEW_WIDTH - 56,
-                    bottom: 8,
-                  },
-                ]}
-              >
-                <Text style={s.worldLabel}>{world.label}</Text>
-                <Text style={s.worldSub}>{world.subtitle}</Text>
-              </View>
-            );
-          })}
 
           {liveLevels.map((level, index) => {
             const pos = POS[index];
@@ -388,31 +368,6 @@ const s = StyleSheet.create({
     marginTop: 1,
   },
 
-  worldMarker: {
-    position: 'absolute',
-    width: 112,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 12,
-    backgroundColor: 'rgba(255,255,255,0.88)',
-    borderWidth: 1,
-    borderColor: 'rgba(61,26,0,0.08)',
-    alignItems: 'center',
-  },
-  worldLabel: {
-    fontSize: 11,
-    fontFamily: 'Nunito_900Black',
-    color: Colors.text,
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-  },
-  worldSub: {
-    marginTop: 1,
-    fontSize: 9,
-    fontFamily: 'Nunito_700Bold',
-    color: 'rgba(19,78,74,0.58)',
-    textAlign: 'center',
-  },
 
   overlay: {
     flex: 1,

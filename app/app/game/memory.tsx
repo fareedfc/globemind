@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Animated, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Animated, ScrollView, ImageBackground } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -11,6 +11,19 @@ import { FailScreen } from '../../components/games/FailScreen';
 import { calcMemoryStars, calcActualPoints } from '../../utils/scoring';
 import { useProgressStore } from '../../stores/progressStore';
 import { pickInsight } from '../../data/brainInsights';
+
+const WORLD_BGS = [
+  require('../../assets/worlds/w1-forest.png'),
+  require('../../assets/worlds/w2-ocean.png'),
+  require('../../assets/worlds/w3-desert.png'),
+  require('../../assets/worlds/w4-mountain.png'),
+  require('../../assets/worlds/w5-space.png'),
+  require('../../assets/worlds/w6-deep-ocean.png'),
+  require('../../assets/worlds/w7-volcanic.png'),
+  require('../../assets/worlds/w8-arctic.png'),
+  require('../../assets/worlds/w9-ruins.png'),
+  require('../../assets/worlds/w10-cosmic.png'),
+];
 
 interface Card {
   id: number;
@@ -215,25 +228,31 @@ export default function MemoryGame() {
   if (failed) {
     return (
       <SafeAreaView style={s.container} edges={['top', 'bottom']}>
-        <FailScreen type="memory" onTryAgain={resetGame} onExit={() => router.replace('/(tabs)/journey')} />
+        <FailScreen type="memory" levelId={levelId} onTryAgain={resetGame} onExit={() => router.replace('/(tabs)/journey')} />
       </SafeAreaView>
     );
   }
 
-  return (
-    <SafeAreaView style={s.container} edges={['top']}>
-      {/* Header */}
-      <View style={s.header}>
-        <TouchableOpacity style={s.backBtn} onPress={() => router.back()}>
-          <Text style={s.backTxt}>←</Text>
-        </TouchableOpacity>
-        <Text style={s.headerTitle} numberOfLines={1}>Level {level.id} · {level.domain}</Text>
-        <View style={[s.scorePill, { backgroundColor: 'rgba(245,158,11,0.15)' }]}>
-          <Text style={[s.scoreTxt, { color: Colors.gold }]}>{matchedCount}/{totalPairs}</Text>
-        </View>
-      </View>
+  const worldBg = WORLD_BGS[Math.min(Math.floor((levelId - 1) / 10), 9)];
 
-      <ScrollView contentContainerStyle={s.body} showsVerticalScrollIndicator={false}>
+  return (
+    <ImageBackground source={worldBg} style={s.container} resizeMode="cover">
+    <SafeAreaView style={s.safeArea} edges={['top']}>
+
+      {/* Top section — all content */}
+      <View style={s.topSection}>
+        {/* Header */}
+        <View style={s.header}>
+          <TouchableOpacity style={s.backBtn} onPress={() => router.back()}>
+            <Text style={s.backTxt}>←</Text>
+          </TouchableOpacity>
+          <Text style={s.headerTitle} numberOfLines={1}>Level {level.id} · {level.domain}</Text>
+          <View style={[s.scorePill, { backgroundColor: 'rgba(245,158,11,0.15)' }]}>
+            <Text style={[s.scoreTxt, { color: Colors.gold }]}>{matchedCount}/{totalPairs}</Text>
+          </View>
+        </View>
+
+        <ScrollView contentContainerStyle={s.body} showsVerticalScrollIndicator={false}>
         <Text style={[s.domainTag, { color: Colors.gold }]}>Memory</Text>
 
         <View style={s.instr}>
@@ -255,7 +274,6 @@ export default function MemoryGame() {
           </View>
           <Text style={s.timerLbl}>{timeLeft}s</Text>
         </View>
-
         {/* Card grid */}
         <View style={s.grid}>
           {Array.from({ length: numRows }, (_, row) => {
@@ -280,13 +298,27 @@ export default function MemoryGame() {
             <View key={i} style={[s.pip, i < matchedCount && s.pipLit]} />
           ))}
         </View>
-      </ScrollView>
+        </ScrollView>
+      </View>
+
+      {/* Bottom strip — world art shows through */}
+      <View style={s.bottomSection} />
+
     </SafeAreaView>
+    </ImageBackground>
   );
 }
 
 const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.bg },
+  container: { flex: 1 },
+  safeArea: { flex: 1 },
+  topSection: {
+    backgroundColor: 'rgba(255,255,255,0.95)',
+  },
+  bottomSection: {
+    flex: 1,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+  },
 
   header: {
     flexDirection: 'row',
@@ -315,18 +347,18 @@ const s = StyleSheet.create({
   scorePill: { paddingVertical: 5, paddingHorizontal: 12, borderRadius: 20 },
   scoreTxt: { fontSize: 13, fontFamily: 'Nunito_800ExtraBold' },
 
-  body: { padding: 16, paddingBottom: 40 },
-  domainTag: { fontSize: 16, fontFamily: 'Nunito_900Black', textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 8 },
-  instr: { backgroundColor: 'rgba(0,0,0,0.03)', borderRadius: 11, padding: 10, marginBottom: 14 },
-  instrTxt: { fontSize: 18, fontFamily: 'Nunito_700Bold', color: '#1A1A1A', lineHeight: 26 },
+  body: { padding: 10, paddingBottom: 16 },
+  domainTag: { fontSize: 16, fontFamily: 'Nunito_900Black', textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 8, textAlign: 'center' },
+  instr: { backgroundColor: 'rgba(0,0,0,0.03)', borderRadius: 11, padding: 8, marginBottom: 8 },
+  instrTxt: { fontSize: 16, fontFamily: 'Nunito_700Bold', color: '#1A1A1A', lineHeight: 26 },
 
-  timerWrap: { marginBottom: 10 },
+  timerWrap: { marginBottom: 6 },
   timerTrack: { height: 6, backgroundColor: 'rgba(0,0,0,0.08)', borderRadius: 3, overflow: 'hidden' },
   timerFill: { height: '100%', borderRadius: 3 },
   timerLbl: { fontSize: 11, fontFamily: 'Nunito_700Bold', color: Colors.muted, textAlign: 'right', marginTop: 3 },
 
-  grid: { gap: 8, marginBottom: 8 },
-  row: { flexDirection: 'row', gap: 8 },
+  grid: { gap: 6, marginBottom: 6 },
+  row: { flexDirection: 'row', gap: 6 },
   cardTouch: { flex: 1, aspectRatio: 1 },
   card: { flex: 1, borderRadius: 13, alignItems: 'center', justifyContent: 'center', minHeight: 64 },
   cardDown: { backgroundColor: 'rgba(0,0,0,0.06)', borderWidth: 1.5, borderColor: Colors.border },

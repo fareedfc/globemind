@@ -1,5 +1,18 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Animated } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Animated, ImageBackground } from 'react-native';
+
+const WORLD_BGS = [
+  require('../../assets/worlds/w1-forest.png'),
+  require('../../assets/worlds/w2-ocean.png'),
+  require('../../assets/worlds/w3-desert.png'),
+  require('../../assets/worlds/w4-mountain.png'),
+  require('../../assets/worlds/w5-space.png'),
+  require('../../assets/worlds/w6-deep-ocean.png'),
+  require('../../assets/worlds/w7-volcanic.png'),
+  require('../../assets/worlds/w8-arctic.png'),
+  require('../../assets/worlds/w9-ruins.png'),
+  require('../../assets/worlds/w10-cosmic.png'),
+];
 import * as Haptics from 'expo-haptics';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -340,12 +353,14 @@ export default function PatternGame() {
   if (failed) {
     return (
       <SafeAreaView style={s.container} edges={['top', 'bottom']}>
-        <FailScreen type="pattern" onTryAgain={resetGame} onExit={() => router.replace('/(tabs)/journey')} />
+        <FailScreen type="pattern" levelId={levelId} onTryAgain={resetGame} onExit={() => router.replace('/(tabs)/journey')} />
       </SafeAreaView>
     );
   }
 
   if (!activeRound) return null;
+
+  const worldBg = WORLD_BGS[Math.min(Math.floor((levelId - 1) / 10), 9)];
 
   const mode = activeRound.mode;
   const isFeedbackOk = phase === 'feedback' && feedbackAnswer === activeRound.answer;
@@ -377,17 +392,19 @@ export default function PatternGame() {
       : '';
 
   return (
-    <SafeAreaView style={s.container} edges={['top']}>
-      {/* Header */}
-      <View style={s.header}>
-        <TouchableOpacity style={s.backBtn} onPress={() => router.back()}>
-          <Text style={s.backTxt}>←</Text>
-        </TouchableOpacity>
-        <Text style={s.headerTitle} numberOfLines={1}>Level {level.id} · {level.domain}</Text>
-        <View style={[s.scorePill, { backgroundColor: 'rgba(0,201,167,0.15)' }]}>
-          <Text style={[s.scoreTxt, { color: Colors.teal }]}>{score}/{TOTAL_ROUNDS}</Text>
+    <ImageBackground source={worldBg} style={s.container} resizeMode="cover">
+    <SafeAreaView style={s.safeArea} edges={['top']}>
+      <View style={s.topSection}>
+        {/* Header */}
+        <View style={s.header}>
+          <TouchableOpacity style={s.backBtn} onPress={() => router.back()}>
+            <Text style={s.backTxt}>←</Text>
+          </TouchableOpacity>
+          <Text style={s.headerTitle} numberOfLines={1}>Level {level.id} · {level.domain}</Text>
+          <View style={[s.scorePill, { backgroundColor: 'rgba(0,201,167,0.15)' }]}>
+            <Text style={[s.scoreTxt, { color: Colors.teal }]}>{score}/{TOTAL_ROUNDS}</Text>
+          </View>
         </View>
-      </View>
 
       <View style={s.body}>
         <Text style={[s.domainTag, { color: Colors.teal }]}>Pattern</Text>
@@ -482,12 +499,19 @@ export default function PatternGame() {
           })}
         </View>
       </View>
+      </View>
+
+      <View style={s.bottomSection} />
     </SafeAreaView>
+    </ImageBackground>
   );
 }
 
 const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.bg },
+  container: { flex: 1 },
+  safeArea: { flex: 1 },
+  topSection: { backgroundColor: 'rgba(255,255,255,1.0)' },
+  bottomSection: { flex: 1, backgroundColor: 'rgba(255,255,255,0.05)' },
 
   header: {
     flexDirection: 'row',
@@ -510,10 +534,10 @@ const s = StyleSheet.create({
   scorePill: { paddingVertical: 5, paddingHorizontal: 12, borderRadius: 20 },
   scoreTxt: { fontSize: 13, fontFamily: 'Nunito_800ExtraBold' },
 
-  body: { flex: 1, paddingHorizontal: 16, paddingTop: 14 },
+  body: { paddingHorizontal: 16, paddingTop: 14, paddingBottom: 12 },
   domainTag: { fontSize: 16, fontFamily: 'Nunito_900Black', textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 8 },
   instr: { backgroundColor: 'rgba(0,0,0,0.03)', borderRadius: 11, padding: 10, marginBottom: 14 },
-  instrTxt: { fontSize: 18, fontFamily: 'Nunito_700Bold', color: '#1A1A1A', lineHeight: 26 },
+  instrTxt: { fontSize: 16, fontFamily: 'Nunito_700Bold', color: '#1A1A1A', lineHeight: 26 },
 
   pips: { flexDirection: 'row', gap: 5, justifyContent: 'center', marginBottom: 12 },
   pip: { width: 28, height: 6, borderRadius: 3, backgroundColor: 'rgba(0,0,0,0.08)' },

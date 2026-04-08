@@ -252,6 +252,14 @@ export default function LandingScreen() {
             >
               <Text style={s.btnTrackTxt}>Track Progress</Text>
             </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => router.push('/auth')}
+              activeOpacity={0.6}
+              style={s.btnSignIn}
+            >
+              <Text style={s.btnSignInTxt}>Sign In</Text>
+            </TouchableOpacity>
           </Animated.View>
 
         </View>
@@ -285,7 +293,7 @@ const s = StyleSheet.create({
     width: BOARD_SIZE * 0.5,
     height: BOARD_SIZE * 0.5,
     borderRadius: 999,
-    backgroundColor: 'rgba(255,107,53,0.14)',
+    backgroundColor: 'rgba(139,63,217,0.18)',
   },
 
   card: {
@@ -337,4 +345,6 @@ const s = StyleSheet.create({
     borderColor: 'rgba(61,26,0,0.10)',
   },
   btnTrackTxt: { fontSize: 15, fontFamily: 'Nunito_800ExtraBold', color: '#3D1A00' },
+  btnSignIn: { alignItems: 'center', paddingVertical: 6 },
+  btnSignInTxt: { fontSize: 13, fontFamily: 'Nunito_700Bold', color: Colors.muted },
 });
