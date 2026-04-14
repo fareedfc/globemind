@@ -47,8 +47,23 @@ export default function RootLayout() {
   }, []);
 
   useEffect(() => {
-    // Handle email confirmation deep link (thinkpop://confirm#access_token=...&refresh_token=...)
+    // Handle deep links for email confirmation and password reset.
+    // Supabase v2 uses PKCE by default → confirmation URLs carry ?code=XXX (query param).
+    // Older implicit-flow URLs carry #access_token=XXX (hash fragment) — kept for password reset.
     const handleUrl = async (url: string) => {
+      // ── PKCE flow: thinkpop://confirm?code=XXX ──────────────────────────────
+      const queryString = url.includes('?') ? url.split('?')[1] : '';
+      const queryParams = Object.fromEntries(new URLSearchParams(queryString));
+      if (queryParams.code) {
+        const { data, error } = await supabase.auth.exchangeCodeForSession(queryParams.code);
+        if (!error && data.session) {
+          await initSession();
+          router.replace('/(tabs)/journey');
+        }
+        return;
+      }
+
+      // ── Implicit flow: thinkpop://reset#access_token=XXX (password reset) ───
       if (!url.includes('access_token')) return;
       const fragment = url.split('#')[1] ?? '';
       const params = Object.fromEntries(new URLSearchParams(fragment));

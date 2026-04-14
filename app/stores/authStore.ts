@@ -78,7 +78,10 @@ export const useAuthStore = create<AuthState>()(
         const { data, error } = await supabase.auth.signUp({
           email: email.trim().toLowerCase(),
           password,
-          options: { data: { name: name.trim() } },
+          options: {
+            data: { name: name.trim() },
+            emailRedirectTo: 'thinkpop://confirm',
+          },
         });
 
         if (error) {
