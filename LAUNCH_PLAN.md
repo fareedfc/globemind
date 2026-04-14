@@ -17,7 +17,7 @@ Bundle IDs: iOS `com.thinkpop.thinkapp` · Android `com.thinkpop.app`
 | 6 | RevenueCat — entitlement | ✅ Done | `ThinkPop Unlimited` entitlement created |
 | 7 | RevenueCat — offerings | ✅ Done | `default` offering with Monthly + Yearly packages configured |
 | 8 | RevenueCat — iOS products attached | ✅ Done | Monthly + Annual iOS products linked to entitlement and packages |
-| 9 | Wire RevenueCat SDK in `app/paywall.tsx` | ⬜ Todo | Replace `setPremium(true)` mock with real RC purchase calls. Add RC iOS API key to `_layout.tsx` |
+| 9 | Wire RevenueCat SDK in `app/paywall.tsx` | ✅ Done | Real RC purchase + restore flow in place. iOS key `appl_AgVACahWeoGFdeGJBqcHqHqxyCQ` confirmed in `_layout.tsx` |
 | 10 | App icon 1024×1024 PNG (no alpha) | ⬜ Todo | Apple rejects transparent icons |
 | 11 | iOS screenshots | ✅ Done | 6.7" (iPhone 15 Pro Max) + 6.5" (iPhone 11 Pro Max) taken |
 | 12 | Store listing copy | ✅ Done | Finalised in `store-listing.md` — Health & Fitness, keywords, description, free trial copy |
@@ -51,7 +51,7 @@ Bundle IDs: iOS `com.thinkpop.thinkapp` · Android `com.thinkpop.app`
 | 13 | Upload AAB to Play Console internal testing | ⬜ Blocked | Requires build (#12). Needed to unlock subscription creation |
 | 14 | Create subscription products in Play Console | ⬜ Blocked | Requires AAB upload (#13). Product ID: `thinkpop_premium_monthly` $3.99/mo + `thinkpop_premium_annual` $24.99/yr |
 | 15 | Attach Android products to RC entitlement | ⬜ Blocked | Requires Play Console products (#14) |
-| 16 | Wire RevenueCat SDK in `app/paywall.tsx` | ⬜ Todo | Replace `setPremium(true)` mock. Add RC Android API key to `_layout.tsx` |
+| 16 | Wire RevenueCat SDK in `app/paywall.tsx` | ✅ Done | Real RC purchase + restore flow in place. Android key `goog_cFhSuvMVroPfGsGWVGDYevhwEJR` confirmed in `_layout.tsx` |
 | 17 | Feature graphic | ⬜ Todo | 1024×500px banner — shown at top of Play Store listing |
 | 18 | Android screenshots | ⬜ Todo | Same screenshots as iOS work — Play Store adds phone frames |
 | 19 | Store listing copy | ✅ Done | Finalised in `store-listing.md` |

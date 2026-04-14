@@ -123,7 +123,7 @@ Existing brain training apps (Lumosity, BrainHQ) feel like homework. ThinkPop fe
 - Journey play gate: premium skips all limits → free checks daily cap (3/day) → lives check
 - Paywall (`app/paywall.tsx`): reason-aware (lives vs daily cap), feature comparison table, mock purchase → `setPremium(true)`, success screen, Restore Purchase stub
 - Premium pill shown in Journey TopBar (👑 Premium replaces ❤️ lives)
-- RevenueCat **Android setup in progress** — service account created + JSON uploaded to RevenueCat dashboard; subscriptions API warning pending 36hr propagation. Purchase still mocked with `setPremium(true)` until entitlements + SDK wiring complete
+- RevenueCat **SDK fully wired** — real purchase + restore flow in `app/paywall.tsx` using `Purchases.getOfferings()` + `Purchases.purchasePackage()`. iOS key (`appl_`) + Android key (`goog_`) both confirmed in `_layout.tsx`. Android service account JSON uploaded (subscriptions API warning — clears within 36hrs). Still need: Play Console subscription products created + attached to RC entitlement (blocked until AAB uploaded)
 
 ## Backend — Supabase (LIVE)
 - Project URL: `https://nfxxmhtzgyklxlzueztz.supabase.co`
@@ -203,7 +203,7 @@ Key files:
 - Subscriptions: RevenueCat (TODO — currently mocked)
 
 ## Remaining App Store Blockers
-1. **RevenueCat** — Android service account done; still need: create Play Console subscription product (blocked until AAB uploaded), set up entitlements/offerings in RC dashboard, wire SDK in `app/paywall.tsx` (replace `setPremium(true)` mock), iOS setup (blocked until Apple Dev account approved)
+1. **RevenueCat** — SDK wired, both API keys confirmed. Still need: upload AAB → create Play Console subscription products (`thinkpop_unlimited_monthly` + `thinkpop_unlimited_annual`) → attach to RC entitlement. iOS products blocked until Apple Dev account approved
 2. **Privacy Policy URL** — generated via iubenda (in progress)
 3. **Terms & Conditions URL** — generated via termsfeed.com (in progress)
 4. **EAS Build setup** — production build pipeline for iOS
