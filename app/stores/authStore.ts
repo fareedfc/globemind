@@ -80,7 +80,7 @@ export const useAuthStore = create<AuthState>()(
           password,
           options: {
             data: { name: name.trim() },
-            emailRedirectTo: 'thinkpop://confirm',
+            emailRedirectTo: 'https://thinkpop.app/confirmation',
           },
         });
 
