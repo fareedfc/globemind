@@ -19,8 +19,8 @@ import { useAuthStore } from '../stores/authStore';
 import { supabase } from '../lib/supabase';
 
 // Replace with your real RevenueCat API keys from the RevenueCat dashboard
-const RC_API_KEY_IOS     = 'test_wgJZWizwFnqnHsNFpcDYMxNenHS';
-const RC_API_KEY_ANDROID = 'REVENUECAT_ANDROID_API_KEY_PLACEHOLDER';
+const RC_API_KEY_IOS     = 'appl_AgVACahWeoGFdeGJBqcHqHqxyCQ';
+const RC_API_KEY_ANDROID = 'goog_cFhSuvMVroPfGsGWVGDYevhwEJR';
 
 SplashScreen.preventAutoHideAsync();
 
