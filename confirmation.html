@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Confirm Your Email — ThinkPop</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Nunito', Arial, sans-serif;
+      background: #0f0f1e;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .card {
+      background: #1a1a2e;
+      border-radius: 24px;
+      padding: 48px 40px;
+      max-width: 480px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+    }
+
+    .logo {
+      font-size: 36px;
+      font-weight: 900;
+      margin-bottom: 4px;
+    }
+    .logo .think { color: #00B894; }
+    .logo .pop   { color: #FF6B35; }
+
+    .tagline {
+      color: #888;
+      font-size: 14px;
+      margin-bottom: 40px;
+    }
+
+    /* ── States ── */
+    .state { display: none; }
+    .state.active { display: block; }
+
+    /* Loading */
+    .spinner {
+      width: 52px;
+      height: 52px;
+      border: 4px solid rgba(255,170,0,0.2);
+      border-top-color: #FFAA00;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 24px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Success */
+    .icon {
+      font-size: 64px;
+      margin-bottom: 20px;
+      animation: pop 0.4s cubic-bezier(0.34,1.56,0.64,1) both;
+    }
+    @keyframes pop {
+      from { transform: scale(0); opacity: 0; }
+      to   { transform: scale(1); opacity: 1; }
+    }
+
+    h2 {
+      font-size: 26px;
+      font-weight: 900;
+      color: #fff;
+      margin-bottom: 12px;
+    }
+
+    p {
+      color: #aaa;
+      font-size: 15px;
+      line-height: 1.7;
+      margin-bottom: 32px;
+    }
+
+    .btn {
+      display: block;
+      width: 100%;
+      padding: 18px;
+      border-radius: 14px;
+      font-family: 'Nunito', Arial, sans-serif;
+      font-size: 17px;
+      font-weight: 900;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s;
+    }
+    .btn:active { transform: scale(0.97); opacity: 0.9; }
+
+    .btn-primary {
+      background: linear-gradient(90deg, #FFAA00, #FF8C00);
+      color: #1a1a2e;
+    }
+
+    .btn-secondary {
+      background: rgba(255,255,255,0.07);
+      color: #ccc;
+      margin-top: 12px;
+    }
+
+    /* Error */
+    .error-icon { font-size: 56px; margin-bottom: 20px; }
+
+    .fine {
+      font-size: 12px;
+      color: #555;
+      margin-top: 24px;
+      margin-bottom: 0;
+    }
+  </style>
+</head>
+<body>
+<div class="card">
+  <div class="logo"><span class="think">Think</span><span class="pop">Pop</span> 🧩</div>
+  <p class="tagline">Train your brain. Stay sharp.</p>
+
+  <!-- Loading state -->
+  <div id="state-loading" class="state active">
+    <div class="spinner"></div>
+    <h2>Confirming your email…</h2>
+    <p>Just a moment while we verify your account.</p>
+  </div>
+
+  <!-- Success state -->
+  <div id="state-success" class="state">
+    <div class="icon">🎉</div>
+    <h2>You're confirmed!</h2>
+    <p>Your email has been verified. You're all set to start your brain training journey with ThinkPop.</p>
+    <a href="thinkpop://" class="btn btn-primary">Open ThinkPop →</a>
+    <p class="fine">Don't have the app yet? Download it from the App Store or Google Play.</p>
+  </div>
+
+  <!-- Error state -->
+  <div id="state-error" class="state">
+    <div class="error-icon">😕</div>
+    <h2>Link expired</h2>
+    <p id="error-msg">This confirmation link has expired or has already been used. Please request a new one from the app.</p>
+    <a href="thinkpop://" class="btn btn-primary">Back to ThinkPop →</a>
+  </div>
+</div>
+
+<script>
+  const SUPABASE_URL      = 'https://nfxxmhtzgyklxlzueztz.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5meHhtaHR6Z3lrbHhsenVlenR6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwOTY2NzAsImV4cCI6MjA5MDY3MjY3MH0.hVN-MgEv1AHRCV6j9wrx_ILYD7pgtTw3YBxx770cKg8';
+
+  function show(id) {
+    document.querySelectorAll('.state').forEach(el => el.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+  }
+
+  async function confirm() {
+    const params = new URLSearchParams(window.location.search);
+    const code   = params.get('code');
+
+    if (!code) {
+      document.getElementById('error-msg').textContent =
+        'No confirmation code found. Please use the link from your email.';
+      show('state-error');
+      return;
+    }
+
+    try {
+      const res = await fetch(
+        `${SUPABASE_URL}/auth/v1/token?grant_type=pkce`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': SUPABASE_ANON_KEY,
+          },
+          body: JSON.stringify({ auth_code: code }),
+        }
+      );
+
+      const json = await res.json();
+
+      if (!res.ok || json.error) {
+        document.getElementById('error-msg').textContent =
+          json.error_description || 'This link has expired or already been used. Please request a new confirmation email from the app.';
+        show('state-error');
+        return;
+      }
+
+      show('state-success');
+
+      // After a short delay try to open the app automatically
+      setTimeout(() => { window.location.href = 'thinkpop://'; }, 1200);
+
+    } catch (err) {
+      document.getElementById('error-msg').textContent =
+        'Something went wrong. Please try again or request a new confirmation email.';
+      show('state-error');
+    }
+  }
+
+  confirm();
+</script>
+</body>
+</html>
