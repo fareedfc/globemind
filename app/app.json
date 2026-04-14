@@ -67,6 +67,9 @@
       },
       "router": {}
     },
-    "owner": "fareedfc"
+    "owner": "fareedfc",
+    "updates": {
+      "url": "https://u.expo.dev/1c166a86-761b-4071-90d2-e4e35a7cc4d2"
+    }
   }
 }
