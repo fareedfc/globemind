@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>ThinkPop — Feature Graphic 1024×500</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      width: 1024px;
+      height: 500px;
+      overflow: hidden;
+      font-family: 'Nunito', sans-serif;
+    }
+
+    .canvas {
+      position: relative;
+      width: 1024px;
+      height: 500px;
+      overflow: hidden;
+    }
+
+    .bg {
+      position: absolute;
+      inset: 0;
+      background-image: url('app/assets/landing-background.png');
+      background-size: cover;
+      background-position: center;
+    }
+
+    /* same scrim as landing.tsx */
+    .bg-scrim {
+      position: absolute;
+      inset: 0;
+      background: rgba(255,255,255,0.10);
+    }
+
+    /* Left side */
+    .left {
+      position: absolute;
+      left: 64px;
+      top: 0; bottom: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: flex-start;
+      width: 400px;
+    }
+
+    .logo {
+      width: 320px;
+      height: auto;
+      margin-bottom: 16px;
+      filter: drop-shadow(0 4px 12px rgba(0,0,0,0.15));
+    }
+
+    .tagline {
+      font-size: 21px;
+      font-weight: 800;
+      color: rgba(255,255,255,0.92);
+      margin-bottom: 28px;
+      line-height: 1.45;
+      text-shadow: 0 1px 6px rgba(0,0,0,0.25);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: linear-gradient(90deg, #9333EA, #6B21A8);
+      color: #fff;
+      font-size: 19px;
+      font-weight: 900;
+      font-family: 'Nunito', sans-serif;
+      padding: 14px 30px;
+      border-radius: 50px;
+      width: 320px;
+      justify-content: center;
+      box-shadow: 0 8px 24px rgba(107,33,168,0.50);
+    }
+
+    .sub-label {
+      margin-top: 14px;
+      font-size: 13px;
+      font-weight: 700;
+      color: rgba(255,255,255,0.65);
+      text-shadow: 0 1px 4px rgba(0,0,0,0.20);
+    }
+
+    /* Right side — cards */
+    .right {
+      position: absolute;
+      right: 52px;
+      top: 0; bottom: 0;
+      width: 440px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Glow orb matching landing.tsx */
+    .glow-orb {
+      position: absolute;
+      width: 240px; height: 240px;
+      border-radius: 50%;
+      background: rgba(139,63,217,0.22);
+      left: 50%; top: 50%;
+      transform: translate(-50%, -50%);
+      filter: blur(40px);
+      pointer-events: none;
+    }
+
+    .cards-grid {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1fr 1fr;
+      gap: 16px;
+      width: 380px;
+      height: 400px;
+    }
+
+    .card {
+      border-radius: 26px;
+      padding: 20px 18px 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 10px 32px rgba(15,23,42,0.09);
+      border: 1.5px solid rgba(255,255,255,0.75);
+    }
+
+    /* exact tints from landing.tsx */
+    .card-memory  { background: #FFE9C4; }
+    .card-speed   { background: #FFD9CC; }
+    .card-pattern { background: #EEE0FF; }
+    .card-logic   { background: #FFD6ED; }
+
+    .card-icon {
+      width: 56px;
+      height: 56px;
+      object-fit: contain;
+    }
+
+    .card-label {
+      font-size: 15px;
+      font-weight: 900;
+      letter-spacing: 0.4px;
+    }
+    .card-memory  .card-label { color: #E07B00; }
+    .card-speed   .card-label { color: #E8460A; }
+    .card-pattern .card-label { color: #8B3FD9; }
+    .card-logic   .card-label { color: #D4006A; }
+
+    .card-desc {
+      font-size: 11px;
+      font-weight: 700;
+      color: rgba(61,26,0,0.45);
+      line-height: 1.4;
+    }
+
+  </style>
+</head>
+<body>
+<div class="canvas">
+  <div class="bg"></div>
+  <div class="bg-scrim"></div>
+
+  <!-- Left: branding -->
+  <div class="left">
+    <img class="logo" src="app/assets/icons/logo-thinkpop.png" alt="ThinkPop">
+    <div class="tagline">Train your brain. Stay sharp.</div>
+    <div class="btn">▶&nbsp; Play Now →</div>
+    <div class="sub-label">101 Levels · 4 Game Modes · Free to Play</div>
+  </div>
+
+  <!-- Right: game cards -->
+  <div class="right">
+    <div class="glow-orb"></div>
+    <div class="cards-grid">
+      <div class="card card-logic">
+        <img class="card-icon" src="app/assets/icons/icon-logic.png" alt="Logic">
+        <div class="card-label">Logic</div>
+        <div class="card-desc">Find the odd one out</div>
+      </div>
+      <div class="card card-pattern">
+        <img class="card-icon" src="app/assets/icons/icon-pattern.png" alt="Pattern">
+        <div class="card-label">Pattern</div>
+        <div class="card-desc">Crack the sequence</div>
+      </div>
+      <div class="card card-speed">
+        <img class="card-icon" src="app/assets/icons/icon-speed.png" alt="Speed">
+        <div class="card-label">Speed</div>
+        <div class="card-desc">Race the clock</div>
+      </div>
+      <div class="card card-memory">
+        <img class="card-icon" src="app/assets/icons/icon-memory.png" alt="Memory">
+        <div class="card-label">Memory</div>
+        <div class="card-desc">Flip & match pairs</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

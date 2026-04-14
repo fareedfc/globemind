@@ -52,7 +52,7 @@ Bundle IDs: iOS `com.thinkpop.thinkapp` · Android `com.thinkpop.app`
 | 14 | Create subscription products in Play Console | ⬜ Blocked | Requires AAB upload (#13). Product ID: `thinkpop_premium_monthly` $3.99/mo + `thinkpop_premium_annual` $24.99/yr |
 | 15 | Attach Android products to RC entitlement | ⬜ Blocked | Requires Play Console products (#14) |
 | 16 | Wire RevenueCat SDK in `app/paywall.tsx` | ✅ Done | Real RC purchase + restore flow in place. Android key `goog_cFhSuvMVroPfGsGWVGDYevhwEJR` confirmed in `_layout.tsx` |
-| 17 | Feature graphic | ⬜ Todo | 1024×500px banner — shown at top of Play Store listing |
+| 17 | Feature graphic | ✅ Done | 1024×500px banner created and saved to UI assets/ |
 | 18 | Android screenshots | ⬜ Todo | Same screenshots as iOS work — Play Store adds phone frames |
 | 19 | Store listing copy | ✅ Done | Finalised in `store-listing.md` |
 | 20 | Content rating questionnaire (IARC) | ⬜ Todo | In Play Console — expect Everyone or Everyone 10+ |
