@@ -1,4 +1,5 @@
 import { useRef, useState, useEffect } from 'react';
+import * as Haptics from 'expo-haptics';
 import {
   View,
   Text,
@@ -159,6 +160,7 @@ export default function OnboardingScreen() {
   const flatRef = useRef<FlatList>(null);
 
   const goNext = () => {
+    Haptics.selectionAsync();
     if (step < SLIDES.length - 1) {
       const next = step + 1;
       setStep(next);
@@ -169,6 +171,7 @@ export default function OnboardingScreen() {
   };
 
   const finish = async () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     await AsyncStorage.setItem('hasOnboarded', 'true');
     router.replace('/landing');
   };

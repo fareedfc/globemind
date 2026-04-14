@@ -1,5 +1,6 @@
 import { Tabs } from 'expo-router';
 import { Image } from 'react-native';
+import * as Haptics from 'expo-haptics';
 import { useUIStore } from '../../stores/uiStore';
 
 const WORLD_TAB_COLORS = [
@@ -23,6 +24,7 @@ export default function TabLayout() {
 
   return (
     <Tabs
+      screenListeners={{ tabPress: () => Haptics.selectionAsync() }}
       screenOptions={{
         headerShown: false,
         tabBarStyle: {

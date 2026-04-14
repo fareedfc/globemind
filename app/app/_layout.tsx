@@ -1,6 +1,7 @@
 import '../lib/i18n'; // initialise i18n before anything else
 import { useEffect } from 'react';
-import { Linking } from 'react-native';
+import { Linking, Platform } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
 import { Stack, router } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import {
@@ -17,8 +18,9 @@ import Purchases, { LOG_LEVEL } from 'react-native-purchases';
 import { useAuthStore } from '../stores/authStore';
 import { supabase } from '../lib/supabase';
 
-// Replace with your real RevenueCat API key from the RevenueCat dashboard
-const RC_API_KEY_IOS = 'REVENUECAT_IOS_API_KEY_PLACEHOLDER';
+// Replace with your real RevenueCat API keys from the RevenueCat dashboard
+const RC_API_KEY_IOS     = 'test_wgJZWizwFnqnHsNFpcDYMxNenHS';
+const RC_API_KEY_ANDROID = 'REVENUECAT_ANDROID_API_KEY_PLACEHOLDER';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -37,7 +39,7 @@ export default function RootLayout() {
     // Initialise RevenueCat (no-op in Expo Go — requires a dev/production build)
     try {
       Purchases.setLogLevel(LOG_LEVEL.ERROR);
-      Purchases.configure({ apiKey: RC_API_KEY_IOS });
+      Purchases.configure({ apiKey: Platform.OS === 'android' ? RC_API_KEY_ANDROID : RC_API_KEY_IOS });
     } catch (_) {}
 
     // Restore Supabase session and pull cloud data if user was previously logged in
@@ -84,6 +86,7 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
+        <StatusBar style="dark" translucent={false} />
         <Stack screenOptions={{ headerShown: false }} />
       </SafeAreaProvider>
     </GestureHandlerRootView>

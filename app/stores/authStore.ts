@@ -81,7 +81,13 @@ export const useAuthStore = create<AuthState>()(
           options: { data: { name: name.trim() } },
         });
 
-        if (error)       return { error: error.message };
+        if (error) {
+          console.log('[signUp] Supabase error:', error.status, error.message);
+          const msg = error.message.toLowerCase();
+          if (msg.includes('already registered') || msg.includes('already exists'))
+            return { error: 'An account with this email already exists. Try logging in instead.' };
+          return { error: error.message };
+        }
         if (!data.user)  return { error: 'Sign-up failed. Please try again.' };
 
         // If session is null, email confirmation is required before the user can log in

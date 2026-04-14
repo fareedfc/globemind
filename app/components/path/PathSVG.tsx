@@ -44,6 +44,8 @@ const WORLD_RANGES: [number, number][] = [
   [89, 101],
 ];
 
+const WORLD_WIDTH = MAP_WIDTH / 10; // 1600px per world
+
 interface Props {
   width?: number;
   height?: number;
@@ -52,63 +54,62 @@ interface Props {
 export function PathSVG({ width = MAP_WIDTH, height = MAP_HEIGHT }: Props) {
   const pts = POS.map(p => ({ x: p.x * width, y: p.y * height }));
 
-  // Build per-world segment paths
+  // Build per-world segment paths (full coordinate space)
   const segments = WORLD_RANGES.map(([from, to]) => buildSegment(pts.slice(from, to)));
-
-  // Full path for the drop-shadow layer
   const fullPath = buildSegment(pts);
 
+  // Render 10 smaller SVGs side by side via viewBox — avoids Android bitmap size limit
   return (
-    <Svg
-      style={{ position: 'absolute', top: 0, left: 0 }}
-      width={width}
-      height={height}
-    >
-      {/* Drop shadow (single wide stroke behind everything) */}
-      <Path
-        d={fullPath}
-        fill="none"
-        stroke="rgba(0,0,0,0.12)"
-        strokeWidth={26}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-
-      {/* World-coloured road segments */}
-      {segments.map((d, i) => (
-        <Path
-          key={i}
-          d={d}
-          fill="none"
-          stroke={WORLD_COLORS[i]}
-          strokeWidth={18}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      ))}
-
-      {/* Road edge highlight (thin, lighter top coat) */}
-      {segments.map((d, i) => (
-        <Path
-          key={`hl-${i}`}
-          d={d}
-          fill="none"
-          stroke="rgba(255,255,255,0.35)"
-          strokeWidth={8}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      ))}
-
-      {/* Centre dashed lane marking */}
-      <Path
-        d={fullPath}
-        fill="none"
-        stroke="rgba(255,255,255,0.55)"
-        strokeWidth={2.5}
-        strokeLinecap="round"
-        strokeDasharray="12 14"
-      />
-    </Svg>
+    <>
+      {WORLD_RANGES.map(([from, to], i) => {
+        const x0 = i * WORLD_WIDTH;
+        return (
+          <Svg
+            key={i}
+            style={{ position: 'absolute', top: 0, left: x0 }}
+            width={WORLD_WIDTH}
+            height={height}
+            viewBox={`${x0} 0 ${WORLD_WIDTH} ${height}`}
+          >
+            {/* Drop shadow */}
+            <Path
+              d={fullPath}
+              fill="none"
+              stroke="rgba(0,0,0,0.12)"
+              strokeWidth={26}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            {/* World-coloured road */}
+            <Path
+              d={segments[i]}
+              fill="none"
+              stroke={WORLD_COLORS[i]}
+              strokeWidth={18}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            {/* Highlight */}
+            <Path
+              d={segments[i]}
+              fill="none"
+              stroke="rgba(255,255,255,0.35)"
+              strokeWidth={8}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            {/* Centre dashes */}
+            <Path
+              d={fullPath}
+              fill="none"
+              stroke="rgba(255,255,255,0.55)"
+              strokeWidth={2.5}
+              strokeLinecap="round"
+              strokeDasharray="12 14"
+            />
+          </Svg>
+        );
+      })}
+    </>
   );
 }

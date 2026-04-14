@@ -258,7 +258,7 @@ export default function LevelTransitionScreen() {
             opacity: btnAnim,
             transform: [{ translateY: btnAnim.interpolate({ inputRange: [0, 1], outputRange: [18, 0] }) }],
           }]}>
-            <TouchableOpacity onPress={() => router.replace('/(tabs)/journey')} activeOpacity={0.85}>
+            <TouchableOpacity onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); router.replace('/(tabs)/journey'); }} activeOpacity={0.85}>
               <LinearGradient
                 colors={['#8B3FD9', '#8B3FD9']}
                 start={{ x: 0, y: 0 }}

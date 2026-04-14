@@ -105,10 +105,10 @@ export function FailScreen({ type, levelId, onTryAgain, onExit }: Props) {
           You were warming up.{'\n'}Give it another pop.
         </Text>
 
-        <TouchableOpacity style={s.btnPrimary} onPress={onTryAgain} activeOpacity={0.85}>
+        <TouchableOpacity style={s.btnPrimary} onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); onTryAgain(); }} activeOpacity={0.85}>
           <Text style={s.btnPrimaryTxt}>Try Again ↺</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={s.btnSecondary} onPress={onExit} activeOpacity={0.7}>
+        <TouchableOpacity style={s.btnSecondary} onPress={() => { Haptics.selectionAsync(); onExit(); }} activeOpacity={0.7}>
           <Text style={s.btnSecondaryTxt}>Back to Journey</Text>
         </TouchableOpacity>
       </Animated.View>

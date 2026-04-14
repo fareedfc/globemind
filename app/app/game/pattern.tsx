@@ -25,8 +25,6 @@ import { calcPatternStars, calcActualPoints } from '../../utils/scoring';
 import { useProgressStore } from '../../stores/progressStore';
 import { pickInsight } from '../../data/brainInsights';
 
-const TOTAL_ROUNDS = 7;
-const ANSWER_MS = 8_000;
 const FAIL_THRESHOLD = 4;
 
 type Phase = 'watching' | 'answering' | 'feedback';
@@ -173,7 +171,12 @@ export default function PatternGame() {
   const levelId = parseInt(rawId ?? '5');
   const level = LEVELS.find(l => l.id === levelId) ?? LEVELS[4];
 
-  const rounds = useRef<ActiveRound[]>(buildPatternRounds(PATTERN_SETS, TOTAL_ROUNDS, levelId));
+  // Difficulty scaling across 101 levels
+  const totalRounds = levelId >= 81 ? 9 : levelId >= 51 ? 8 : 7;
+  const answerMs = levelId >= 61 ? 5000 : levelId >= 31 ? 6500 : 8000;
+  const flashItemMs = levelId >= 71 ? 320 : levelId >= 41 ? 430 : 550;
+
+  const rounds = useRef<ActiveRound[]>(buildPatternRounds(PATTERN_SETS, totalRounds, levelId));
 
   const [currentRound, setCurrentRound] = useState(0);
   const [phase, setPhase] = useState<Phase>('watching');
@@ -181,7 +184,7 @@ export default function PatternGame() {
   const [seqHidden, setSeqHidden] = useState(false);
   const timerAnim = useRef(new Animated.Value(1)).current;
   const [score, setScore] = useState(0);
-  const [pips, setPips] = useState<PipState[]>(Array(TOTAL_ROUNDS).fill('none'));
+  const [pips, setPips] = useState<PipState[]>(Array(totalRounds).fill('none'));
   const [feedbackAnswer, setFeedbackAnswer] = useState<string | null>(null);
   const [won, setWon] = useState(false);
   const [failed, setFailed] = useState(false);
@@ -194,8 +197,12 @@ export default function PatternGame() {
   currentRoundRef.current = currentRound;
   scoreRef.current = score;
 
+  const warningTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+
   const stopAnswerTimer = useCallback(() => {
     timerAnim.stopAnimation();
+    warningTimersRef.current.forEach(clearTimeout);
+    warningTimersRef.current = [];
   }, [timerAnim]);
 
   const handleAnswer = useCallback((ans: string | null) => {
@@ -228,7 +235,7 @@ export default function PatternGame() {
     setTimeout(() => {
       if (willFail) { setFailed(true); return; }
       const nextRound = currentRoundRef.current + 1;
-      if (nextRound >= TOTAL_ROUNDS) {
+      if (nextRound >= totalRounds) {
         setWon(true);
       } else {
         setCurrentRound(nextRound);
@@ -240,13 +247,18 @@ export default function PatternGame() {
     timerAnim.setValue(1);
     Animated.timing(timerAnim, {
       toValue: 0,
-      duration: ANSWER_MS,
+      duration: answerMs,
       easing: Easing.linear,
       useNativeDriver: false,
     }).start(({ finished }) => {
       if (finished) handleAnswer(null);
     });
-  }, [timerAnim, handleAnswer]);
+    warningTimersRef.current = ([
+      answerMs > 3000 ? setTimeout(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light),  answerMs - 3000) : null,
+      answerMs > 2000 ? setTimeout(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium), answerMs - 2000) : null,
+      answerMs > 1000 ? setTimeout(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy),  answerMs - 1000) : null,
+    ] as (ReturnType<typeof setTimeout> | null)[]).filter(Boolean) as ReturnType<typeof setTimeout>[];
+  }, [timerAnim, handleAnswer, answerMs]);
 
   const playSequence = useCallback(async (activeRound: ActiveRound) => {
     cancelRef.current = false;
@@ -258,17 +270,19 @@ export default function PatternGame() {
 
     for (let i = 0; i < activeRound.displaySeq.length; i++) {
       if (cancelRef.current) return;
+      Haptics.selectionAsync();
       setLitIndex(i);
-      await delay(550);
+      await delay(flashItemMs);
       if (cancelRef.current) return;
       setLitIndex(-1);
-      await delay(150);
+      await delay(Math.round(flashItemMs * 0.27));
     }
 
     if (cancelRef.current) return;
 
     if (activeRound.mode === 'flash') {
       // Sequence vanishes before answering
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       setSeqHidden(true);
       await delay(200);
     } else {
@@ -278,7 +292,7 @@ export default function PatternGame() {
     if (cancelRef.current) return;
     setPhase('answering');
     startAnswerTimer();
-  }, [startAnswerTimer]);
+  }, [startAnswerTimer, flashItemMs]);
 
   useEffect(() => {
     if (won) return;
@@ -299,7 +313,7 @@ export default function PatternGame() {
   const resetGame = () => {
     cancelRef.current = true;
     stopAnswerTimer();
-    rounds.current = buildPatternRounds(PATTERN_SETS, TOTAL_ROUNDS, levelId);
+    rounds.current = buildPatternRounds(PATTERN_SETS, totalRounds, levelId);
     setCurrentRound(0);
     setPhase('watching');
     setLitIndex(-1);
@@ -308,7 +322,7 @@ export default function PatternGame() {
     setScore(0);
     scoreRef.current = 0;
     wrongCountRef.current = 0;
-    setPips(Array(TOTAL_ROUNDS).fill('none'));
+    setPips(Array(totalRounds).fill('none'));
     setFeedbackAnswer(null);
     setWon(false);
     setFailed(false);
@@ -321,7 +335,7 @@ export default function PatternGame() {
     outputRange: [Colors.coral, Colors.coral, Colors.gold, Colors.teal],
   });
 
-  const winPct = Math.round((score / TOTAL_ROUNDS) * 100);
+  const winPct = Math.round((score / totalRounds) * 100);
   const stars = calcPatternStars(score);
   const isFirstClear = useProgressStore.getState().completions[levelId] === undefined;
   const lastPlayedAt = useProgressStore.getState().lastPlayedAt?.[levelId];
@@ -332,7 +346,7 @@ export default function PatternGame() {
     title: stars === 5 ? 'Pattern Master!' : stars === 4 ? 'Excellent!' : stars === 3 ? 'Sharp Eye!' : stars === 2 ? 'Good Effort!' : 'Keep Practicing!',
     sub: 'Pattern recognition sharpens how fast you read situations and make decisions.',
     stats: [
-      { num: `${score}/${TOTAL_ROUNDS}`, lbl: 'Correct' },
+      { num: `${score}/${totalRounds}`, lbl: 'Correct' },
       { num: `${winPct}%`, lbl: 'Accuracy' },
       { num: `+${previewPts}`, lbl: 'Points' },
     ],
@@ -395,7 +409,7 @@ export default function PatternGame() {
       <View style={s.topSection}>
         {/* Header */}
         <View style={s.header}>
-          <TouchableOpacity style={s.backBtn} onPress={() => router.back()}>
+          <TouchableOpacity style={s.backBtn} onPress={() => { Haptics.selectionAsync(); router.back(); }}>
             <Text style={s.backTxt}>←</Text>
           </TouchableOpacity>
           <Text style={s.headerTitle} numberOfLines={1}>Level {level.id} · {level.domain}</Text>

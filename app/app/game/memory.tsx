@@ -136,14 +136,22 @@ export default function MemoryGame() {
   const timerAnim = useRef(new Animated.Value(1)).current;
   const startTimeRef = useRef<number>(Date.now());
 
+  const warningTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+
   // Countdown timer — interval for seconds text, Animated for smooth bar
   useEffect(() => {
     if (won || failed) return;
+    // Cards dealt burst — one selectionAsync per pair (max 8), 80ms apart
+    const burstCount = Math.min(totalPairs, 8);
+    for (let i = 0; i < burstCount; i++) {
+      setTimeout(() => Haptics.selectionAsync(), i * 80);
+    }
     startTimeRef.current = Date.now();
     timerAnim.setValue(1);
+    const durationMs = timeLimit * 1000;
     Animated.timing(timerAnim, {
       toValue: 0,
-      duration: timeLimit * 1000,
+      duration: durationMs,
       easing: Easing.linear,
       useNativeDriver: false,
     }).start(({ finished }) => {
@@ -157,9 +165,16 @@ export default function MemoryGame() {
         if (timerRef.current) clearInterval(timerRef.current);
       }
     }, 500);
+    warningTimersRef.current = ([
+      durationMs > 3000 ? setTimeout(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light),  durationMs - 3000) : null,
+      durationMs > 2000 ? setTimeout(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium), durationMs - 2000) : null,
+      durationMs > 1000 ? setTimeout(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy),  durationMs - 1000) : null,
+    ] as (ReturnType<typeof setTimeout> | null)[]).filter(Boolean) as ReturnType<typeof setTimeout>[];
     return () => {
       timerAnim.stopAnimation();
       if (timerRef.current) clearInterval(timerRef.current);
+      warningTimersRef.current.forEach(clearTimeout);
+      warningTimersRef.current = [];
     };
   }, [won, failed]);
 
@@ -270,7 +285,7 @@ export default function MemoryGame() {
       <View style={s.topSection}>
         {/* Header */}
         <View style={s.header}>
-          <TouchableOpacity style={s.backBtn} onPress={() => router.back()}>
+          <TouchableOpacity style={s.backBtn} onPress={() => { Haptics.selectionAsync(); router.back(); }}>
             <Text style={s.backTxt}>←</Text>
           </TouchableOpacity>
           <Text style={s.headerTitle} numberOfLines={1}>Level {level.id} · {level.domain}</Text>

@@ -130,6 +130,8 @@ export default function SpeedGame() {
   const startTimeRef = useRef<number>(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const runningRef = useRef(false);
+  const comboRef = useRef(0);
+  const warningTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   const stopTimer = useCallback(() => {
     timerAnim.stopAnimation();
@@ -137,6 +139,8 @@ export default function SpeedGame() {
     timerRef.current = null;
     runningRef.current = false;
     setRunning(false);
+    warningTimersRef.current.forEach(clearTimeout);
+    warningTimersRef.current = [];
   }, [timerAnim]);
 
   const startTimer = useCallback(() => {
@@ -157,6 +161,11 @@ export default function SpeedGame() {
         setWon(true);
       }
     });
+    warningTimersRef.current = ([
+      setTimeout(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light),  TOTAL_MS - 3000),
+      setTimeout(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium), TOTAL_MS - 2000),
+      setTimeout(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy),  TOTAL_MS - 1000),
+    ]);
     // Seconds countdown for display only (1s interval)
     timerRef.current = setInterval(() => {
       const elapsed = Date.now() - startTimeRef.current;
@@ -186,16 +195,19 @@ export default function SpeedGame() {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       setFlash({ idx, correct: true });
       setCorrect(p => p + 1);
-      setCombo(p => {
-        const next = p + 1;
-        setMaxCombo(m => Math.max(m, next));
-        const pts = 10 + (next > 1 ? (next - 1) * 5 : 0);
-        setScore(s => s + pts);
-        setComboText(next > 1 ? `🔥 x${next} +${pts}⭐` : `✓ +${pts}⭐`);
-        return next;
-      });
+      const nextCombo = comboRef.current + 1;
+      comboRef.current = nextCombo;
+      if (nextCombo === 3 || nextCombo === 5 || nextCombo === 10) {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+      setMaxCombo(m => Math.max(m, nextCombo));
+      const pts = 10 + (nextCombo > 1 ? (nextCombo - 1) * 5 : 0);
+      setScore(s => s + pts);
+      setCombo(nextCombo);
+      setComboText(nextCombo > 1 ? `🔥 x${nextCombo} +${pts}⭐` : `✓ +${pts}⭐`);
       setTimeout(() => {
         setFlash(null);
+        Haptics.selectionAsync();
         setRound(buildRound(pool, cellCount));
         setComboText('');
       }, 180);
@@ -203,6 +215,7 @@ export default function SpeedGame() {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       setFlash({ idx, correct: false });
       setWrong(p => p + 1);
+      comboRef.current = 0;
       setCombo(0);
       setComboText('❌ -5⭐');
       setScore(s => Math.max(0, s - 5));
@@ -210,6 +223,7 @@ export default function SpeedGame() {
       if (mode === 'donttap') {
         setTimeout(() => {
           setFlash(null);
+          Haptics.selectionAsync();
           setRound(buildRound(pool, cellCount));
           setComboText('');
         }, 350);
@@ -227,6 +241,7 @@ export default function SpeedGame() {
 
   const resetGame = () => {
     stopTimer();
+    comboRef.current = 0;
     setRound(buildRound(pool, cellCount));
     setScore(0);
     setCombo(0);
@@ -279,7 +294,7 @@ export default function SpeedGame() {
     <SafeAreaView style={s.safeArea} edges={['top']}>
       {/* Header */}
       <View style={s.header}>
-        <TouchableOpacity style={s.backBtn} onPress={() => router.back()}>
+        <TouchableOpacity style={s.backBtn} onPress={() => { Haptics.selectionAsync(); router.back(); }}>
           <Text style={s.backTxt}>←</Text>
         </TouchableOpacity>
         <Text style={s.headerTitle} numberOfLines={1}>Level {level.id} · {level.domain}</Text>

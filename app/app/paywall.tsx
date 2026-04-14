@@ -1,7 +1,7 @@
 import { useRef, useEffect, useState } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet,
-  ScrollView, Animated, ActivityIndicator, Alert,
+  ScrollView, Animated, ActivityIndicator, Alert, Platform, Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -12,15 +12,19 @@ import { Colors } from '../constants/colors';
 import { useLives } from '../hooks/useLives';
 import { usePlayerStore, MAX_LIVES } from '../stores/playerStore';
 
-// The product identifier you'll create in App Store Connect
+// Product identifiers — must match exactly what you create in App Store Connect + Google Play
 const PREMIUM_MONTHLY_ID = 'thinkpop_premium_monthly';
+const PREMIUM_ANNUAL_ID  = 'thinkpop_premium_annual';
+
+// Set to 7 once you configure a free trial in App Store Connect / Google Play Console
+const FREE_TRIAL_DAYS = 7;
 
 const FEATURES = [
-  { label: 'Levels',           free: 'Unlimited',                   premium: 'Unlimited' },
+  { label: 'Daily levels',     free: '3 per day',                   premium: 'Unlimited' },
   { label: 'Lives',            free: `${MAX_LIVES}, slow refill`,   premium: 'Unlimited ♾️' },
+  { label: 'Ads',              free: 'Banner + rewarded',           premium: 'None' },
   { label: 'Strengths',        free: 'Basic summary',               premium: 'Full breakdown' },
   { label: 'Weekly Report',    free: 'Highlights only',             premium: 'Detailed analysis' },
-  { label: 'Game modes',       free: 'All 4',                       premium: 'All 4 + future' },
 ];
 
 export default function PaywallScreen() {
@@ -28,6 +32,7 @@ export default function PaywallScreen() {
   const { lives, timeUntilNext } = useLives();
   const { isPremium, setPremium } = usePlayerStore();
 
+  const [plan, setPlan] = useState<'monthly' | 'annual'>('annual');
   const [purchased, setPurchased] = useState(false);
   const [loading, setLoading] = useState(false);
   const scaleAnim = useRef(new Animated.Value(0)).current;
@@ -42,11 +47,12 @@ export default function PaywallScreen() {
 
   const handlePurchase = async () => {
     setLoading(true);
+    const targetId = plan === 'annual' ? PREMIUM_ANNUAL_ID : PREMIUM_MONTHLY_ID;
     try {
       const offerings = await Purchases.getOfferings();
       const pkg = offerings.current?.availablePackages.find(
-        p => p.product.identifier === PREMIUM_MONTHLY_ID
-      ) ?? offerings.current?.monthly;
+        p => p.product.identifier === targetId
+      ) ?? (plan === 'annual' ? offerings.current?.annual : offerings.current?.monthly);
 
       if (!pkg) {
         Alert.alert('Not available', 'Purchase unavailable right now. Try again later.');
@@ -55,7 +61,7 @@ export default function PaywallScreen() {
       }
 
       const { customerInfo } = await Purchases.purchasePackage(pkg);
-      const isActive = typeof customerInfo.entitlements.active['premium'] !== 'undefined';
+      const isActive = typeof customerInfo.entitlements.active['ThinkPop Unlimited'] !== 'undefined';
       if (isActive) {
         setPremium(true);
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -74,13 +80,13 @@ export default function PaywallScreen() {
     setLoading(true);
     try {
       const customerInfo = await Purchases.restorePurchases();
-      const isActive = typeof customerInfo.entitlements.active['premium'] !== 'undefined';
+      const isActive = typeof customerInfo.entitlements.active['ThinkPop Unlimited'] !== 'undefined';
       if (isActive) {
         setPremium(true);
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         setPurchased(true);
       } else {
-        Alert.alert('No purchases found', 'No active subscription found for this Apple ID.');
+        Alert.alert('No purchases found', `No active subscription found for this ${Platform.OS === 'android' ? 'Google account' : 'Apple ID'}.`);
       }
     } catch (e: any) {
       Alert.alert('Restore failed', e?.message ?? 'Something went wrong. Please try again.');
@@ -127,23 +133,34 @@ export default function PaywallScreen() {
       >
         {/* Header block */}
         <Animated.View style={[s.header, { opacity: scaleAnim, transform: [{ scale: scaleAnim }] }]}>
-          {/* Hearts row */}
-          <View style={s.heartsRow}>
-            {Array.from({ length: MAX_LIVES }, (_, i) => (
-              <Text key={i} style={[s.heart, i < lives && s.heartFull]}>
-                {i < lives ? '❤️' : '🖤'}
+          {reason === 'daily' ? (
+            <>
+              <Text style={s.headerEmoji}>🌟</Text>
+              <Text style={s.headerTitle}>You're on a roll!</Text>
+              <Text style={s.headerSub}>
+                You've played your 3 free levels for today. Go Premium for unlimited daily play and a detailed weekly report.
               </Text>
-            ))}
-          </View>
-          <Text style={s.headerTitle}>You're out of lives</Text>
-          <Text style={s.headerSub}>
-            Lives refill automatically — one every 30 minutes. Or go Premium for unlimited lives and richer insights.
-          </Text>
-          {timeUntilNext && (
-            <View style={s.timerCard}>
-              <Text style={s.timerLbl}>Next free life in</Text>
-              <Text style={s.timerNum}>{timeUntilNext}</Text>
-            </View>
+            </>
+          ) : (
+            <>
+              <View style={s.heartsRow}>
+                {Array.from({ length: MAX_LIVES }, (_, i) => (
+                  <Text key={i} style={[s.heart, i < lives && s.heartFull]}>
+                    {i < lives ? '❤️' : '🖤'}
+                  </Text>
+                ))}
+              </View>
+              <Text style={s.headerTitle}>You're out of lives</Text>
+              <Text style={s.headerSub}>
+                Lives refill automatically — one every 30 minutes. Or go Premium for unlimited lives and richer insights.
+              </Text>
+              {timeUntilNext && (
+                <View style={s.timerCard}>
+                  <Text style={s.timerLbl}>Next free life in</Text>
+                  <Text style={s.timerNum}>{timeUntilNext}</Text>
+                </View>
+              )}
+            </>
           )}
         </Animated.View>
 
@@ -163,8 +180,30 @@ export default function PaywallScreen() {
           ))}
         </View>
 
-        {/* Purchase CTA */}
+        {/* Plan toggle */}
         <Animated.View style={[s.ctaWrap, { opacity: btnAnim, transform: [{ translateY: btnAnim.interpolate({ inputRange: [0, 1], outputRange: [20, 0] }) }] }]}>
+          <View style={s.planToggle}>
+            <TouchableOpacity
+              style={[s.planOption, plan === 'annual' && s.planOptionActive]}
+              onPress={() => { setPlan('annual'); Haptics.selectionAsync(); }}
+              activeOpacity={0.8}
+            >
+              <View style={s.planSaveBadge}><Text style={s.planSaveTxt}>SAVE 48%</Text></View>
+              <Text style={[s.planPrice, plan === 'annual' && s.planPriceActive]}>$24.99</Text>
+              <Text style={[s.planPeriod, plan === 'annual' && s.planPeriodActive]}>per year</Text>
+              <Text style={[s.planPer, plan === 'annual' && s.planPerActive]}>~$2.08/mo</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[s.planOption, plan === 'monthly' && s.planOptionActive]}
+              onPress={() => { setPlan('monthly'); Haptics.selectionAsync(); }}
+              activeOpacity={0.8}
+            >
+              <Text style={[s.planPrice, plan === 'monthly' && s.planPriceActive]}>$3.99</Text>
+              <Text style={[s.planPeriod, plan === 'monthly' && s.planPeriodActive]}>per month</Text>
+              <Text style={[s.planPer, plan === 'monthly' && s.planPerActive]}>cancel any time</Text>
+            </TouchableOpacity>
+          </View>
+
           <TouchableOpacity onPress={handlePurchase} activeOpacity={0.88} disabled={loading} style={{ width: '100%' }}>
             <LinearGradient
               colors={['#FFD166', '#FF9500']}
@@ -176,8 +215,14 @@ export default function PaywallScreen() {
                 <ActivityIndicator color="#1a1a2e" style={{ paddingVertical: 20 }} />
               ) : (
                 <>
-                  <Text style={s.premiumBtnTxt}>Get Premium — $6.99/mo</Text>
-                  <Text style={s.premiumBtnSub}>Unlimited lives · Full stats & reports</Text>
+                  <Text style={s.premiumBtnTxt}>
+                    {FREE_TRIAL_DAYS > 0 ? `Try Free for ${FREE_TRIAL_DAYS} Days` : 'Get Premium'}
+                  </Text>
+                  <Text style={s.premiumBtnSub}>
+                    {FREE_TRIAL_DAYS > 0
+                      ? plan === 'annual' ? 'Then $24.99/yr · No ads · Unlimited play' : 'Then $3.99/mo · Cancel any time'
+                      : 'No ads · Unlimited levels · Full stats'}
+                  </Text>
                 </>
               )}
             </LinearGradient>
@@ -187,7 +232,16 @@ export default function PaywallScreen() {
             <Text style={s.restoreTxt}>Restore Purchase</Text>
           </TouchableOpacity>
 
-          <Text style={s.finePrint}>Cancel any time. Billed monthly.</Text>
+          <Text style={s.finePrint}>Cancel any time. Subscriptions auto-renew.</Text>
+          <View style={s.legalRow}>
+            <TouchableOpacity onPress={() => Linking.openURL('https://fareedfc.github.io/thinkpop-legal/terms.html')} activeOpacity={0.7}>
+              <Text style={s.legalLink}>Terms of Use</Text>
+            </TouchableOpacity>
+            <Text style={s.legalSep}>·</Text>
+            <TouchableOpacity onPress={() => Linking.openURL('https://www.iubenda.com/privacy-policy/14041250')} activeOpacity={0.7}>
+              <Text style={s.legalLink}>Privacy Policy</Text>
+            </TouchableOpacity>
+          </View>
         </Animated.View>
       </ScrollView>
     </SafeAreaView>
@@ -288,6 +342,65 @@ const s = StyleSheet.create({
   tableRowFreeVal: { color: Colors.muted },
   tableRowPremVal: { color: Colors.gold },
 
+  // Plan toggle
+  planToggle: {
+    flexDirection: 'row',
+    gap: 10,
+    width: '100%',
+    marginBottom: 4,
+  },
+  planOption: {
+    flex: 1,
+    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    paddingVertical: 14,
+    paddingHorizontal: 10,
+    alignItems: 'center',
+    gap: 2,
+    position: 'relative',
+  },
+  planOptionActive: {
+    borderColor: Colors.gold,
+    backgroundColor: 'rgba(255,209,102,0.08)',
+  },
+  planSaveBadge: {
+    position: 'absolute',
+    top: -10,
+    backgroundColor: Colors.coral,
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+  },
+  planSaveTxt: {
+    fontSize: 9,
+    fontFamily: 'Nunito_900Black',
+    color: '#fff',
+    letterSpacing: 0.5,
+  },
+  planPrice: {
+    fontSize: 22,
+    fontFamily: 'Nunito_900Black',
+    color: Colors.muted,
+    marginTop: 6,
+  },
+  planPriceActive: { color: Colors.gold },
+  planPeriod: {
+    fontSize: 11,
+    fontFamily: 'Nunito_700Bold',
+    color: Colors.muted,
+    opacity: 0.7,
+  },
+  planPeriodActive: { color: Colors.text, opacity: 1 },
+  planPer: {
+    fontSize: 10,
+    fontFamily: 'Nunito_400Regular',
+    color: Colors.muted,
+    opacity: 0.5,
+  },
+  planPerActive: { opacity: 0.8, color: Colors.muted },
+
   // CTA section
   ctaWrap: { alignItems: 'center', gap: 14 },
   premiumBtn: { width: '100%', borderRadius: 18, marginBottom: 2 },
@@ -319,6 +432,23 @@ const s = StyleSheet.create({
     fontFamily: 'Nunito_400Regular',
     color: Colors.muted,
     opacity: 0.5,
+  },
+  legalRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  legalLink: {
+    fontSize: 11,
+    fontFamily: 'Nunito_700Bold',
+    color: Colors.muted,
+    opacity: 0.5,
+    textDecorationLine: 'underline',
+  },
+  legalSep: {
+    fontSize: 11,
+    color: Colors.muted,
+    opacity: 0.3,
   },
 
   // Success state

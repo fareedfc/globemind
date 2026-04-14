@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Animated, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import * as Haptics from 'expo-haptics';
 import { Colors } from '../../constants/colors';
 import { Level } from '../../data/levels';
 
@@ -100,7 +101,7 @@ export function LevelNode({ level, x, y, onPress }: Props) {
   return (
     <TouchableOpacity
       style={[s.node, { left: x - 40, top: y - 40 }]}
-      onPress={() => isInteractive && onPress(level)}
+      onPress={() => { if (isInteractive) { Haptics.selectionAsync(); onPress(level); } }}
       activeOpacity={isInteractive ? 0.8 : 1}
       disabled={!isInteractive}
     >

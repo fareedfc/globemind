@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import * as Haptics from 'expo-haptics';
 import {
   View,
   Text,
@@ -116,6 +117,7 @@ export default function JourneyScreen() {
 
   // ── Modal ─────────────────────────────────────────────────────────────────
   const openModal = (level: Level) => {
+    Haptics.selectionAsync();
     setSelectedLevel(level);
     setModalVisible(true);
     modalAnim.setValue(400);
@@ -280,6 +282,7 @@ export default function JourneyScreen() {
                 <TouchableOpacity
                   activeOpacity={0.85}
                   onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
                     closeModal();
                     // TODO: restore lives gate before shipping
                     useLive();

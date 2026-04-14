@@ -184,6 +184,7 @@ export function WinScreen({ data, levelId, onExit }: Props) {
       const interval = setInterval(() => {
         step++;
         current += stepSize;
+        if (step % 4 === 0) Haptics.selectionAsync();
         if (step >= steps) {
           setDisplayScore(oldScore + pointsEarned);
           clearInterval(interval);
@@ -206,6 +207,7 @@ export function WinScreen({ data, levelId, onExit }: Props) {
     // Stars pop in one by one — after POP! fades
     starAnims.forEach((anim, i) => {
       setTimeout(() => {
+        if (i < data.stars) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         Animated.spring(anim, {
           toValue: 1,
           tension: 140,

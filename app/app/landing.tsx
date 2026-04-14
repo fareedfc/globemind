@@ -3,6 +3,7 @@ import {
   View, Text, TouchableOpacity, StyleSheet,
   Animated, Easing, Dimensions, Image, ImageBackground,
 } from 'react-native';
+import * as Haptics from 'expo-haptics';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, useFocusEffect } from 'expo-router';
@@ -230,7 +231,7 @@ export default function LandingScreen() {
           {/* CTAs */}
           <Animated.View style={[s.ctas, entry(ctaAnim, 32)]}>
             <TouchableOpacity
-              onPress={() => router.replace('/(tabs)/journey')}
+              onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); router.replace('/(tabs)/journey'); }}
               activeOpacity={0.88}
               style={s.btnWrap}
             >
@@ -246,7 +247,7 @@ export default function LandingScreen() {
             </TouchableOpacity>
 
             <TouchableOpacity
-              onPress={() => router.replace('/(tabs)/brain')}
+              onPress={() => { Haptics.selectionAsync(); router.replace('/(tabs)/brain'); }}
               activeOpacity={0.82}
               style={s.btnTrack}
             >
@@ -254,7 +255,7 @@ export default function LandingScreen() {
             </TouchableOpacity>
 
             <TouchableOpacity
-              onPress={() => router.push('/auth')}
+              onPress={() => { Haptics.selectionAsync(); router.push('/auth'); }}
               activeOpacity={0.6}
               style={s.btnSignIn}
             >

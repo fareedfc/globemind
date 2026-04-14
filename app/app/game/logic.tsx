@@ -184,8 +184,12 @@ export default function LogicGame() {
   currentRoundRef.current = currentRound;
   scoreRef.current = score;
 
+  const warningTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+
   const stopTimer = useCallback(() => {
     timerAnim.stopAnimation();
+    warningTimersRef.current.forEach(clearTimeout);
+    warningTimersRef.current = [];
   }, [timerAnim]);
 
   const advanceRound = useCallback((correct: boolean) => {
@@ -282,6 +286,11 @@ export default function LogicGame() {
     }).start(({ finished }) => {
       if (finished) handleAnswer(null);
     });
+    warningTimersRef.current = ([
+      answerMs > 3000 ? setTimeout(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light),  answerMs - 3000) : null,
+      answerMs > 2000 ? setTimeout(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium), answerMs - 2000) : null,
+      answerMs > 1000 ? setTimeout(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy),  answerMs - 1000) : null,
+    ] as (ReturnType<typeof setTimeout> | null)[]).filter(Boolean) as ReturnType<typeof setTimeout>[];
   }, [timerAnim, handleAnswer, answerMs]);
 
   useEffect(() => {
@@ -373,7 +382,7 @@ export default function LogicGame() {
       <View style={s.topSection}>
         {/* Header */}
         <View style={s.header}>
-          <TouchableOpacity style={s.backBtn} onPress={() => router.back()}>
+          <TouchableOpacity style={s.backBtn} onPress={() => { Haptics.selectionAsync(); router.back(); }}>
             <Text style={s.backTxt}>←</Text>
           </TouchableOpacity>
           <Text style={s.headerTitle} numberOfLines={1}>Level {level.id} · {level.domain}</Text>
