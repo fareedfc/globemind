@@ -1,210 +1,323 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Confirm Your Email — ThinkPop</title>
-  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap" rel="stylesheet" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Email Confirmed — ThinkPop</title>
+  <meta name="description" content="Your ThinkPop email has been confirmed. Return to the app to keep playing.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&display=swap" rel="stylesheet">
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
     body {
-      font-family: 'Nunito', Arial, sans-serif;
-      background: #0f0f1e;
+      font-family: 'Nunito', sans-serif;
       min-height: 100vh;
+      background: #0f0c1a;
+      color: #fff;
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 24px;
+      padding: 2rem 1.5rem;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: -200px;
+      left: -200px;
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(147, 51, 234, 0.35) 0%, transparent 70%);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    body::after {
+      content: '';
+      position: fixed;
+      bottom: -200px;
+      right: -200px;
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(255, 140, 0, 0.3) 0%, transparent 70%);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 0;
     }
 
     .card {
-      background: #1a1a2e;
-      border-radius: 24px;
-      padding: 48px 40px;
-      max-width: 480px;
+      position: relative;
+      z-index: 1;
       width: 100%;
+      max-width: 560px;
       text-align: center;
-      box-shadow: 0 24px 64px rgba(0,0,0,0.5);
     }
 
     .logo {
-      font-size: 36px;
+      height: 150px;
+      width: auto;
+      margin-bottom: 2rem;
+    }
+
+    h1 {
+      font-size: clamp(2.3rem, 7vw, 3.8rem);
       font-weight: 900;
-      margin-bottom: 4px;
-    }
-    .logo .think { color: #00B894; }
-    .logo .pop   { color: #FF6B35; }
-
-    .tagline {
-      color: #888;
-      font-size: 14px;
-      margin-bottom: 40px;
+      line-height: 1.08;
+      margin-bottom: 1rem;
+      background: linear-gradient(135deg, #fff 30%, #FFAA00 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
     }
 
-    /* ── States ── */
-    .state { display: none; }
-    .state.active { display: block; }
+    .sub {
+      font-size: clamp(1rem, 3vw, 1.15rem);
+      font-weight: 400;
+      color: rgba(255, 255, 255, 0.68);
+      line-height: 1.7;
+      margin-bottom: 2rem;
+    }
 
-    /* Loading */
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 2rem;
+    }
+
+    .chip {
+      background: rgba(255, 255, 255, 0.07);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 50px;
+      padding: 8px 16px;
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: rgba(255, 255, 255, 0.82);
+      backdrop-filter: blur(8px);
+    }
+
+    .panel {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 24px;
+      padding: 1.5rem;
+      margin-bottom: 1.6rem;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.24);
+    }
+
+    .panel-title {
+      font-size: 1rem;
+      font-weight: 900;
+      color: #fff;
+      margin-bottom: 0.45rem;
+    }
+
+    .panel-copy {
+      color: rgba(255, 255, 255, 0.62);
+      line-height: 1.6;
+      font-size: 0.96rem;
+    }
+
+    .note {
+      font-size: 0.82rem;
+      color: rgba(255, 255, 255, 0.34);
+    }
+
+    footer {
+      position: relative;
+      z-index: 1;
+      margin-top: 1rem;
+      text-align: center;
+      font-size: 0.78rem;
+      color: rgba(255, 255, 255, 0.2);
+    }
+
+    footer a {
+      color: rgba(255, 255, 255, 0.32);
+      text-decoration: none;
+    }
+
+    footer a:hover {
+      color: rgba(255, 255, 255, 0.6);
+    }
+
+    @media (max-width: 480px) {
+      .logo {
+        height: 120px;
+      }
+
+      .panel {
+        padding: 1.25rem;
+      }
+    }
+
+    /* ── Loading overlay ── */
+    #loading {
+      position: fixed;
+      inset: 0;
+      z-index: 99;
+      background: #0f0c1a;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      transition: opacity 0.4s ease;
+    }
+
+    #loading.fade-out {
+      opacity: 0;
+      pointer-events: none;
+    }
+
     .spinner {
-      width: 52px;
-      height: 52px;
-      border: 4px solid rgba(255,170,0,0.2);
+      width: 48px;
+      height: 48px;
+      border: 4px solid rgba(255, 170, 0, 0.2);
       border-top-color: #FFAA00;
       border-radius: 50%;
       animation: spin 0.8s linear infinite;
-      margin: 0 auto 24px;
     }
+
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* Success */
-    .icon {
-      font-size: 64px;
-      margin-bottom: 20px;
-      animation: pop 0.4s cubic-bezier(0.34,1.56,0.64,1) both;
-    }
-    @keyframes pop {
-      from { transform: scale(0); opacity: 0; }
-      to   { transform: scale(1); opacity: 1; }
+    .loading-text {
+      font-family: 'Nunito', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      color: rgba(255,255,255,0.5);
     }
 
-    h2 {
-      font-size: 26px;
-      font-weight: 900;
-      color: #fff;
-      margin-bottom: 12px;
+    /* ── Error panel (hidden by default) ── */
+    #error-panel {
+      display: none;
+      background: rgba(239, 71, 111, 0.1);
+      border: 1px solid rgba(239, 71, 111, 0.3);
+      border-radius: 24px;
+      padding: 1.5rem;
+      margin-bottom: 1.6rem;
     }
 
-    p {
-      color: #aaa;
-      font-size: 15px;
-      line-height: 1.7;
-      margin-bottom: 32px;
-    }
-
-    .btn {
-      display: block;
-      width: 100%;
-      padding: 18px;
-      border-radius: 14px;
-      font-family: 'Nunito', Arial, sans-serif;
-      font-size: 17px;
-      font-weight: 900;
-      text-decoration: none;
-      border: none;
-      cursor: pointer;
-      transition: opacity 0.15s, transform 0.1s;
-    }
-    .btn:active { transform: scale(0.97); opacity: 0.9; }
-
-    .btn-primary {
-      background: linear-gradient(90deg, #FFAA00, #FF8C00);
-      color: #1a1a2e;
-    }
-
-    .btn-secondary {
-      background: rgba(255,255,255,0.07);
-      color: #ccc;
-      margin-top: 12px;
-    }
-
-    /* Error */
-    .error-icon { font-size: 56px; margin-bottom: 20px; }
-
-    .fine {
-      font-size: 12px;
-      color: #555;
-      margin-top: 24px;
-      margin-bottom: 0;
-    }
+    #error-panel .panel-title { color: #EF476F; }
+    #error-panel .panel-copy  { color: rgba(255,255,255,0.62); }
   </style>
 </head>
 <body>
-<div class="card">
-  <div class="logo"><span class="think">Think</span><span class="pop">Pop</span> 🧩</div>
-  <p class="tagline">Train your brain. Stay sharp.</p>
 
-  <!-- Loading state -->
-  <div id="state-loading" class="state active">
+  <!-- Loading overlay — shown while code is being exchanged -->
+  <div id="loading">
     <div class="spinner"></div>
-    <h2>Confirming your email…</h2>
-    <p>Just a moment while we verify your account.</p>
+    <div class="loading-text">Confirming your email…</div>
   </div>
 
-  <!-- Success state -->
-  <div id="state-success" class="state">
-    <div class="icon">🎉</div>
-    <h2>You're confirmed!</h2>
-    <p>Your email has been verified. You're all set to start your brain training journey with ThinkPop.</p>
-    <a href="thinkpop://" class="btn btn-primary">Open ThinkPop →</a>
-    <p class="fine">Don't have the app yet? Download it from the App Store or Google Play.</p>
+  <div class="card">
+    <img class="logo" src="logo.png" alt="ThinkPop">
+
+    <h1 id="headline">You're in!<br>Let the Pop Begin.</h1>
+
+    <p class="sub" id="subtext">
+      Your ThinkPop account is confirmed and ready to go.
+      Head back into the app and keep your streak moving.
+    </p>
+
+    <div class="chips" id="chips">
+      <span class="chip">✅ Verified</span>
+      <span class="chip">⚡ Back to Playing</span>
+    </div>
+
+    <!-- Error panel (shown on failure) -->
+    <div class="panel" id="error-panel">
+      <div class="panel-title">😕 Link expired</div>
+      <p class="panel-copy" id="error-msg">
+        This confirmation link has expired or has already been used.
+        Please open ThinkPop and request a new confirmation email.
+      </p>
+    </div>
+
+    <!-- Success panel (shown on success) -->
+    <div class="panel" id="success-panel">
+      <div class="panel-title">Everything looks good.</div>
+      <p class="panel-copy">
+        You can return to ThinkPop and continue playing.
+        If the app is already open, head back there anytime.
+      </p>
+    </div>
+
+    <p class="note" id="note">Confirmation complete. You can safely close this page anytime.</p>
   </div>
 
-  <!-- Error state -->
-  <div id="state-error" class="state">
-    <div class="error-icon">😕</div>
-    <h2>Link expired</h2>
-    <p id="error-msg">This confirmation link has expired or has already been used. Please request a new one from the app.</p>
-    <a href="thinkpop://" class="btn btn-primary">Back to ThinkPop →</a>
-  </div>
-</div>
+  <footer>
+    <a href="/terms.html">Terms</a> · <a href="/support.html">Support</a> · <a href="https://www.iubenda.com/privacy-policy/14041250">Privacy</a>
+  </footer>
 
-<script>
-  const SUPABASE_URL      = 'https://nfxxmhtzgyklxlzueztz.supabase.co';
-  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5meHhtaHR6Z3lrbHhsenVlenR6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwOTY2NzAsImV4cCI6MjA5MDY3MjY3MH0.hVN-MgEv1AHRCV6j9wrx_ILYD7pgtTw3YBxx770cKg8';
+  <script>
+    const SUPABASE_URL      = 'https://nfxxmhtzgyklxlzueztz.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5meHhtaHR6Z3lrbHhsenVlenR6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwOTY2NzAsImV4cCI6MjA5MDY3MjY3MH0.hVN-MgEv1AHRCV6j9wrx_ILYD7pgtTw3YBxx770cKg8';
 
-  function show(id) {
-    document.querySelectorAll('.state').forEach(el => el.classList.remove('active'));
-    document.getElementById(id).classList.add('active');
-  }
-
-  async function confirm() {
-    const params = new URLSearchParams(window.location.search);
-    const code   = params.get('code');
-
-    if (!code) {
-      document.getElementById('error-msg').textContent =
-        'No confirmation code found. Please use the link from your email.';
-      show('state-error');
-      return;
+    function showError(msg) {
+      document.getElementById('headline').textContent   = 'Something went wrong.';
+      document.getElementById('subtext').textContent    = 'We couldn\'t confirm your email. Please try the link again or request a new one from the app.';
+      document.getElementById('chips').style.display    = 'none';
+      document.getElementById('success-panel').style.display = 'none';
+      document.getElementById('note').style.display     = 'none';
+      if (msg) document.getElementById('error-msg').textContent = msg;
+      document.getElementById('error-panel').style.display = 'block';
     }
 
-    try {
-      const res = await fetch(
-        `${SUPABASE_URL}/auth/v1/token?grant_type=pkce`,
-        {
+    async function confirm() {
+      const params = new URLSearchParams(window.location.search);
+      const code   = params.get('code');
+
+      // No code — user landed here directly, just show the page
+      if (!code) {
+        document.getElementById('loading').classList.add('fade-out');
+        setTimeout(() => document.getElementById('loading').remove(), 400);
+        return;
+      }
+
+      try {
+        const res = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=pkce`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'apikey': SUPABASE_ANON_KEY,
           },
           body: JSON.stringify({ auth_code: code }),
+        });
+
+        const json = await res.json();
+
+        // Fade out loading overlay
+        document.getElementById('loading').classList.add('fade-out');
+        setTimeout(() => document.getElementById('loading').remove(), 400);
+
+        if (!res.ok || json.error) {
+          showError(json.error_description || null);
+          return;
         }
-      );
 
-      const json = await res.json();
+        // Success — try to open the app after a short delay
+        setTimeout(() => { window.location.href = 'thinkpop://'; }, 1500);
 
-      if (!res.ok || json.error) {
-        document.getElementById('error-msg').textContent =
-          json.error_description || 'This link has expired or already been used. Please request a new confirmation email from the app.';
-        show('state-error');
-        return;
+      } catch (err) {
+        document.getElementById('loading').classList.add('fade-out');
+        setTimeout(() => document.getElementById('loading').remove(), 400);
+        showError('Something went wrong. Please try again or request a new confirmation email from the app.');
       }
-
-      show('state-success');
-
-      // After a short delay try to open the app automatically
-      setTimeout(() => { window.location.href = 'thinkpop://'; }, 1200);
-
-    } catch (err) {
-      document.getElementById('error-msg').textContent =
-        'Something went wrong. Please try again or request a new confirmation email.';
-      show('state-error');
     }
-  }
 
-  confirm();
-</script>
+    confirm();
+  </script>
 </body>
 </html>
