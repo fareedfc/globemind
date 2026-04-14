@@ -331,7 +331,7 @@ thinkpop/
 
 ---
 
-## Build Status — Last Updated 2026-04-06
+## Build Status — Last Updated 2026-04-13
 
 ### Phase 1 MVP — COMPLETE ✅
 - [x] Onboarding (3 slides + baseline reveal → Landing)
@@ -367,12 +367,17 @@ thinkpop/
 - [x] EAS build config (eas.json) — development/preview/production profiles
 - [x] App Store listing copy (store-listing.md) — description, keywords, legal URLs
 
-### Phase 3 — App Store Submission (NEXT)
-- [ ] **RevenueCat** — wire real purchase in `app/paywall.tsx` (replace `setPremium(true)` mock)
-- [ ] **Apple Developer account** — $99/year, use a dedicated business Apple ID
-- [ ] **EAS project ID** — run `npx eas init` once Apple Developer account is active
-- [ ] **App Store assets** — 1024×1024 icon PNG, screenshots (6.7" + 6.5"), preview video optional
-- [ ] **App Store Connect** — fill in Privacy Policy URL + T&C URL
+### Phase 3 — App Store Submission (IN PROGRESS)
+- [x] **Apple Developer account** — active ✅
+- [x] **Supabase signup fixed** — DB trigger had wrong FK (pointing to `public.users` not `auth.users`) + missing SECURITY DEFINER; both fixed
+- [x] **Email delivery** — Resend SMTP configured in Supabase; DNS records added to IONOS (thinkpop.com via GoDaddy NS); pending full propagation verification
+- [x] **Bundle ID** — changed to `com.thinkpop.thinkapp` (com.thinkpop.app was taken); registered in Apple Developer portal
+- [x] **App Store Connect app created** — "ThinkPop: Stay Sharp" (ThinkPop name was taken; can reclaim later)
+- [x] **RevenueCat wired** — SDK installed, iOS test API key in `_layout.tsx`; entitlement "ThinkPop Unlimited"; products `thinkpop_unlimited_monthly` ($3.99/mo) + `thinkpop_unlimited_annual` ($24.99/yr) created in App Store Connect + RevenueCat; localized pricing set for 15+ countries; App Store Connect API key connected to RevenueCat
+- [x] **Paywall updated** — entitlement check updated to `'ThinkPop Unlimited'`; product IDs updated to `thinkpop_unlimited_monthly` / `thinkpop_unlimited_annual`; branding updated to "Unlimited"
+- [ ] **RevenueCat production key** — swap test key (`test_wgJ...`) for production key before App Store submission
+- [ ] **App Store assets** — screenshots (6.7" + 6.5"), preview video optional
+- [ ] **App Store Connect metadata** — fill in Privacy Policy URL + T&C URL, description, keywords
 - [ ] **Production build** — `npx eas build --platform ios --profile production`
 - [ ] **Submit** — `npx eas submit --platform ios`
 
@@ -387,7 +392,7 @@ thinkpop/
 ---
 
 ## Known Gaps / Tech Debt
-- RevenueCat **not integrated** — purchase is mocked with `setPremium(true)`
+- RevenueCat **test key only** — swap `test_wgJ...` for production key in `app/_layout.tsx` before submission
 - Push notifications not wired
 - Percentile rank vs age group in Stats tab is static/placeholder
 - i18n infrastructure built (`lib/i18n.ts`, `locales/en.ts`) but UI strings not yet extracted
@@ -400,11 +405,11 @@ thinkpop/
 ## Recommended Next Priorities
 
 ### Immediate (App Store blockers)
-1. **Apple Developer account** — create dedicated business account at developer.apple.com
-2. **RevenueCat** — wire paywall "Get Premium" button (Apple tests purchase in review)
-3. **EAS init** — `npx eas init` to get projectId, then update `app.json`
-4. **App Store assets** — 1024×1024 icon, screenshots on real device
-5. **Production build + submit** — `npx eas build --platform ios --profile production`
+1. **Swap RevenueCat test key for production key** in `app/_layout.tsx`
+2. **App Store assets** — screenshots on real device (6.7" + 6.5")
+3. **App Store Connect metadata** — Privacy Policy URL, T&C URL, description, keywords
+4. **Production build** — `npx eas build --platform ios --profile production`
+5. **Submit** — `npx eas submit --platform ios`
 
 ### Phase 4 — Growth
 - Leaderboards, daily challenges, social sharing, referral loop, premium level packs IAP
@@ -416,9 +421,9 @@ thinkpop/
 
 | Field | Value |
 |---|---|
-| App Name | ThinkPop |
+| App Name | ThinkPop: Stay Sharp (App Store display name — ThinkPop was taken) |
 | Subtitle | Train Your Brain Daily |
-| Bundle ID | com.thinkpop.app |
+| Bundle ID | com.thinkpop.thinkapp |
 | Category | Games → Puzzle |
 | Age Rating | 4+ |
 | Privacy Policy | https://www.iubenda.com/privacy-policy/14041250 |
