@@ -55,7 +55,7 @@ Bundle IDs: iOS `com.thinkpop.thinkapp` · Android `com.thinkpop.app`
 | 17 | Feature graphic | ✅ Done | 1024×500px banner created and saved to UI assets/ |
 | 18 | Android screenshots | ⬜ Todo | Same screenshots as iOS work — Play Store adds phone frames |
 | 19 | Store listing copy | ✅ Done | Finalised in `store-listing.md` — category: Games (Brain/Puzzle) |
-| 20 | Content rating questionnaire (IARC) | ⬜ Todo | In Play Console — expect Everyone or Everyone 10+ |
+| 20 | Content rating questionnaire (IARC) | ✅ Done | ESRB: Everyone · PEGI: 3+ · USK: 0 · IARC: 3+ |
 | 21 | Data safety form | ⬜ Todo | Declare: email (Supabase auth), gameplay data (Supabase) |
 | 22 | Full play-through on Android device | ⬜ Todo | Focus on status bar, back button, shadows, keyboard |
 | 23 | Sandbox purchase test | ⬜ Todo | Google Play sandbox — test subscription flow end-to-end |
