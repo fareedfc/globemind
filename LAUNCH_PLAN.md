@@ -56,7 +56,7 @@ Bundle IDs: iOS `com.thinkpop.thinkapp` · Android `com.thinkpop.app`
 | 18 | Android screenshots | ⬜ Todo | Same screenshots as iOS work — Play Store adds phone frames |
 | 19 | Store listing copy | ✅ Done | Finalised in `store-listing.md` — category: Games (Brain/Puzzle) |
 | 20 | Content rating questionnaire (IARC) | ✅ Done | ESRB: Everyone · PEGI: 3+ · USK: 0 · IARC: 3+ |
-| 21 | Data safety form | ⬜ Todo | Declare: email (Supabase auth), gameplay data (Supabase) |
+| 21 | Data safety form | ✅ Done | Email, name, app interactions, crash logs declared. All 8 policy declarations completed |
 | 22 | Full play-through on Android device | ⬜ Todo | Focus on status bar, back button, shadows, keyboard |
 | 23 | Sandbox purchase test | ⬜ Todo | Google Play sandbox — test subscription flow end-to-end |
 | 24 | Submit for review | ⬜ Blocked | Google review: 1–7 days first submission. Requires closed test with 12+ testers for 14 days before production |
