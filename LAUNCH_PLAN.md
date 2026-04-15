@@ -20,7 +20,7 @@ Bundle IDs: iOS `com.thinkpop.thinkapp` · Android `com.thinkpop.app`
 | 9 | Wire RevenueCat SDK in `app/paywall.tsx` | ✅ Done | Real RC purchase + restore flow in place. iOS key `appl_AgVACahWeoGFdeGJBqcHqHqxyCQ` confirmed in `_layout.tsx` |
 | 10 | App icon 1024×1024 PNG (no alpha) | ⬜ Todo | Apple rejects transparent icons |
 | 11 | iOS screenshots | ✅ Done | 6.7" (iPhone 15 Pro Max) + 6.5" (iPhone 11 Pro Max) taken |
-| 12 | Store listing copy | ✅ Done | Finalised in `store-listing.md` — Health & Fitness, keywords, description, free trial copy |
+| 12 | Store listing copy | ✅ Done | Finalised in `store-listing.md` — category: Games (Brain/Puzzle), keywords, description, free trial copy |
 | 13 | Privacy Policy + T&C + Support URLs | ✅ Done | All 3 URLs live and in `settings.tsx` + `store-listing.md` |
 | 14 | EAS project init | ✅ Done | Project ID `1c166a86-761b-4071-90d2-e4e35a7cc4d2`, owner `fareedfc` |
 | 15 | iOS production build | ⬜ Blocked | `eas build --platform ios --profile production` — requires Apple Dev account |
@@ -54,7 +54,7 @@ Bundle IDs: iOS `com.thinkpop.thinkapp` · Android `com.thinkpop.app`
 | 16 | Wire RevenueCat SDK in `app/paywall.tsx` | ✅ Done | Real RC purchase + restore flow in place. Android key `goog_cFhSuvMVroPfGsGWVGDYevhwEJR` confirmed in `_layout.tsx` |
 | 17 | Feature graphic | ✅ Done | 1024×500px banner created and saved to UI assets/ |
 | 18 | Android screenshots | ⬜ Todo | Same screenshots as iOS work — Play Store adds phone frames |
-| 19 | Store listing copy | ✅ Done | Finalised in `store-listing.md` |
+| 19 | Store listing copy | ✅ Done | Finalised in `store-listing.md` — category: Games (Brain/Puzzle) |
 | 20 | Content rating questionnaire (IARC) | ⬜ Todo | In Play Console — expect Everyone or Everyone 10+ |
 | 21 | Data safety form | ⬜ Todo | Declare: email (Supabase auth), gameplay data (Supabase) |
 | 22 | Full play-through on Android device | ⬜ Todo | Focus on status bar, back button, shadows, keyboard |

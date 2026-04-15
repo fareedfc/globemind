@@ -239,7 +239,8 @@ Key files:
 One-time IAP: Level Packs ($2.99), Explorer Kit ($4.99), Extra Lives
 
 ## Go-To-Market
-- App Store category: Health & Fitness (not Games)
+- App Store category: **Games** (Brain Games / Puzzle subcategory)
+- Support email: support@thinkpop.app
 - Facebook/Instagram ads targeting 38–65 with brain health interests
 - Taglines: "Train your brain. Stay sharp." / "10 minutes a day. A sharper you."
 - Partner with neurologists, senior wellness influencers
