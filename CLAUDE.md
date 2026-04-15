@@ -123,7 +123,7 @@ Existing brain training apps (Lumosity, BrainHQ) feel like homework. ThinkPop fe
 - Journey play gate: premium skips all limits → free checks daily cap (3/day) → lives check
 - Paywall (`app/paywall.tsx`): reason-aware (lives vs daily cap), feature comparison table, mock purchase → `setPremium(true)`, success screen, Restore Purchase stub
 - Premium pill shown in Journey TopBar (👑 Premium replaces ❤️ lives)
-- RevenueCat **SDK fully wired** — real purchase + restore flow in `app/paywall.tsx` using `Purchases.getOfferings()` + `Purchases.purchasePackage()`. iOS key (`appl_`) + Android key (`goog_`) both confirmed in `_layout.tsx`. Android service account JSON uploaded (subscriptions API warning — clears within 36hrs). Still need: Play Console subscription products created + attached to RC entitlement (blocked until AAB uploaded)
+- RevenueCat **fully wired on both platforms** — SDK in `app/paywall.tsx`, iOS key (`appl_AgVACahWeoGFdeGJBqcHqHqxyCQ`) + Android key (`goog_cFhSuvMVroPfGsGWVGDYevhwEJR`) in `_layout.tsx`. Android: service account validated, `thinkpop_unlimited_monthly` + `thinkpop_unlimited_annual` products created in Play Console + attached to RC entitlement + offerings. iOS products pending Apple Dev account approval
 
 ## Backend — Supabase (LIVE)
 - Project URL: `https://nfxxmhtzgyklxlzueztz.supabase.co`

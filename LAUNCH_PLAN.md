@@ -47,28 +47,31 @@ Bundle IDs: iOS `com.thinkpop.thinkapp` · Android `com.thinkpop.app`
 | 9 | RevenueCat — service account | ✅ Done | Google Cloud service account created, JSON uploaded. Subscriptions API warning — clears within 36hrs |
 | 10 | RevenueCat — entitlement | ✅ Done | Reusing `ThinkPop Unlimited` entitlement (shared with iOS) |
 | 11 | RevenueCat — offerings | ✅ Done | Reusing `default` offering (shared with iOS) |
-| 12 | Android preview build | ⏳ Building | `eas build --platform android --profile preview` — queued on EAS (~160 min free tier) |
+| 12 | Android production build | ✅ Done | `eas build --platform android --profile production` — AAB produced |
 | 13 | Upload AAB to Play Console internal testing | ✅ Done | AAB uploaded, internal testing track live |
 | 14 | Create subscription products in Play Console | ✅ Done | `thinkpop_unlimited_monthly` $3.99/mo + `thinkpop_unlimited_annual` $24.99/yr · 7-day free trial on both |
 | 15 | Attach Android products to RC entitlement | ✅ Done | Both products attached to ThinkPop Unlimited entitlement + default offering |
 | 16 | Wire RevenueCat SDK in `app/paywall.tsx` | ✅ Done | Real RC purchase + restore flow in place. Android key `goog_cFhSuvMVroPfGsGWVGDYevhwEJR` confirmed in `_layout.tsx` |
 | 17 | Feature graphic | ✅ Done | 1024×500px banner created and saved to UI assets/ |
-| 18 | Android screenshots | ⬜ Todo | Same screenshots as iOS work — Play Store adds phone frames |
-| 19 | Store listing copy | ✅ Done | Finalised in `store-listing.md` — category: Games (Brain/Puzzle) |
+| 18 | Android screenshots | ✅ Done | Uploaded to Play Store listing |
+| 19 | Store listing copy | ✅ Done | App name, short + full description, icon, feature graphic, screenshots all uploaded to Play Console |
 | 20 | Content rating questionnaire (IARC) | ✅ Done | ESRB: Everyone · PEGI: 3+ · USK: 0 · IARC: 3+ |
 | 21 | Data safety form | ✅ Done | Email, name, app interactions, crash logs declared. All 8 policy declarations completed |
 | 22 | Full play-through on Android device | ⬜ Todo | Focus on status bar, back button, shadows, keyboard |
 | 23 | Sandbox purchase test | ⬜ Todo | Google Play sandbox — test subscription flow end-to-end |
-| 24 | Submit for review | ⬜ Blocked | Google review: 1–7 days first submission. Requires closed test with 12+ testers for 14 days before production |
+| 24 | Closed testing — 12 testers for 14 days | ⏳ In progress | Need 12 testers to opt in via link. 14-day clock starts on opt-in. Target: production eligible ~Apr 29 |
+| 25 | Submit for review | ⬜ Blocked | Requires closed test (#24). Google review: 1–7 days |
 
 ---
 
 ## Immediate Next Steps
 
-**Android (unblocked now):**
-- Wire RevenueCat SDK in `app/paywall.tsx` (replace mock)
-- Wait for build to finish → upload to Play Console → create subscription products
+**Android:**
+- Get 12 friends to click the closed testing opt-in link (just click "Become a tester" — no download needed)
+- 14-day clock starts on opt-in → production eligible ~Apr 29
+- Full play-through + sandbox purchase test on Android device
+- Submit for review once closed test criteria met
 
 **iOS (blocked on Apple Dev account):**
 - Apply for Apple Developer account if not done
-- Once approved: create app in ASC → subscription products → tax & banking → build → submit
+- Once approved: create app in ASC → subscription products (`thinkpop_unlimited_monthly` + `thinkpop_unlimited_annual`) → tax & banking → production build → submit
