@@ -48,9 +48,9 @@ Bundle IDs: iOS `com.thinkpop.thinkapp` · Android `com.thinkpop.app`
 | 10 | RevenueCat — entitlement | ✅ Done | Reusing `ThinkPop Unlimited` entitlement (shared with iOS) |
 | 11 | RevenueCat — offerings | ✅ Done | Reusing `default` offering (shared with iOS) |
 | 12 | Android preview build | ⏳ Building | `eas build --platform android --profile preview` — queued on EAS (~160 min free tier) |
-| 13 | Upload AAB to Play Console internal testing | ⬜ Blocked | Requires build (#12). Needed to unlock subscription creation |
-| 14 | Create subscription products in Play Console | ⬜ Blocked | Requires AAB upload (#13). Product ID: `thinkpop_premium_monthly` $3.99/mo + `thinkpop_premium_annual` $24.99/yr |
-| 15 | Attach Android products to RC entitlement | ⬜ Blocked | Requires Play Console products (#14) |
+| 13 | Upload AAB to Play Console internal testing | ✅ Done | AAB uploaded, internal testing track live |
+| 14 | Create subscription products in Play Console | ✅ Done | `thinkpop_unlimited_monthly` $3.99/mo + `thinkpop_unlimited_annual` $24.99/yr · 7-day free trial on both |
+| 15 | Attach Android products to RC entitlement | ✅ Done | Both products attached to ThinkPop Unlimited entitlement + default offering |
 | 16 | Wire RevenueCat SDK in `app/paywall.tsx` | ✅ Done | Real RC purchase + restore flow in place. Android key `goog_cFhSuvMVroPfGsGWVGDYevhwEJR` confirmed in `_layout.tsx` |
 | 17 | Feature graphic | ✅ Done | 1024×500px banner created and saved to UI assets/ |
 | 18 | Android screenshots | ⬜ Todo | Same screenshots as iOS work — Play Store adds phone frames |
