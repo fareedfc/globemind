@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Animated, Easing, ImageBackground } from 'react-native';
+import { useFocusEffect } from 'expo-router';
 
 const WORLD_BGS = [
   require('../../assets/worlds/w1-forest.png'),
@@ -194,6 +195,25 @@ export default function PatternGame() {
   const wrongCountRef = useRef(0);
   const currentRoundRef = useRef(0);
   const scoreRef = useRef(0);
+
+  // Reset game state every time the screen comes into focus (expo-router keeps screens alive)
+  useFocusEffect(useCallback(() => {
+    cancelRef.current = false;
+    wrongCountRef.current = 0;
+    currentRoundRef.current = 0;
+    scoreRef.current = 0;
+    rounds.current = buildPatternRounds(PATTERN_SETS, totalRounds, levelId);
+    setCurrentRound(0);
+    setPhase('watching');
+    setLitIndex(-1);
+    setSeqHidden(false);
+    timerAnim.setValue(1);
+    setScore(0);
+    setPips(Array(totalRounds).fill('none'));
+    setFeedbackAnswer(null);
+    setWon(false);
+    setFailed(false);
+  }, [levelId, totalRounds]));
 
   currentRoundRef.current = currentRound;
   scoreRef.current = score;

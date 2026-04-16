@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Animated, Easing, ImageBackground } from 'react-native';
+import { useFocusEffect } from 'expo-router';
 
 const CELL_GAP = 14;
 
@@ -183,6 +184,24 @@ export default function LogicGame() {
 
   currentRoundRef.current = currentRound;
   scoreRef.current = score;
+
+  // Reset game state every time the screen comes into focus (expo-router keeps screens alive)
+  useFocusEffect(useCallback(() => {
+    rounds.current = buildLogicRounds(ODD_ONE_SETS, TOTAL_ROUNDS, levelId);
+    setCurrentRound(0);
+    setPhase('answering');
+    timerAnim.setValue(1);
+    setScore(0);
+    scoreRef.current = 0;
+    wrongCountRef.current = 0;
+    currentRoundRef.current = 0;
+    setPips(Array(TOTAL_ROUNDS).fill('none'));
+    setSelectedAnswer(null);
+    foundTargetsRef.current = [];
+    setFoundTargets([]);
+    setWon(false);
+    setFailed(false);
+  }, [levelId]));
 
   const warningTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
 

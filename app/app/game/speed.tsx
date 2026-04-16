@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Animated, Easing, ImageBackground } from 'react-native';
+import { useFocusEffect } from 'expo-router';
 
 const WORLD_BGS = [
   require('../../assets/worlds/w1-forest.png'),
@@ -132,6 +133,26 @@ export default function SpeedGame() {
   const runningRef = useRef(false);
   const comboRef = useRef(0);
   const warningTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+
+  // Reset game state every time the screen comes into focus (expo-router keeps screens alive)
+  useFocusEffect(useCallback(() => {
+    if (timerRef.current) clearInterval(timerRef.current);
+    timerAnim.setValue(1);
+    comboRef.current = 0;
+    runningRef.current = false;
+    setRound(buildRound(pool, cellCount));
+    setScore(0);
+    setCombo(0);
+    setMaxCombo(0);
+    setCorrect(0);
+    setWrong(0);
+    setTimerSecs(30);
+    setRunning(false);
+    setStarted(false);
+    setWon(false);
+    setFlash(null);
+    setComboText('');
+  }, [levelId, pool, cellCount]));
 
   const stopTimer = useCallback(() => {
     timerAnim.stopAnimation();

@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Animated, Easing, ScrollView, ImageBackground } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router, useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { Colors } from '../../constants/colors';
 import { LEVELS } from '../../data/levels';
 import { MEMORY_SETS } from '../../data/memoryEmojis';
@@ -137,6 +137,21 @@ export default function MemoryGame() {
   const startTimeRef = useRef<number>(Date.now());
 
   const warningTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+
+  // Reset game state every time the screen comes into focus (expo-router keeps screens alive)
+  useFocusEffect(useCallback(() => {
+    timerAnim.stopAnimation();
+    if (timerRef.current) clearInterval(timerRef.current);
+    timerAnim.setValue(1);
+    setDeck(buildDeck(levelId));
+    setFlippedIdx([]);
+    setMatchedCount(0);
+    setWrongFlips(0);
+    setLocked(false);
+    setWon(false);
+    setFailed(false);
+    setTimeLeft(timeLimit);
+  }, [levelId, timeLimit]));
 
   // Countdown timer — interval for seconds text, Animated for smooth bar
   useEffect(() => {
