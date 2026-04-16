@@ -25,6 +25,7 @@ import { calcPatternStars, calcActualPoints } from '../../utils/scoring';
 import { useProgressStore } from '../../stores/progressStore';
 import { pickInsight } from '../../data/brainInsights';
 
+const TOTAL_ROUNDS = 7;
 const FAIL_THRESHOLD = 4;
 
 type Phase = 'watching' | 'answering' | 'feedback';
