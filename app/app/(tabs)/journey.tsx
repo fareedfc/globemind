@@ -177,7 +177,7 @@ export default function JourneyScreen() {
                     bg={WORLD_TAB_COLORS[worldIdx]}
                   />
                   {isPremium
-                    ? <Pill variant="warm" icon={require('../../assets/icons/icon-crown.png')} label="Premium" bg={WORLD_TAB_COLORS[worldIdx]} />
+                    ? <Pill variant="warm" icon={require('../../assets/icons/icon-crown.png')} label="Unlimited" bg={WORLD_TAB_COLORS[worldIdx]} />
                     : <Pill variant="warm" icon={require('../../assets/icons/icon-heart.png')} label={`${lives}${timeUntilNext ? ` · ${timeUntilNext}` : ''}`} bg={WORLD_TAB_COLORS[worldIdx]} />
                   }
                 </>
@@ -283,9 +283,13 @@ export default function JourneyScreen() {
                   activeOpacity={0.85}
                   onPress={() => {
                     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                    if (!isPremium && lives <= 0) {
+                      closeModal();
+                      router.push('/paywall?reason=lives');
+                      return;
+                    }
                     closeModal();
-                    // TODO: restore lives gate before shipping
-                    useLive();
+                    if (!isPremium) useLive();
                     router.push(`/game/${selectedLevel?.type}?levelId=${selectedLevel?.id}`);
                   }}
                 >

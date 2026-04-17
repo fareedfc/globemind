@@ -74,6 +74,11 @@ export default function SettingsScreen() {
                     <Text style={s.rowLabel}>{name ?? 'Your account'}</Text>
                     <Text style={s.rowSub}>{email}</Text>
                   </View>
+                  {isPremium && (
+                    <View style={s.unlimitedBadge}>
+                      <Text style={s.unlimitedBadgeTxt}>👑 Unlimited</Text>
+                    </View>
+                  )}
                 </View>
                 <View style={s.divider} />
                 <Row label="Log out" onPress={handleLogout} right={<Text style={s.chevron}>›</Text>} />
@@ -127,7 +132,7 @@ export default function SettingsScreen() {
             {!isPremium && (
               <>
                 <Row
-                  label="Upgrade to Premium 👑"
+                  label="Upgrade to Unlimited 👑"
                   onPress={() => router.push('/paywall')}
                   right={<Text style={s.chevron}>›</Text>}
                 />
@@ -241,6 +246,19 @@ const s = StyleSheet.create({
     fontSize: 22,
     color: Colors.muted,
     lineHeight: 26,
+  },
+  unlimitedBadge: {
+    backgroundColor: 'rgba(139,63,217,0.12)',
+    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderWidth: 1,
+    borderColor: 'rgba(139,63,217,0.20)',
+  },
+  unlimitedBadgeTxt: {
+    fontSize: 12,
+    fontFamily: 'Nunito_700Bold',
+    color: '#8B3FD9',
   },
   comingSoon: {
     fontSize: 12,

@@ -14,8 +14,8 @@ interface ProgressState {
 export const useProgressStore = create<ProgressState>()(
   persist(
     (set, get) => ({
-      currentLevelId: 4,
-      completions: { 1: 3, 2: 3, 3: 2 },
+      currentLevelId: 1,
+      completions: {},
       lastPlayedAt: {},
 
       completeLevel: (id, stars) => {

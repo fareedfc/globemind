@@ -254,13 +254,15 @@ export default function LandingScreen() {
               <Text style={s.btnTrackTxt}>Track Progress</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity
-              onPress={() => { Haptics.selectionAsync(); router.push('/auth'); }}
-              activeOpacity={0.6}
-              style={s.btnSignIn}
-            >
-              <Text style={s.btnSignInTxt}>Sign In</Text>
-            </TouchableOpacity>
+            {!isLoggedIn && (
+              <TouchableOpacity
+                onPress={() => { Haptics.selectionAsync(); router.push('/auth'); }}
+                activeOpacity={0.6}
+                style={s.btnSignIn}
+              >
+                <Text style={s.btnSignInTxt}>Sign In</Text>
+              </TouchableOpacity>
+            )}
           </Animated.View>
 
         </View>

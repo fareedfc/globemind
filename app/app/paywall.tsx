@@ -13,8 +13,8 @@ import { useLives } from '../hooks/useLives';
 import { usePlayerStore, MAX_LIVES } from '../stores/playerStore';
 
 // Product identifiers — must match exactly what you create in App Store Connect + Google Play
-const PREMIUM_MONTHLY_ID = 'thinkpop_premium_monthly';
-const PREMIUM_ANNUAL_ID  = 'thinkpop_premium_annual';
+const PREMIUM_MONTHLY_ID = 'thinkpop_unlimited_monthly';
+const PREMIUM_ANNUAL_ID  = 'thinkpop_unlimited_annual';
 
 // Set to 7 once you configure a free trial in App Store Connect / Google Play Console
 const FREE_TRIAL_DAYS = 7;
@@ -100,8 +100,8 @@ export default function PaywallScreen() {
       <SafeAreaView style={s.container} edges={['top', 'bottom']}>
         <View style={s.successBody}>
           <Text style={s.successEmoji}>👑</Text>
-          <Text style={s.successTitle}>You're Premium!</Text>
-          <Text style={s.successSub}>Unlimited lives, full stats breakdown, detailed weekly reports. Enjoy!</Text>
+          <Text style={s.successTitle}>You're Unlimited!</Text>
+          <Text style={s.successSub}>Unlimited lives, unlimited levels, full stats breakdown. Enjoy!</Text>
           <TouchableOpacity
             onPress={() => router.replace('/(tabs)/journey')}
             activeOpacity={0.85}
@@ -138,28 +138,39 @@ export default function PaywallScreen() {
               <Text style={s.headerEmoji}>🌟</Text>
               <Text style={s.headerTitle}>You're on a roll!</Text>
               <Text style={s.headerSub}>
-                You've played your 3 free levels for today. Go Premium for unlimited daily play and a detailed weekly report.
+                You've played your 3 free levels for today. Go Unlimited for unlimited daily play and a detailed weekly report.
               </Text>
             </>
           ) : (
             <>
               <View style={s.heartsRow}>
                 {Array.from({ length: MAX_LIVES }, (_, i) => (
-                  <Text key={i} style={[s.heart, i < lives && s.heartFull]}>
-                    {i < lives ? '❤️' : '🖤'}
-                  </Text>
+                  <Text key={i} style={s.heart}>🖤</Text>
                 ))}
               </View>
-              <Text style={s.headerTitle}>You're out of lives</Text>
+              <Text style={s.headerTitle}>Your brain needs a breather</Text>
               <Text style={s.headerSub}>
-                Lives refill automatically — one every 30 minutes. Or go Premium for unlimited lives and richer insights.
+                You've used all your lives. They refill one by one — but that takes a while.
               </Text>
+
               {timeUntilNext && (
                 <View style={s.timerCard}>
-                  <Text style={s.timerLbl}>Next free life in</Text>
+                  <Text style={s.timerLbl}>⏳ Next life refills in</Text>
                   <Text style={s.timerNum}>{timeUntilNext}</Text>
+                  <Text style={s.timerSub}>Full refill takes up to {MAX_LIVES * 30} minutes</Text>
                 </View>
               )}
+
+              <View style={s.orRow}>
+                <View style={s.orLine} />
+                <Text style={s.orTxt}>OR</Text>
+                <View style={s.orLine} />
+              </View>
+
+              <View style={s.unlimitedCallout}>
+                <Text style={s.unlimitedCalloutTitle}>👑 Never wait again</Text>
+                <Text style={s.unlimitedCalloutSub}>Unlimited users play as much as they want, any time — no lives, no daily caps, no waiting.</Text>
+              </View>
             </>
           )}
         </Animated.View>
@@ -169,7 +180,7 @@ export default function PaywallScreen() {
           <View style={s.tableHeader}>
             <Text style={[s.tableCol, s.tableColLabel]} />
             <Text style={[s.tableCol, s.tableColFree]}>Free</Text>
-            <Text style={[s.tableCol, s.tableColPremium]}>Premium</Text>
+            <Text style={[s.tableCol, s.tableColPremium]}>Unlimited</Text>
           </View>
           {FEATURES.map((f, i) => (
             <View key={f.label} style={[s.tableRow, i % 2 === 0 && s.tableRowAlt]}>
@@ -184,6 +195,15 @@ export default function PaywallScreen() {
         <Animated.View style={[s.ctaWrap, { opacity: btnAnim, transform: [{ translateY: btnAnim.interpolate({ inputRange: [0, 1], outputRange: [20, 0] }) }] }]}>
           <View style={s.planToggle}>
             <TouchableOpacity
+              style={[s.planOption, plan === 'monthly' && s.planOptionActive]}
+              onPress={() => { setPlan('monthly'); Haptics.selectionAsync(); }}
+              activeOpacity={0.8}
+            >
+              <Text style={[s.planPrice, plan === 'monthly' && s.planPriceActive]}>$3.99</Text>
+              <Text style={[s.planPeriod, plan === 'monthly' && s.planPeriodActive]}>per month</Text>
+              <Text style={[s.planPer, plan === 'monthly' && s.planPerActive]}>cancel any time</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
               style={[s.planOption, plan === 'annual' && s.planOptionActive]}
               onPress={() => { setPlan('annual'); Haptics.selectionAsync(); }}
               activeOpacity={0.8}
@@ -192,15 +212,6 @@ export default function PaywallScreen() {
               <Text style={[s.planPrice, plan === 'annual' && s.planPriceActive]}>$24.99</Text>
               <Text style={[s.planPeriod, plan === 'annual' && s.planPeriodActive]}>per year</Text>
               <Text style={[s.planPer, plan === 'annual' && s.planPerActive]}>~$2.08/mo</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[s.planOption, plan === 'monthly' && s.planOptionActive]}
-              onPress={() => { setPlan('monthly'); Haptics.selectionAsync(); }}
-              activeOpacity={0.8}
-            >
-              <Text style={[s.planPrice, plan === 'monthly' && s.planPriceActive]}>$3.99</Text>
-              <Text style={[s.planPeriod, plan === 'monthly' && s.planPeriodActive]}>per month</Text>
-              <Text style={[s.planPer, plan === 'monthly' && s.planPerActive]}>cancel any time</Text>
             </TouchableOpacity>
           </View>
 
@@ -216,7 +227,7 @@ export default function PaywallScreen() {
               ) : (
                 <>
                   <Text style={s.premiumBtnTxt}>
-                    {FREE_TRIAL_DAYS > 0 ? `Try Free for ${FREE_TRIAL_DAYS} Days` : 'Get Premium'}
+                    {FREE_TRIAL_DAYS > 0 ? `Try Free for ${FREE_TRIAL_DAYS} Days` : 'Go Unlimited'}
                   </Text>
                   <Text style={s.premiumBtnSub}>
                     {FREE_TRIAL_DAYS > 0
@@ -288,21 +299,68 @@ const s = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(239,71,111,0.25)',
     borderRadius: 14,
-    paddingVertical: 14,
+    paddingVertical: 16,
     alignItems: 'center',
+    gap: 4,
   },
   timerLbl: {
-    fontSize: 11,
+    fontSize: 12,
     fontFamily: 'Nunito_700Bold',
     color: Colors.coral,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-    marginBottom: 4,
+    letterSpacing: 0.5,
   },
   timerNum: {
-    fontSize: 32,
+    fontSize: 38,
     fontFamily: 'Nunito_900Black',
     color: Colors.white,
+  },
+  timerSub: {
+    fontSize: 11,
+    fontFamily: 'Nunito_400Regular',
+    color: Colors.muted,
+    opacity: 0.6,
+    marginTop: 2,
+  },
+  orRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    width: '100%',
+    marginTop: 20,
+    marginBottom: 16,
+    gap: 10,
+  },
+  orLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+  },
+  orTxt: {
+    fontSize: 11,
+    fontFamily: 'Nunito_900Black',
+    color: Colors.muted,
+    letterSpacing: 1.5,
+  },
+  unlimitedCallout: {
+    width: '100%',
+    backgroundColor: 'rgba(139,63,217,0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(139,63,217,0.3)',
+    borderRadius: 14,
+    paddingVertical: 16,
+    paddingHorizontal: 18,
+    gap: 6,
+    marginBottom: 8,
+  },
+  unlimitedCalloutTitle: {
+    fontSize: 17,
+    fontFamily: 'Nunito_900Black',
+    color: '#C084FC',
+  },
+  unlimitedCalloutSub: {
+    fontSize: 13,
+    fontFamily: 'Nunito_400Regular',
+    color: Colors.muted,
+    lineHeight: 20,
   },
 
   // Feature table

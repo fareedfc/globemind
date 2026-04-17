@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '../lib/supabase';
-import { pullAll } from '../lib/sync';
+import { pullAll, pushPlayerState, pushCurrentLevel, pushCompletion, pushBrainState } from '../lib/sync';
 import { setCurrentUserId } from '../lib/userId';
 import { usePlayerStore } from './playerStore';
 import { useProgressStore } from './progressStore';
@@ -23,8 +23,46 @@ interface AuthState {
   initSession: () => Promise<void>;
 }
 
-function hydrateStores(data: Awaited<ReturnType<typeof pullAll>>) {
+function hydrateStores(data: Awaited<ReturnType<typeof pullAll>>, userId: string) {
   const { profile, completions, brain } = data;
+
+  // New account: Supabase has no completions and default score=0.
+  // Push local guest progress to Supabase instead of overwriting it.
+  const isNewAccount = completions.length === 0 && (!profile || (profile.score as number) === 0);
+
+  if (isNewAccount) {
+    const localPlayer   = usePlayerStore.getState();
+    const localProgress = useProgressStore.getState();
+    const localBrain    = useBrainStore.getState();
+
+    pushPlayerState(userId, {
+      score:          localPlayer.score,
+      lives:          localPlayer.lives,
+      streak:         localPlayer.streak,
+      lastPlayedDate: localPlayer.lastPlayedDate,
+      nextRefillAt:   localPlayer.nextRefillAt,
+      isPremium:      localPlayer.isPremium,
+      dailyCount:     localPlayer.dailyLevelsPlayed,
+      dailyDate:      localPlayer.dailyLevelsDate,
+    });
+
+    pushCurrentLevel(userId, localProgress.currentLevelId);
+
+    Object.entries(localProgress.completions).forEach(([levelId, stars]) => {
+      pushCompletion(userId, Number(levelId), stars as number);
+    });
+
+    pushBrainState(userId, {
+      memory:         localBrain.domains.memory,
+      logic:          localBrain.domains.logic,
+      speed:          localBrain.domains.speed,
+      pattern:        localBrain.domains.pattern,
+      weeklyBaseline: localBrain.weeklyBaseline,
+      weekStart:      localBrain.weekStart,
+    });
+
+    return; // Keep local state as-is
+  }
 
   if (profile) {
     const p = profile as Record<string, unknown>;
@@ -130,7 +168,7 @@ export const useAuthStore = create<AuthState>()(
         });
 
         const pulled = await pullAll(user.id);
-        hydrateStores(pulled);
+        hydrateStores(pulled, user.id);
         return {};
       },
 
@@ -174,7 +212,7 @@ export const useAuthStore = create<AuthState>()(
         });
 
         const pulled = await pullAll(user.id);
-        hydrateStores(pulled);
+        hydrateStores(pulled, user.id);
       },
     }),
     {

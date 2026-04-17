@@ -9,10 +9,10 @@ Bundle IDs: iOS `com.thinkpop.thinkapp` · Android `com.thinkpop.app`
 
 | # | Task | Status | Notes |
 |---|------|--------|-------|
-| 1 | Apple Developer account | ⏳ Pending | developer.apple.com — $99/yr, 24–48hr approval |
-| 2 | App Store Connect — create app | ⬜ Blocked | Requires Apple Dev account. Bundle ID: `com.thinkpop.thinkapp` |
-| 3 | App Store Connect — subscription products | ⬜ Blocked | Monthly `thinkpop_premium_monthly` $3.99 · Annual `thinkpop_premium_annual` $24.99 · 7-day trial on both |
-| 4 | App Store Connect — tax & banking | ⬜ Blocked | Required before any paid app goes live |
+| 1 | Apple Developer account | ✅ Done | Approved |
+| 2 | App Store Connect — create app | ⬜ Todo | Bundle ID: `com.thinkpop.thinkapp`, SKU: `thinkpop` |
+| 3 | App Store Connect — subscription products | ⬜ Todo | Create subscription group `ThinkPop Unlimited` → Monthly `thinkpop_premium_monthly` $3.99 · Annual `thinkpop_premium_annual` $24.99 · 7-day trial on both → attach to RC entitlement |
+| 4 | App Store Connect — tax & banking | ⬜ Todo | Required before any paid app goes live |
 | 5 | RevenueCat — iOS app created | ✅ Done | App added to RC dashboard |
 | 6 | RevenueCat — entitlement | ✅ Done | `ThinkPop Unlimited` entitlement created |
 | 7 | RevenueCat — offerings | ✅ Done | `default` offering with Monthly + Yearly packages configured |
@@ -23,11 +23,11 @@ Bundle IDs: iOS `com.thinkpop.thinkapp` · Android `com.thinkpop.app`
 | 12 | Store listing copy | ✅ Done | Finalised in `store-listing.md` — category: Games (Brain/Puzzle), keywords, description, free trial copy |
 | 13 | Privacy Policy + T&C + Support URLs | ✅ Done | All 3 URLs live and in `settings.tsx` + `store-listing.md` |
 | 14 | EAS project init | ✅ Done | Project ID `1c166a86-761b-4071-90d2-e4e35a7cc4d2`, owner `fareedfc` |
-| 15 | iOS production build | ⬜ Blocked | `eas build --platform ios --profile production` — requires Apple Dev account |
+| 15 | iOS production build | ⬜ Todo | `eas build --platform ios --profile production` |
 | 16 | Upload to App Store Connect | ⬜ Blocked | `eas submit --platform ios` — requires build + ASC app created |
 | 17 | Age rating questionnaire | ⬜ Todo | In App Store Connect — expect 4+ rating |
-| 18 | TestFlight internal test | ⬜ Todo | `eas build --profile preview --platform ios` — test all flows on real device |
-| 19 | Sandbox purchase test | ⬜ Todo | Test subscription flow end-to-end before submitting |
+| 18 | TestFlight internal test | ✅ Done | Preview build on iPhone via ad-hoc distribution. Device registered, credentials configured |
+| 19 | Sandbox purchase test | ⬜ Todo | Test subscription flow end-to-end before submitting — blocked on ASC products |
 | 20 | Submit for review | ⬜ Blocked | Apple review: 1–3 days. Requires all above done |
 
 ---
@@ -64,14 +64,48 @@ Bundle IDs: iOS `com.thinkpop.thinkapp` · Android `com.thinkpop.app`
 
 ---
 
+## Beta Bug Fixes Shipped (Apr 16)
+
+- ✅ Guest progress preserved on signup — local state pushed to Supabase instead of being overwritten
+- ✅ Fresh installs now start at level 1 (was hardcoded to level 4 with 3 fake completions)
+- ✅ Lives gate enforced — 0 lives → redirects to paywall instead of allowing play
+- ✅ "Sign In" hidden on landing page for already logged-in users
+- ✅ "Premium" renamed to "Unlimited" across all UI (settings, paywall, journey pill)
+- ✅ Unlimited badge shown next to name in settings for paid users
+- ✅ Paywall plan order fixed — monthly left, annual (SAVE 48%) right
+- ✅ Out-of-lives paywall redesigned — timer, OR divider, "Never wait again" callout
+
 ## Immediate Next Steps
 
 **Android:**
-- Get 12 friends to click the closed testing opt-in link (just click "Become a tester" — no download needed)
-- 14-day clock starts on opt-in → production eligible ~Apr 29
+- Run `eas update --branch preview --message "Beta fixes Apr 16"` to push all JS fixes to testers
 - Full play-through + sandbox purchase test on Android device
-- Submit for review once closed test criteria met
+- Closed testing ends ~Apr 29 → submit for review
 
-**iOS (blocked on Apple Dev account):**
-- Apply for Apple Developer account if not done
-- Once approved: create app in ASC → subscription products (`thinkpop_unlimited_monthly` + `thinkpop_unlimited_annual`) → tax & banking → production build → submit
+**iOS (Apple Dev account approved):**
+- Create app in App Store Connect (Bundle ID: `com.thinkpop.thinkapp`, SKU: `thinkpop`)
+- Create subscription products in ASC → attach to RC entitlement
+- Complete tax & banking in ASC
+- Run production build → submit for review
+
+---
+
+## Observability & Growth (Post-Beta)
+
+### B. Observability — Error & Auth Monitoring
+
+| # | Task | Status | Notes |
+|---|------|--------|-------|
+| 1 | Fix email deliverability via Resend SMTP | ✅ Done | Resend account created, `thinkpop.app` domain verified. SMTP wired into Supabase: host `smtp.resend.com`, port 465, sender `noreply@thinkpop.app` |
+| 2 | Sentry crash monitoring | ⬜ Todo | `@sentry/react-native` — captures crashes, errors, breadcrumbs. Free tier: 5k errors/mo. Gives full stack trace + device info when users report issues |
+| 3 | Supabase Auth logs | ✅ Available | Supabase Dashboard → Logs → Auth — shows every signup/login attempt with status. Use this to debug individual user auth issues today |
+
+### C. KPI Dashboard — Growth Metrics
+
+| # | Task | Status | Notes |
+|---|------|--------|-------|
+| 1 | PostHog analytics | ⬜ Todo | Open source, React Native SDK, free up to 1M events/mo. Tracks MAU/DAU, conversion funnel (signup → first game → premium), retention curves, feature usage |
+| 2 | Basic KPIs to instrument | ⬜ Todo | Key events: `app_open`, `signup_completed`, `level_completed`, `paywall_shown`, `purchase_completed`. These 5 events give MAU, conversion %, and funnel |
+| 3 | Supabase queries for quick KPIs | ✅ Available | Query `profiles` table for total users + signups by week. Query `level_completions` for engagement. No setup needed — data already there |
+
+**Priority order:** Resend (fixes live user issue) → Sentry (catch crashes proactively) → PostHog (growth KPIs once user base grows)
