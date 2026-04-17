@@ -68,7 +68,15 @@ export default function AuthScreen() {
     setLoading(false);
 
     if (result.error) {
-      setError(result.error);
+      // If signing up with an existing email, switch to login with email pre-filled
+      if (mode === 'signup' && result.error.includes('already exists')) {
+        setMode('login');
+        setName('');
+        setPassword('');
+        setError('You already have an account. Enter your password to log in, or use "Forgot password?" below.');
+      } else {
+        setError(result.error);
+      }
       shake();
       return;
     }
@@ -116,12 +124,17 @@ export default function AuthScreen() {
             </Text>
           </TouchableOpacity>
 
+          <View style={s.confirmDivider} />
+
+          <Text style={s.confirmAlreadyHint}>
+            Already have an account with this email?
+          </Text>
           <TouchableOpacity
             onPress={() => { setAwaitingConfirmation(false); switchMode('login'); }}
             activeOpacity={0.7}
-            style={s.resendBtn}
+            style={s.loginLinkBtn}
           >
-            <Text style={s.loginLinkTxt}>Already confirmed? Log in →</Text>
+            <Text style={s.loginLinkTxt}>Log in instead →</Text>
           </TouchableOpacity>
         </View>
         </SafeAreaView>
@@ -250,9 +263,9 @@ export default function AuthScreen() {
                   setError('');
                 }}
                 activeOpacity={0.7}
-                style={s.forgotBtn}
+                style={[s.forgotBtn, error && s.forgotBtnHighlighted]}
               >
-                <Text style={s.forgotTxt}>
+                <Text style={[s.forgotTxt, error && s.forgotTxtHighlighted]}>
                   {resetSent ? '✓ Reset link sent — check your inbox' : 'Forgot password?'}
                 </Text>
               </TouchableOpacity>
@@ -447,7 +460,9 @@ const s = StyleSheet.create({
   },
 
   forgotBtn: { alignSelf: 'flex-end', paddingVertical: 2 },
+  forgotBtnHighlighted: { alignSelf: 'stretch', backgroundColor: 'rgba(255,170,0,0.1)', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 8 },
   forgotTxt: { fontSize: 12, fontFamily: 'Nunito_700Bold', color: Colors.teal },
+  forgotTxtHighlighted: { fontSize: 13, color: Colors.gold },
 
   // Email confirmation screen
   confirmBody: {
@@ -484,6 +499,19 @@ const s = StyleSheet.create({
     opacity: 0.8,
     marginTop: 4,
   },
+  confirmDivider: {
+    width: '60%',
+    height: 1,
+    backgroundColor: 'rgba(0,0,0,0.08)',
+    marginVertical: 4,
+  },
+  confirmAlreadyHint: {
+    fontSize: 13,
+    fontFamily: 'Nunito_400Regular',
+    color: Colors.muted,
+    textAlign: 'center',
+  },
+  loginLinkBtn: { paddingVertical: 6 },
   resendBtn: { paddingVertical: 8 },
   resendTxt: {
     fontSize: 13,

@@ -131,6 +131,11 @@ export const useAuthStore = create<AuthState>()(
         }
         if (!data.user)  return { error: 'Sign-up failed. Please try again.' };
 
+        // Supabase returns an empty identities array for duplicate emails (security feature)
+        if (data.user.identities && data.user.identities.length === 0) {
+          return { error: 'An account with this email already exists. Try logging in instead.' };
+        }
+
         // If session is null, email confirmation is required before the user can log in
         if (!data.session) {
           return { needsConfirmation: true };

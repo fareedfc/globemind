@@ -64,7 +64,7 @@ Bundle IDs: iOS `com.thinkpop.thinkapp` · Android `com.thinkpop.app`
 
 ---
 
-## Beta Bug Fixes Shipped (Apr 16)
+## Beta Bug Fixes Shipped (Apr 16–17)
 
 - ✅ Guest progress preserved on signup — local state pushed to Supabase instead of being overwritten
 - ✅ Fresh installs now start at level 1 (was hardcoded to level 4 with 3 fake completions)
@@ -74,6 +74,10 @@ Bundle IDs: iOS `com.thinkpop.thinkapp` · Android `com.thinkpop.app`
 - ✅ Unlimited badge shown next to name in settings for paid users
 - ✅ Paywall plan order fixed — monthly left, annual (SAVE 48%) right
 - ✅ Out-of-lives paywall redesigned — timer, OR divider, "Never wait again" callout
+- ✅ Duplicate email on signup now detected via `identities[]` check — shows "already exists, try logging in" error instead of "check your inbox"
+- ✅ Signup with existing email auto-switches to login tab with email pre-filled
+- ✅ "Forgot password?" highlights in gold when login error is shown
+- ✅ Reset password + confirm signup emails redesigned to match ThinkPop brand (dark bg, gold CTA, game chips)
 
 ## Immediate Next Steps
 
