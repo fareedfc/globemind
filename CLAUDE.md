@@ -114,6 +114,8 @@ Existing brain training apps (Lumosity, BrainHQ) feel like homework. ThinkPop fe
 - Section title: **"Your Strengths"** (was "Brain Training Areas")
 - Score total as large number; weekly delta; percentile rank vs age group
 - 4 domain bars: Memory, Speed, Logic, Pattern
+- **Premium domain breakdown**: trend arrow (▲/▼/→ % change vs last week) + "N games this week" under each bar
+- **Weekly Report card**: premium sees days active, total games, pts earned, most improved domain, most played game. Free users see a dimmed preview with lock overlay + "Unlock with Unlimited →" CTA → paywall
 - Coach Tips: 32 tips total (8 per domain), rotating daily, motivational/positive tone — NOT tied to brain training language
 - Guest users: "Save your progress · Sign In →" banner → `/auth`
 - Logged-in users: "Signed in as [name]" + Log out
@@ -121,9 +123,11 @@ Existing brain training apps (Lumosity, BrainHQ) feel like homework. ThinkPop fe
 ## Monetisation — Built
 - `playerStore`: `isPremium` flag, `dailyLevelsPlayed` counter, `FREE_DAILY_LEVELS = 3`
 - Journey play gate: premium skips all limits → free checks daily cap (3/day) → lives check
-- Paywall (`app/paywall.tsx`): reason-aware (lives vs daily cap), feature comparison table, mock purchase → `setPremium(true)`, success screen, Restore Purchase stub
+- Paywall (`app/paywall.tsx`): reason-aware (lives vs daily cap), feature comparison table (4 rows: Daily levels, Lives, Strengths, Weekly Report — no Ads row), real RevenueCat purchase flow, success screen, Restore Purchase
 - Premium pill shown in Journey TopBar (👑 Premium replaces ❤️ lives)
-- RevenueCat **fully wired on both platforms** — SDK in `app/paywall.tsx`, iOS key (`appl_AgVACahWeoGFdeGJBqcHqHqxyCQ`) + Android key (`goog_cFhSuvMVroPfGsGWVGDYevhwEJR`) in `_layout.tsx`. Android: service account validated, `thinkpop_unlimited_monthly` + `thinkpop_unlimited_annual` products created in Play Console + attached to RC entitlement + offerings. iOS products pending Apple Dev account approval
+- **Premium Stats features** (gated by `isPremium`): domain trend arrows + weekly games played count; full Weekly Report card (days active, total games, pts earned, most improved, most played). Free users see locked Weekly Report with paywall CTA.
+- `brainStore` tracks: `weeklyGamesPlayed` (per domain), `weeklyPlayDays` (days active this week), `prevDomains` (snapshot at week start for trend calculation) — all reset on new week
+- RevenueCat **fully wired on both platforms** — SDK in `app/paywall.tsx`, iOS key (`appl_AgVACahWeoGFdeGJBqcHqHqxyCQ`) + Android key (`goog_cFhSuvMVroPfGsGWVGDYevhwEJR`) in `_layout.tsx`. Android: service account validated, `thinkpop_unlimited_monthly` + `thinkpop_unlimited_annual` products created in Play Console + attached to RC entitlement + offerings.
 
 ## Backend — Supabase (LIVE)
 - Project URL: `https://nfxxmhtzgyklxlzueztz.supabase.co`
@@ -160,7 +164,7 @@ A fully working React Native (Expo SDK 54) app in `app/` with:
 - POP! animations and haptics across all 4 games
 - Fail screens (deflating bubble), Win screen (POP! splash, confetti, score counter, "+N pts ⭐" badge)
 - Level transition screen (marker travel + next level unlock); "Continue to Journey" button in purple (#8B3FD9)
-- Stats tab: 4 domains, guest banner, account row, 32 rotating coach tips
+- Stats tab: 4 domains + premium trend arrows + weekly games count, Weekly Report card (premium full / free locked), guest banner, account row, 32 rotating coach tips
 - Lives system (5 hearts, 30-min refill, premium bypass), day streak tracking
 - Daily level cap (3 free/day), paywall with feature table
 - Supabase auth + real-time sync to cloud (profiles, completions, brain scores)
@@ -203,12 +207,18 @@ Key files:
 - Subscriptions: RevenueCat (TODO — currently mocked)
 
 ## Remaining App Store Blockers
-1. **RevenueCat** — SDK wired, both API keys confirmed. Still need: upload AAB → create Play Console subscription products (`thinkpop_unlimited_monthly` + `thinkpop_unlimited_annual`) → attach to RC entitlement. iOS products blocked until Apple Dev account approved
-2. **Privacy Policy URL** — generated via iubenda (in progress)
-3. **Terms & Conditions URL** — generated via termsfeed.com (in progress)
-4. **EAS Build setup** — production build pipeline for iOS
-5. **App Store assets** — 1024×1024 icon, screenshots (6.5" + 5.5"), description, keywords
-6. **Apple Developer account** — $99/year needed if not already active
+1. **EAS project ID** — run `npx eas init` (Apple Developer account now active), update app.json
+2. **RevenueCat iOS** — iOS products now approvable; wire real purchase in `app/paywall.tsx` once products approved in App Store Connect
+3. **App Store assets** — 1024×1024 icon PNG, screenshots (6.7" + 6.5" displays)
+4. **Production build + submit** — `npx eas build --platform ios --profile production` then `npx eas submit`
+5. **App Store Connect** — add Privacy Policy URL (iubenda) + T&C URL (fareedfc.github.io/thinkpop-legal/terms.html)
+
+**Done:**
+- Apple Developer account ✅
+- Privacy Policy: https://www.iubenda.com/privacy-policy/14041250 ✅
+- T&C: https://fareedfc.github.io/thinkpop-legal/terms.html ✅ (contact email updated to support@thinkpop.app)
+- Android closed testing in progress ✅
+- RevenueCat Android fully wired ✅
 
 ## Key Design Principles
 1. **Never make the player feel dumb** — frame difficulty as "brain warming up"

@@ -16,8 +16,11 @@ interface DomainScores {
 
 interface BrainState {
   domains: DomainScores;
+  prevDomains: DomainScores;
   weeklyBaseline: number;
   weekStart: string;
+  weeklyGamesPlayed: DomainScores;
+  weeklyPlayDays: string[];
   recordGame: (
     type: GameType,
     stars: number,
@@ -36,20 +39,33 @@ function getWeekStart(): string {
   return sun.toISOString().slice(0, 10);
 }
 
+const ZERO_DOMAINS: DomainScores = { memory: 0, logic: 0, speed: 0, pattern: 0 };
+
 export const useBrainStore = create<BrainState>()(
   persist(
     (set, get) => ({
       domains: { memory: 15, logic: 15, speed: 15, pattern: 15 },
+      prevDomains: { memory: 15, logic: 15, speed: 15, pattern: 15 },
       weeklyBaseline: 0,
       weekStart: getWeekStart(),
+      weeklyGamesPlayed: { ...ZERO_DOMAINS },
+      weeklyPlayDays: [],
 
       recordGame: (type, stars, levelId, isFirstClear, lastPlayedAt) => {
         const delta = calcStrengthDelta(stars, levelId, isFirstClear, lastPlayedAt);
+        const today = new Date().toISOString().slice(0, 10);
         set((s) => ({
           domains: {
             ...s.domains,
             [type]: Math.min(100, s.domains[type] + delta),
           },
+          weeklyGamesPlayed: {
+            ...s.weeklyGamesPlayed,
+            [type]: s.weeklyGamesPlayed[type] + 1,
+          },
+          weeklyPlayDays: s.weeklyPlayDays.includes(today)
+            ? s.weeklyPlayDays
+            : [...s.weeklyPlayDays, today],
         }));
 
         const userId = getCurrentUserId();
@@ -72,7 +88,13 @@ export const useBrainStore = create<BrainState>()(
         set((s) => {
           const thisWeek = getWeekStart();
           if (s.weekStart === thisWeek) return {};
-          return { weeklyBaseline: currentScore, weekStart: thisWeek };
+          return {
+            weeklyBaseline: currentScore,
+            weekStart: thisWeek,
+            prevDomains: { ...s.domains },
+            weeklyGamesPlayed: { ...ZERO_DOMAINS },
+            weeklyPlayDays: [],
+          };
         }),
     }),
     {

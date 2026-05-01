@@ -22,9 +22,8 @@ const FREE_TRIAL_DAYS = 7;
 const FEATURES = [
   { label: 'Daily levels',     free: '3 per day',                   premium: 'Unlimited' },
   { label: 'Lives',            free: `${MAX_LIVES}, slow refill`,   premium: 'Unlimited ♾️' },
-  { label: 'Ads',              free: 'Banner + rewarded',           premium: 'None' },
-  { label: 'Strengths',        free: 'Basic summary',               premium: 'Full breakdown' },
-  { label: 'Weekly Report',    free: 'Highlights only',             premium: 'Detailed analysis' },
+  { label: 'Strengths',        free: 'Basic summary',               premium: 'Trends + detail' },
+  { label: 'Weekly Report',    free: 'Score only',                  premium: 'Full breakdown' },
 ];
 
 export default function PaywallScreen() {

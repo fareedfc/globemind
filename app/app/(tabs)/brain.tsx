@@ -1,10 +1,11 @@
 import { useEffect } from 'react';
 import {
-  ScrollView, View, Text, StyleSheet,
+  ScrollView, View, Text, StyleSheet, TouchableOpacity,
   DimensionValue, Image, ImageBackground,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import { router } from 'expo-router';
 import { Colors } from '../../constants/colors';
 import { usePlayerStore } from '../../stores/playerStore';
 import { useBrainStore, type GameType } from '../../stores/brainStore';
@@ -95,11 +96,16 @@ function pickTip(tips: string[]): string {
   return tips[dayIndex % tips.length];
 }
 
+function trendLabel(delta: number): { text: string; color: string } {
+  if (delta > 0) return { text: `▲ +${delta}%`, color: '#2EC4B6' };
+  if (delta < 0) return { text: `▼ ${Math.abs(delta)}%`, color: '#E8460A' };
+  return { text: '→ steady', color: '#888' };
+}
+
 
 export default function BrainScreen() {
-  const { score, streak } = usePlayerStore();
-  const { domains, weeklyBaseline, snapshotWeekIfNeeded } = useBrainStore();
-
+  const { score, streak, isPremium } = usePlayerStore();
+  const { domains, prevDomains, weeklyBaseline, weeklyGamesPlayed, weeklyPlayDays, snapshotWeekIfNeeded } = useBrainStore();
 
   useEffect(() => {
     snapshotWeekIfNeeded(score);
@@ -111,6 +117,16 @@ export default function BrainScreen() {
     .sort((a, b) => domains[a] - domains[b])[0];
 
   const coachTip = pickTip(COACH_TIPS[weakestKey]);
+
+  const totalWeeklyGames = Object.values(weeklyGamesPlayed).reduce((a, b) => a + b, 0);
+
+  const mostImproved = (['memory', 'speed', 'logic', 'pattern'] as GameType[])
+    .map(k => ({ key: k, delta: domains[k] - prevDomains[k] }))
+    .sort((a, b) => b.delta - a.delta)[0];
+
+  const mostPlayed = (['memory', 'speed', 'logic', 'pattern'] as GameType[])
+    .map(k => ({ key: k, count: weeklyGamesPlayed[k] }))
+    .sort((a, b) => b.count - a.count)[0];
 
   return (
     <ImageBackground source={SCREEN_BACKGROUND} style={s.screen} resizeMode="cover">
@@ -173,6 +189,9 @@ export default function BrainScreen() {
         <View style={s.card}>
           {DOMAIN_META.map((d, i) => {
             const pct = domains[d.key];
+            const delta = domains[d.key] - prevDomains[d.key];
+            const trend = trendLabel(delta);
+            const gamesThisWeek = weeklyGamesPlayed[d.key];
             return (
               <View key={d.key} style={[s.drow, i < DOMAIN_META.length - 1 && s.drowBorder]}>
                 <View style={[s.iconBubble, { backgroundColor: d.tint }]}>
@@ -181,15 +200,109 @@ export default function BrainScreen() {
                 <View style={s.dInfo}>
                   <View style={s.dTopRow}>
                     <Text style={s.dlbl}>{d.label}</Text>
-                    <Text style={[s.dpct, { color: d.color }]}>{pct}%</Text>
+                    <View style={s.dRightCol}>
+                      {isPremium && (
+                        <Text style={[s.trendTxt, { color: trend.color }]}>{trend.text}</Text>
+                      )}
+                      <Text style={[s.dpct, { color: d.color }]}>{pct}%</Text>
+                    </View>
                   </View>
                   <View style={s.dtrack}>
                     <View style={{ width: `${pct}%` as DimensionValue, height: '100%', backgroundColor: d.color, borderRadius: 6 }} />
                   </View>
+                  {isPremium && (
+                    <Text style={s.gamesPlayedTxt}>
+                      {gamesThisWeek === 0 ? 'No games this week' : `${gamesThisWeek} game${gamesThisWeek === 1 ? '' : 's'} this week`}
+                    </Text>
+                  )}
                 </View>
               </View>
             );
           })}
+        </View>
+
+        {/* ── Weekly Report card ─────────────────────────────────────────── */}
+        <Text style={s.sectionLbl}>Weekly Report</Text>
+        <View style={[s.card, s.reportCard]}>
+          {isPremium ? (
+            <View style={s.reportGrid}>
+              <View style={s.reportStat}>
+                <Text style={s.reportStatNum}>{weeklyPlayDays.length}</Text>
+                <Text style={s.reportStatLbl}>days active</Text>
+              </View>
+              <View style={s.reportDivider} />
+              <View style={s.reportStat}>
+                <Text style={s.reportStatNum}>{totalWeeklyGames}</Text>
+                <Text style={s.reportStatLbl}>games played</Text>
+              </View>
+              <View style={s.reportDivider} />
+              <View style={s.reportStat}>
+                <Text style={s.reportStatNum}>{weeklyDelta >= 0 ? `+${weeklyDelta}` : weeklyDelta}</Text>
+                <Text style={s.reportStatLbl}>pts earned</Text>
+              </View>
+              {totalWeeklyGames > 0 && (
+                <>
+                  <View style={s.reportInsightRow}>
+                    <Text style={s.reportInsightLabel}>Most improved</Text>
+                    <Text style={s.reportInsightValue}>
+                      {DOMAIN_META.find(d => d.key === mostImproved.key)?.label ?? '—'}
+                      {mostImproved.delta > 0 ? ` ▲ +${mostImproved.delta}%` : ''}
+                    </Text>
+                  </View>
+                  <View style={s.reportInsightRow}>
+                    <Text style={s.reportInsightLabel}>Most played</Text>
+                    <Text style={s.reportInsightValue}>
+                      {DOMAIN_META.find(d => d.key === mostPlayed.key)?.label ?? '—'}
+                      {` · ${mostPlayed.count} game${mostPlayed.count === 1 ? '' : 's'}`}
+                    </Text>
+                  </View>
+                </>
+              )}
+              {totalWeeklyGames === 0 && (
+                <View style={s.reportNoData}>
+                  <Text style={s.reportNoDataTxt}>Play some games this week to see your report!</Text>
+                </View>
+              )}
+            </View>
+          ) : (
+            <View style={s.reportLocked}>
+              <View style={s.reportLockedPreview}>
+                <View style={s.reportGrid}>
+                  <View style={s.reportStat}>
+                    <Text style={[s.reportStatNum, s.blurred]}>5</Text>
+                    <Text style={[s.reportStatLbl, s.blurred]}>days active</Text>
+                  </View>
+                  <View style={s.reportDivider} />
+                  <View style={s.reportStat}>
+                    <Text style={[s.reportStatNum, s.blurred]}>12</Text>
+                    <Text style={[s.reportStatLbl, s.blurred]}>games played</Text>
+                  </View>
+                  <View style={s.reportDivider} />
+                  <View style={s.reportStat}>
+                    <Text style={[s.reportStatNum, s.blurred]}>+450</Text>
+                    <Text style={[s.reportStatLbl, s.blurred]}>pts earned</Text>
+                  </View>
+                </View>
+              </View>
+              <View style={s.reportOverlay}>
+                <Text style={s.lockIcon}>🔒</Text>
+                <Text style={s.lockTitle}>Detailed Weekly Report</Text>
+                <Text style={s.lockSub}>Days active, games played, most improved domain and more.</Text>
+                <TouchableOpacity
+                  onPress={() => router.push('/paywall')}
+                  activeOpacity={0.85}
+                >
+                  <LinearGradient
+                    colors={['#FFAA00', '#FF8C00']}
+                    start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+                    style={s.lockBtn}
+                  >
+                    <Text style={s.lockBtnTxt}>Unlock with Unlimited →</Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
         </View>
 
         {/* ── Coach tip card ─────────────────────────────────────────────── */}
@@ -345,6 +458,10 @@ const s = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
+  dRightCol: {
+    alignItems: 'flex-end',
+    gap: 2,
+  },
   dlbl: {
     fontSize: 15,
     fontFamily: 'Nunito_700Bold',
@@ -354,12 +471,122 @@ const s = StyleSheet.create({
     fontSize: 15,
     fontFamily: 'Nunito_900Black',
   },
+  trendTxt: {
+    fontSize: 11,
+    fontFamily: 'Nunito_700Bold',
+  },
+  gamesPlayedTxt: {
+    fontSize: 11,
+    fontFamily: 'Nunito_400Regular',
+    color: '#888',
+    marginTop: -4,
+  },
   dtrack: {
     width: '100%',
     height: 10,
     backgroundColor: 'rgba(0,0,0,0.06)',
     borderRadius: 6,
     overflow: 'hidden',
+  },
+
+  // ── Weekly Report ────────────────────────────────────────────────────────
+  reportCard: { padding: 0 },
+  reportGrid: {
+    padding: 18,
+    gap: 12,
+  },
+  reportStat: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  reportStatNum: {
+    fontSize: 28,
+    fontFamily: 'Nunito_900Black',
+    color: '#1A1A2E',
+  },
+  reportStatLbl: {
+    fontSize: 11,
+    fontFamily: 'Nunito_700Bold',
+    color: '#888',
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    marginTop: 2,
+  },
+  reportDivider: {
+    width: 1,
+    backgroundColor: 'rgba(0,0,0,0.08)',
+    alignSelf: 'stretch',
+  },
+  reportInsightRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(0,0,0,0.05)',
+  },
+  reportInsightLabel: {
+    fontSize: 13,
+    fontFamily: 'Nunito_700Bold',
+    color: '#888',
+  },
+  reportInsightValue: {
+    fontSize: 13,
+    fontFamily: 'Nunito_700Bold',
+    color: '#1A1A2E',
+  },
+  reportNoData: {
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(0,0,0,0.05)',
+  },
+  reportNoDataTxt: {
+    fontSize: 13,
+    fontFamily: 'Nunito_400Regular',
+    color: '#888',
+    textAlign: 'center',
+  },
+  reportLocked: {
+    position: 'relative',
+  },
+  reportLockedPreview: {
+    opacity: 0.15,
+  },
+  reportOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(255,255,255,0.85)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 20,
+    gap: 8,
+  },
+  lockIcon: { fontSize: 28 },
+  lockTitle: {
+    fontSize: 16,
+    fontFamily: 'Nunito_900Black',
+    color: '#1A1A2E',
+    textAlign: 'center',
+  },
+  lockSub: {
+    fontSize: 13,
+    fontFamily: 'Nunito_400Regular',
+    color: '#555',
+    textAlign: 'center',
+    lineHeight: 20,
+    marginBottom: 4,
+  },
+  lockBtn: {
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 14,
+  },
+  lockBtnTxt: {
+    fontSize: 14,
+    fontFamily: 'Nunito_900Black',
+    color: '#FFFFFF',
+  },
+  blurred: {
+    opacity: 0.3,
   },
 
   // ── Coach tip ────────────────────────────────────────────────────────────
