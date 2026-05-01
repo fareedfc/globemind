@@ -115,7 +115,9 @@ Existing brain training apps (Lumosity, BrainHQ) feel like homework. ThinkPop fe
 - Score total as large number; weekly delta; percentile rank vs age group
 - 4 domain bars: Memory, Speed, Logic, Pattern
 - **Premium domain breakdown**: trend arrow (▲/▼/→ % change vs last week) + "N games this week" under each bar
-- **Weekly Report card**: premium sees days active, total games, pts earned, most improved domain, most played game. Free users see a dimmed preview with lock overlay + "Unlock with Unlimited →" CTA → paywall
+- **Weekly Report card** (4 stats: days active, games played, pts earned, perfect ⭐):
+  - Premium: full breakdown + most improved domain + most played game + "Perfect by domain" row + "So close! 🎯" section (top 2 sub-5-star levels, tappable → Journey)
+  - Free: dimmed preview with lock overlay + "Unlock with Unlimited →" CTA (→ `/paywall?reason=stats`)
 - Coach Tips: 32 tips total (8 per domain), rotating daily, motivational/positive tone — NOT tied to brain training language
 - Guest users: "Save your progress · Sign In →" banner → `/auth`
 - Logged-in users: "Signed in as [name]" + Log out
@@ -125,8 +127,13 @@ Existing brain training apps (Lumosity, BrainHQ) feel like homework. ThinkPop fe
 - Journey play gate: premium skips all limits → free checks daily cap (3/day) → lives check
 - Paywall (`app/paywall.tsx`): reason-aware (lives vs daily cap), feature comparison table (4 rows: Daily levels, Lives, Strengths, Weekly Report — no Ads row), real RevenueCat purchase flow, success screen, Restore Purchase
 - Premium pill shown in Journey TopBar (👑 Premium replaces ❤️ lives)
-- **Premium Stats features** (gated by `isPremium`): domain trend arrows + weekly games played count; full Weekly Report card (days active, total games, pts earned, most improved, most played). Free users see locked Weekly Report with paywall CTA.
+- **Premium Stats features** (gated by `isPremium`): domain trend arrows + weekly games count; full Weekly Report (days active, games, pts, perfect ⭐, most improved, most played, perfect by domain, "So close!" replay nudge for top sub-5-star levels)
 - `brainStore` tracks: `weeklyGamesPlayed` (per domain), `weeklyPlayDays` (days active this week), `prevDomains` (snapshot at week start for trend calculation) — all reset on new week
+- **Daily cap now enforced** in journey modal: free users blocked after 3 levels/day → `/paywall?reason=daily`; `incrementDailyLevels()` called on each play
+- **Paywall reason-aware headers** — 4 contexts: `lives` ("Your brain needs a breather"), `daily` ("You're on a roll!"), `stats` ("Unlock your full picture 📊"), `upgrade` ("Go Unlimited 👑")
+- **Score badge** on Journey map: changed from ⭐ star icon to 💎 diamond emoji to avoid conflict with level node stars
+- **Level node stars**: now use `icon-star.png` asset (14px) at full/25% opacity instead of emoji ⭐/☆
+- **Level modal**: completed levels show star rating + contextual message ("So close!" / "Beat your score" / "Perfect score! 🌟") + button text changes to "Beat your score" for sub-5-star levels
 - RevenueCat **fully wired on both platforms** — SDK in `app/paywall.tsx`, iOS key (`appl_AgVACahWeoGFdeGJBqcHqHqxyCQ`) + Android key (`goog_cFhSuvMVroPfGsGWVGDYevhwEJR`) in `_layout.tsx`. Android: service account validated, `thinkpop_unlimited_monthly` + `thinkpop_unlimited_annual` products created in Play Console + attached to RC entitlement + offerings.
 
 ## Backend — Supabase (LIVE)

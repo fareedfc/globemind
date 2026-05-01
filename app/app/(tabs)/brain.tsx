@@ -9,6 +9,8 @@ import { router } from 'expo-router';
 import { Colors } from '../../constants/colors';
 import { usePlayerStore } from '../../stores/playerStore';
 import { useBrainStore, type GameType } from '../../stores/brainStore';
+import { useProgressStore } from '../../stores/progressStore';
+import { LEVELS } from '../../data/levels';
 
 
 const DOMAIN_META: Array<{
@@ -106,6 +108,7 @@ function trendLabel(delta: number): { text: string; color: string } {
 export default function BrainScreen() {
   const { score, streak, isPremium } = usePlayerStore();
   const { domains, prevDomains, weeklyBaseline, weeklyGamesPlayed, weeklyPlayDays, snapshotWeekIfNeeded } = useBrainStore();
+  const { completions } = useProgressStore();
 
   useEffect(() => {
     snapshotWeekIfNeeded(score);
@@ -127,6 +130,21 @@ export default function BrainScreen() {
   const mostPlayed = (['memory', 'speed', 'logic', 'pattern'] as GameType[])
     .map(k => ({ key: k, count: weeklyGamesPlayed[k] }))
     .sort((a, b) => b.count - a.count)[0];
+
+  const perfectCount = Object.values(completions).filter(s => s === 5).length;
+
+  const perfectByDomain = (['memory', 'speed', 'logic', 'pattern'] as GameType[]).reduce(
+    (acc, key) => {
+      acc[key] = LEVELS.filter(l => l.type === key && (completions[l.id] ?? 0) === 5).length;
+      return acc;
+    },
+    {} as Record<GameType, number>,
+  );
+
+  const soClose = LEVELS
+    .filter(l => (completions[l.id] ?? 0) > 0 && (completions[l.id] ?? 0) < 5)
+    .sort((a, b) => (completions[b.id] ?? 0) - (completions[a.id] ?? 0))
+    .slice(0, 2);
 
   return (
     <ImageBackground source={SCREEN_BACKGROUND} style={s.screen} resizeMode="cover">
@@ -226,20 +244,28 @@ export default function BrainScreen() {
         <View style={[s.card, s.reportCard]}>
           {isPremium ? (
             <View style={s.reportGrid}>
-              <View style={s.reportStat}>
-                <Text style={s.reportStatNum}>{weeklyPlayDays.length}</Text>
-                <Text style={s.reportStatLbl}>days active</Text>
+              <View style={s.reportStatRow}>
+                <View style={s.reportStat}>
+                  <Text style={s.reportStatNum}>{weeklyPlayDays.length}</Text>
+                  <Text style={s.reportStatLbl}>days active</Text>
+                </View>
+                <View style={s.reportDivider} />
+                <View style={s.reportStat}>
+                  <Text style={s.reportStatNum}>{totalWeeklyGames}</Text>
+                  <Text style={s.reportStatLbl}>games played</Text>
+                </View>
+                <View style={s.reportDivider} />
+                <View style={s.reportStat}>
+                  <Text style={s.reportStatNum}>{weeklyDelta >= 0 ? `+${weeklyDelta}` : weeklyDelta}</Text>
+                  <Text style={s.reportStatLbl}>pts earned</Text>
+                </View>
+                <View style={s.reportDivider} />
+                <View style={s.reportStat}>
+                  <Text style={[s.reportStatNum, { color: '#FF8A00' }]}>{perfectCount}</Text>
+                  <Text style={s.reportStatLbl}>perfect ⭐</Text>
+                </View>
               </View>
-              <View style={s.reportDivider} />
-              <View style={s.reportStat}>
-                <Text style={s.reportStatNum}>{totalWeeklyGames}</Text>
-                <Text style={s.reportStatLbl}>games played</Text>
-              </View>
-              <View style={s.reportDivider} />
-              <View style={s.reportStat}>
-                <Text style={s.reportStatNum}>{weeklyDelta >= 0 ? `+${weeklyDelta}` : weeklyDelta}</Text>
-                <Text style={s.reportStatLbl}>pts earned</Text>
-              </View>
+
               {totalWeeklyGames > 0 && (
                 <>
                   <View style={s.reportInsightRow}>
@@ -258,7 +284,47 @@ export default function BrainScreen() {
                   </View>
                 </>
               )}
-              {totalWeeklyGames === 0 && (
+
+              <View style={s.reportInsightRow}>
+                <Text style={s.reportInsightLabel}>Perfect by domain</Text>
+                <Text style={s.reportInsightValue}>
+                  {(['memory', 'speed', 'logic', 'pattern'] as GameType[])
+                    .map(k => `${DOMAIN_META.find(d => d.key === k)?.label}: ${perfectByDomain[k]}`)
+                    .join(' · ')}
+                </Text>
+              </View>
+
+              {soClose.length > 0 && (
+                <View style={s.soCloseSection}>
+                  <Text style={s.soCloseTitle}>So close! 🎯</Text>
+                  {soClose.map(l => (
+                    <TouchableOpacity
+                      key={l.id}
+                      style={s.soCloseRow}
+                      onPress={() => router.push('/(tabs)/journey')}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={s.soCloseEmoji}>{l.e}</Text>
+                      <View style={s.soCloseInfo}>
+                        <Text style={s.soCloseLevel}>Level {l.id} · {l.domain}</Text>
+                        <View style={s.soCloseStars}>
+                          {Array.from({ length: 5 }, (_, i) => (
+                            <Image
+                              key={i}
+                              source={require('../../assets/icons/icon-star.png')}
+                              style={[s.soCloseStar, i >= (completions[l.id] ?? 0) && s.soCloseStarEmpty]}
+                              resizeMode="contain"
+                            />
+                          ))}
+                        </View>
+                      </View>
+                      <Text style={s.soCloseArrow}>→</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
+
+              {totalWeeklyGames === 0 && soClose.length === 0 && (
                 <View style={s.reportNoData}>
                   <Text style={s.reportNoDataTxt}>Play some games this week to see your report!</Text>
                 </View>
@@ -268,19 +334,26 @@ export default function BrainScreen() {
             <View style={s.reportLocked}>
               <View style={s.reportLockedPreview}>
                 <View style={s.reportGrid}>
-                  <View style={s.reportStat}>
-                    <Text style={[s.reportStatNum, s.blurred]}>5</Text>
-                    <Text style={[s.reportStatLbl, s.blurred]}>days active</Text>
-                  </View>
-                  <View style={s.reportDivider} />
-                  <View style={s.reportStat}>
-                    <Text style={[s.reportStatNum, s.blurred]}>12</Text>
-                    <Text style={[s.reportStatLbl, s.blurred]}>games played</Text>
-                  </View>
-                  <View style={s.reportDivider} />
-                  <View style={s.reportStat}>
-                    <Text style={[s.reportStatNum, s.blurred]}>+450</Text>
-                    <Text style={[s.reportStatLbl, s.blurred]}>pts earned</Text>
+                  <View style={s.reportStatRow}>
+                    <View style={s.reportStat}>
+                      <Text style={[s.reportStatNum, s.blurred]}>5</Text>
+                      <Text style={[s.reportStatLbl, s.blurred]}>days active</Text>
+                    </View>
+                    <View style={s.reportDivider} />
+                    <View style={s.reportStat}>
+                      <Text style={[s.reportStatNum, s.blurred]}>12</Text>
+                      <Text style={[s.reportStatLbl, s.blurred]}>games played</Text>
+                    </View>
+                    <View style={s.reportDivider} />
+                    <View style={s.reportStat}>
+                      <Text style={[s.reportStatNum, s.blurred]}>+450</Text>
+                      <Text style={[s.reportStatLbl, s.blurred]}>pts earned</Text>
+                    </View>
+                    <View style={s.reportDivider} />
+                    <View style={s.reportStat}>
+                      <Text style={[s.reportStatNum, s.blurred]}>3</Text>
+                      <Text style={[s.reportStatLbl, s.blurred]}>perfect ⭐</Text>
+                    </View>
                   </View>
                 </View>
               </View>
@@ -289,11 +362,11 @@ export default function BrainScreen() {
                 <Text style={s.lockTitle}>Detailed Weekly Report</Text>
                 <Text style={s.lockSub}>Days active, games played, most improved domain and more.</Text>
                 <TouchableOpacity
-                  onPress={() => router.push('/paywall')}
+                  onPress={() => router.push('/paywall?reason=stats')}
                   activeOpacity={0.85}
                 >
                   <LinearGradient
-                    colors={['#FFAA00', '#FF8C00']}
+                    colors={['#4A0E8F', '#8B3FD9', '#C76FE8']}
                     start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
                     style={s.lockBtn}
                   >
@@ -495,22 +568,27 @@ const s = StyleSheet.create({
     padding: 18,
     gap: 12,
   },
+  reportStatRow: {
+    flexDirection: 'row',
+    gap: 0,
+  },
   reportStat: {
     alignItems: 'center',
     flex: 1,
   },
   reportStatNum: {
-    fontSize: 28,
+    fontSize: 24,
     fontFamily: 'Nunito_900Black',
     color: '#1A1A2E',
   },
   reportStatLbl: {
-    fontSize: 11,
+    fontSize: 10,
     fontFamily: 'Nunito_700Bold',
     color: '#888',
     textTransform: 'uppercase',
-    letterSpacing: 0.8,
+    letterSpacing: 0.6,
     marginTop: 2,
+    textAlign: 'center',
   },
   reportDivider: {
     width: 1,
@@ -546,8 +624,43 @@ const s = StyleSheet.create({
     color: '#888',
     textAlign: 'center',
   },
+  soCloseSection: {
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(0,0,0,0.05)',
+    gap: 8,
+  },
+  soCloseTitle: {
+    fontSize: 13,
+    fontFamily: 'Nunito_900Black',
+    color: '#8B3FD9',
+  },
+  soCloseRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: 'rgba(139,63,217,0.06)',
+    borderRadius: 12,
+    padding: 10,
+  },
+  soCloseEmoji: { fontSize: 24 },
+  soCloseInfo: { flex: 1, gap: 4 },
+  soCloseLevel: {
+    fontSize: 13,
+    fontFamily: 'Nunito_700Bold',
+    color: '#1A1A2E',
+  },
+  soCloseStars: { flexDirection: 'row', gap: 2 },
+  soCloseStar: { width: 12, height: 12 },
+  soCloseStarEmpty: { opacity: 0.2 },
+  soCloseArrow: {
+    fontSize: 16,
+    color: '#8B3FD9',
+    fontFamily: 'Nunito_900Black',
+  },
   reportLocked: {
     position: 'relative',
+    minHeight: 200,
   },
   reportLockedPreview: {
     opacity: 0.15,

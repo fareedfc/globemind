@@ -140,6 +140,22 @@ export default function PaywallScreen() {
                 You've played your 3 free levels for today. Go Unlimited for unlimited daily play and a detailed weekly report.
               </Text>
             </>
+          ) : reason === 'stats' ? (
+            <>
+              <Text style={s.headerEmoji}>📊</Text>
+              <Text style={s.headerTitle}>Unlock your full picture</Text>
+              <Text style={s.headerSub}>
+                See your weekly report, domain trends, perfect levels by domain, and which levels to replay — all in one place.
+              </Text>
+            </>
+          ) : reason === 'upgrade' ? (
+            <>
+              <Text style={s.headerEmoji}>👑</Text>
+              <Text style={s.headerTitle}>Go Unlimited</Text>
+              <Text style={s.headerSub}>
+                Unlimited levels, no waiting for lives, and the full stats breakdown. Everything ThinkPop has to offer.
+              </Text>
+            </>
           ) : (
             <>
               <View style={s.heartsRow}>
@@ -216,7 +232,7 @@ export default function PaywallScreen() {
 
           <TouchableOpacity onPress={handlePurchase} activeOpacity={0.88} disabled={loading} style={{ width: '100%' }}>
             <LinearGradient
-              colors={['#FFD166', '#FF9500']}
+              colors={['#4A0E8F', '#8B3FD9', '#C76FE8']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={s.premiumBtn}
@@ -464,7 +480,7 @@ const s = StyleSheet.create({
   premiumBtnTxt: {
     fontSize: 18,
     fontFamily: 'Nunito_900Black',
-    color: '#1a1a2e',
+    color: '#FFFFFF',
     textAlign: 'center',
     paddingTop: 18,
     marginBottom: 2,
@@ -472,7 +488,7 @@ const s = StyleSheet.create({
   premiumBtnSub: {
     fontSize: 12,
     fontFamily: 'Nunito_700Bold',
-    color: 'rgba(26,26,46,0.60)',
+    color: 'rgba(255,255,255,0.70)',
     textAlign: 'center',
     paddingBottom: 18,
   },

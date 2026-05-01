@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Animated, TouchableOpacity } from 'react-native';
+import { View, Text, Image, StyleSheet, Animated, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import { Colors } from '../../constants/colors';
@@ -96,7 +96,6 @@ export function LevelNode({ level, x, y, onPress }: Props) {
 
   const MAX_STARS = 5;
   const earned = level.done ? Math.min(level.stars ?? MAX_STARS, MAX_STARS) : 0;
-  const stars = '⭐'.repeat(earned) + '☆'.repeat(MAX_STARS - earned);
 
   return (
     <TouchableOpacity
@@ -117,8 +116,13 @@ export function LevelNode({ level, x, y, onPress }: Props) {
         </Animated.View>
       </Animated.View>
       <View style={s.stars}>
-        {stars.split('').map((star, i) => (
-          <Text key={i} style={s.star}>{star}</Text>
+        {Array.from({ length: MAX_STARS }, (_, i) => (
+          <Image
+            key={i}
+            source={require('../../assets/icons/icon-star.png')}
+            style={[s.star, i >= earned && s.starEmpty]}
+            resizeMode="contain"
+          />
         ))}
       </View>
 
@@ -174,7 +178,11 @@ const s = StyleSheet.create({
     marginTop: 4,
   },
   star: {
-    fontSize: 9,
+    width: 14,
+    height: 14,
+  },
+  starEmpty: {
+    opacity: 0.25,
   },
   levelLabel: {
     marginTop: 2,

@@ -133,7 +133,7 @@ export default function SettingsScreen() {
               <>
                 <Row
                   label="Upgrade to Unlimited 👑"
-                  onPress={() => router.push('/paywall')}
+                  onPress={() => router.push('/paywall?reason=upgrade')}
                   right={<Text style={s.chevron}>›</Text>}
                 />
                 <View style={s.divider} />

@@ -23,7 +23,7 @@ import { Colors } from '../../constants/colors';
 import { MAP_HEIGHT, MAP_WIDTH } from '../../constants/config';
 import { PathSVG } from '../../components/path/PathSVG';
 import { LevelNode } from '../../components/path/LevelNode';
-import { usePlayerStore } from '../../stores/playerStore';
+import { usePlayerStore, FREE_DAILY_LEVELS } from '../../stores/playerStore';
 import { useProgressStore } from '../../stores/progressStore';
 import { useLives } from '../../hooks/useLives';
 import { useUIStore } from '../../stores/uiStore';
@@ -93,7 +93,7 @@ const WORLD_MARKERS = [
 ];
 
 export default function JourneyScreen() {
-  const { score, useLive, isPremium } = usePlayerStore();
+  const { score, useLive, isPremium, getDailyLevelsToday, incrementDailyLevels } = usePlayerStore();
   const insets = useSafeAreaInsets();
   const setWorldIdx = useUIStore((s) => s.setWorldIdx);
   const { currentLevelId, completions } = useProgressStore();
@@ -172,8 +172,7 @@ export default function JourneyScreen() {
                 <>
                   <Pill
                     variant="warm"
-                    icon={require('../../assets/icons/icon-star.png')}
-                    label={score.toLocaleString()}
+                    label={'💎 ' + score.toLocaleString()}
                     bg={WORLD_TAB_COLORS[worldIdx]}
                   />
                   {isPremium
@@ -279,6 +278,31 @@ export default function JourneyScreen() {
                 </View>
                 <Text style={s.modalDesc}>{selectedLevel?.desc}</Text>
 
+                {selectedLevel?.done && (
+                  <View style={s.modalStarsRow}>
+                    <View style={s.modalStars}>
+                      {Array.from({ length: 5 }, (_, i) => (
+                        <Image
+                          key={i}
+                          source={require('../../assets/icons/icon-star.png')}
+                          style={[s.modalStar, i >= (selectedLevel.stars ?? 0) && s.modalStarEmpty]}
+                          resizeMode="contain"
+                        />
+                      ))}
+                    </View>
+                    {(selectedLevel.stars ?? 0) < 5 && (
+                      <Text style={s.beatScoreTxt}>
+                        {(selectedLevel.stars ?? 0) >= 4
+                          ? 'So close! One more push for 5 stars 🎯'
+                          : 'Beat your score — can you hit 5 stars? 🎯'}
+                      </Text>
+                    )}
+                    {(selectedLevel.stars ?? 0) === 5 && (
+                      <Text style={s.perfectTxt}>Perfect score! 🌟</Text>
+                    )}
+                  </View>
+                )}
+
                 <TouchableOpacity
                   activeOpacity={0.85}
                   onPress={() => {
@@ -288,8 +312,16 @@ export default function JourneyScreen() {
                       router.push('/paywall?reason=lives');
                       return;
                     }
+                    if (!isPremium && getDailyLevelsToday() >= FREE_DAILY_LEVELS) {
+                      closeModal();
+                      router.push('/paywall?reason=daily');
+                      return;
+                    }
                     closeModal();
-                    if (!isPremium) useLive();
+                    if (!isPremium) {
+                      useLive();
+                      incrementDailyLevels();
+                    }
                     router.push(`/game/${selectedLevel?.type}?levelId=${selectedLevel?.id}`);
                   }}
                 >
@@ -299,7 +331,11 @@ export default function JourneyScreen() {
                     end={{ x: 1, y: 0 }}
                     style={s.playBtn}
                   >
-                    <Text style={s.playBtnText}>▶  Play Now</Text>
+                    <Text style={s.playBtnText}>
+                      {selectedLevel?.done && (selectedLevel.stars ?? 0) < 5
+                        ? '▶  Beat your score'
+                        : '▶  Play Now'}
+                    </Text>
                   </LinearGradient>
                 </TouchableOpacity>
 
@@ -424,6 +460,31 @@ const s = StyleSheet.create({
 
     lineHeight: 22,
     marginBottom: 18,
+  },
+  modalStarsRow: {
+    marginBottom: 14,
+    gap: 6,
+  },
+  modalStars: {
+    flexDirection: 'row',
+    gap: 4,
+  },
+  modalStar: {
+    width: 20,
+    height: 20,
+  },
+  modalStarEmpty: {
+    opacity: 0.2,
+  },
+  beatScoreTxt: {
+    fontSize: 13,
+    fontFamily: 'Nunito_700Bold',
+    color: '#8B3FD9',
+  },
+  perfectTxt: {
+    fontSize: 13,
+    fontFamily: 'Nunito_700Bold',
+    color: '#FF8A00',
   },
   playBtn: {
     width: '100%',
