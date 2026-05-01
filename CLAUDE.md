@@ -130,10 +130,11 @@ Existing brain training apps (Lumosity, BrainHQ) feel like homework. ThinkPop fe
 - **Premium Stats features** (gated by `isPremium`): domain trend arrows + weekly games count; full Weekly Report (days active, games, pts, perfect ⭐, most improved, most played, perfect by domain, "So close!" replay nudge for top sub-5-star levels)
 - `brainStore` tracks: `weeklyGamesPlayed` (per domain), `weeklyPlayDays` (days active this week), `prevDomains` (snapshot at week start for trend calculation) — all reset on new week
 - **Daily cap now enforced** in journey modal: free users blocked after 3 levels/day → `/paywall?reason=daily`; `incrementDailyLevels()` called on each play
-- **Paywall reason-aware headers** — 4 contexts: `lives` ("Your brain needs a breather"), `daily` ("You're on a roll!"), `stats` ("Unlock your full picture 📊"), `upgrade` ("Go Unlimited 👑")
+- **Paywall reason-aware headers** — 4 contexts: `lives` ("Keep Your Streak Alive"), `daily` ("You're On a Roll!"), `stats` ("Unlock Your Full Picture"), `upgrade` ("Unlock Unlimited Play")
 - **Score badge** on Journey map: changed from ⭐ star icon to 💎 diamond emoji to avoid conflict with level node stars
 - **Level node stars**: now use `icon-star.png` asset (14px) at full/25% opacity instead of emoji ⭐/☆
 - **Level modal**: completed levels show star rating + contextual message ("So close!" / "Beat your score" / "Perfect score! 🌟") + button text changes to "Beat your score" for sub-5-star levels
+- **Paywall full redesign**: landing-background.png + white scrim; animated crown hero (`icon-crown-hero.png`) with double glow rings + pulse; 4 benefit rows using app icon assets (icon-explore, icon-heart, icon-speed, icon-chart); sparkle particles; urgency line; contextual trigger pill; plan cards swap size on selection (selected = larger); purple gradient CTA with breathing pulse + glow; "Start Free & Play Unlimited ⚡"; all accent colours unified to purple + gold
 - RevenueCat **fully wired on both platforms** — SDK in `app/paywall.tsx`, iOS key (`appl_AgVACahWeoGFdeGJBqcHqHqxyCQ`) + Android key (`goog_cFhSuvMVroPfGsGWVGDYevhwEJR`) in `_layout.tsx`. Android: service account validated, `thinkpop_unlimited_monthly` + `thinkpop_unlimited_annual` products created in Play Console + attached to RC entitlement + offerings.
 
 ## Backend — Supabase (LIVE)
