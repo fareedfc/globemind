@@ -2,8 +2,12 @@ import { useEffect, useState } from 'react';
 import { usePlayerStore, MAX_LIVES } from '../stores/playerStore';
 
 export function useLives() {
-  const { lives, nextRefillAt, refillLive } = usePlayerStore();
+  const { lives, nextRefillAt, refillLive, checkDailyLivesReset } = usePlayerStore();
   const [, setTick] = useState(0); // triggers re-render for countdown display
+
+  useEffect(() => {
+    checkDailyLivesReset();
+  }, []);
 
   useEffect(() => {
     if (lives >= MAX_LIVES || !nextRefillAt) return;

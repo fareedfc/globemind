@@ -137,7 +137,7 @@ export function WinScreen({ data, levelId, onExit }: Props) {
   const navigateNext = () => {
     const hasNext = LEVELS.some(l => l.id === levelId + 1);
     if (hasNext) {
-      router.replace(`/transition?levelId=${levelId}&domain=${data.type}&oldPct=${oldDomainPct}` as any);
+      router.replace(`/transition?levelId=${levelId}&domain=${data.type}&oldPct=${oldDomainPct}&insight=${encodeURIComponent(data.insight)}` as any);
     } else {
       router.replace('/(tabs)/journey');
     }
@@ -159,7 +159,7 @@ export function WinScreen({ data, levelId, onExit }: Props) {
       setTimeout(() => {
         Animated.timing(progressAnim, {
           toValue: 1,
-          duration: 2000,
+          duration: 3200,
           useNativeDriver: false,
         }).start(({ finished }) => {
           if (finished) navigateNext();
@@ -294,12 +294,6 @@ export function WinScreen({ data, levelId, onExit }: Props) {
           ))}
         </View>
 
-        {/* Brain insight */}
-        <View style={s.insight}>
-          <Text style={s.insightLbl}>💡 Today's insight</Text>
-          <Text style={s.insightTxt}>{data.insight}</Text>
-        </View>
-
         {/* Auto-continue bar */}
         <View style={s.progressWrap}>
           <Animated.View
@@ -350,15 +344,18 @@ const s = StyleSheet.create({
   star: { width: 36, height: 36 },
 
   topSection: {
-    backgroundColor: 'rgba(255,255,255,0.95)',
+    backgroundColor: 'rgba(255,255,255,0.82)',
     alignItems: 'center',
     paddingHorizontal: 24,
     paddingTop: 20,
     paddingBottom: 16,
+    borderRadius: 24,
+    marginHorizontal: 16,
+    marginBottom: 16,
   },
   bottomSection: {
     flex: 1,
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: 'rgba(255,255,255,0)',
   },
 
   emojiWrap: { marginBottom: 12 },

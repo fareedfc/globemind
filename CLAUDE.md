@@ -123,8 +123,9 @@ Existing brain training apps (Lumosity, BrainHQ) feel like homework. ThinkPop fe
 - Logged-in users: "Signed in as [name]" + Log out
 
 ## Monetisation — Built
-- `playerStore`: `isPremium` flag, `dailyLevelsPlayed` counter, `FREE_DAILY_LEVELS = 3`
-- Journey play gate: premium skips all limits → free checks daily cap (3/day) → lives check
+- `playerStore`: `isPremium` flag, `dailyLevelsPlayed` counter, `FREE_DAILY_LEVELS = 10`, `MAX_LIVES = 10`, `DAILY_START_LIVES = 5`, `REFILL_MS = 15min`
+- **Lives system**: daily reset to 5 lives each new day + refill timer starts immediately (+1 life every 15 min up to max 10). Premium bypasses entirely. `checkDailyLivesReset()` called on mount via `useLives` hook.
+- Journey play gate: premium skips all limits → free checks daily cap (10/day) → lives check
 - Paywall (`app/paywall.tsx`): reason-aware (lives vs daily cap), feature comparison table (4 rows: Daily levels, Lives, Strengths, Weekly Report — no Ads row), real RevenueCat purchase flow, success screen, Restore Purchase
 - Premium pill shown in Journey TopBar (👑 Premium replaces ❤️ lives)
 - **Premium Stats features** (gated by `isPremium`): domain trend arrows + weekly games count; full Weekly Report (days active, games, pts, perfect ⭐, most improved, most played, perfect by domain, "So close!" replay nudge for top sub-5-star levels)

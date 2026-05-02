@@ -132,8 +132,10 @@ export default function MemoryGame() {
   const [won, setWon] = useState(false);
   const [failed, setFailed] = useState(false);
   const [timeLeft, setTimeLeft] = useState(timeLimit);
+  const [gameKey, setGameKey] = useState(0);
+  const [trackWidth, setTrackWidth] = useState(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const timerAnim = useRef(new Animated.Value(1)).current;
+  const timerAnim  = useRef(new Animated.Value(1)).current;
   const startTimeRef = useRef<number>(Date.now());
 
   const warningTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
@@ -141,8 +143,10 @@ export default function MemoryGame() {
   // Reset game state every time the screen comes into focus (expo-router keeps screens alive)
   useFocusEffect(useCallback(() => {
     timerAnim.stopAnimation();
+
     if (timerRef.current) clearInterval(timerRef.current);
     timerAnim.setValue(1);
+
     setDeck(buildDeck(levelId));
     setFlippedIdx([]);
     setMatchedCount(0);
@@ -151,25 +155,22 @@ export default function MemoryGame() {
     setWon(false);
     setFailed(false);
     setTimeLeft(timeLimit);
+    // Haptic burst for cards being dealt — fires once on focus, not in the timer effect
+    const burstCount = Math.min(calcPairs(levelId), 8);
+    for (let i = 0; i < burstCount; i++) {
+      setTimeout(() => Haptics.selectionAsync(), i * 80);
+    }
+    setGameKey(k => k + 1);
   }, [levelId, timeLimit]));
 
   // Countdown timer — interval for seconds text, Animated for smooth bar
   useEffect(() => {
     if (won || failed) return;
-    // Cards dealt burst — one selectionAsync per pair (max 8), 80ms apart
-    const burstCount = Math.min(totalPairs, 8);
-    for (let i = 0; i < burstCount; i++) {
-      setTimeout(() => Haptics.selectionAsync(), i * 80);
-    }
     startTimeRef.current = Date.now();
     timerAnim.setValue(1);
+
     const durationMs = timeLimit * 1000;
-    Animated.timing(timerAnim, {
-      toValue: 0,
-      duration: durationMs,
-      easing: Easing.linear,
-      useNativeDriver: false,
-    }).start(({ finished }) => {
+    Animated.timing(timerAnim, { toValue: 0, duration: durationMs, easing: Easing.linear, useNativeDriver: true }).start(({ finished }) => {
       if (finished) setFailed(true);
     });
     timerRef.current = setInterval(() => {
@@ -187,11 +188,12 @@ export default function MemoryGame() {
     ] as (ReturnType<typeof setTimeout> | null)[]).filter(Boolean) as ReturnType<typeof setTimeout>[];
     return () => {
       timerAnim.stopAnimation();
+  
       if (timerRef.current) clearInterval(timerRef.current);
       warningTimersRef.current.forEach(clearTimeout);
       warningTimersRef.current = [];
     };
-  }, [won, failed]);
+  }, [won, failed, gameKey]);
 
   // Handle two flipped cards
   useEffect(() => {
@@ -318,16 +320,14 @@ export default function MemoryGame() {
 
         {/* Countdown timer bar */}
         <View style={s.timerWrap}>
-          <View style={s.timerTrack}>
+          <View style={s.timerTrack} onLayout={e => setTrackWidth(e.nativeEvent.layout.width)}>
             <Animated.View
               style={[
                 s.timerFill,
                 {
-                  width: timerAnim.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] }),
-                  backgroundColor: timerAnim.interpolate({
-                    inputRange: [0, 0.25, 0.5, 1],
-                    outputRange: [Colors.coral, Colors.coral, Colors.gold, Colors.teal],
-                  }),
+                  width: trackWidth,
+                  backgroundColor: Colors.teal,
+                  transform: [{ translateX: timerAnim.interpolate({ inputRange: [0, 1], outputRange: [-trackWidth, 0] }) }],
                 },
               ]}
             />
@@ -373,7 +373,7 @@ const s = StyleSheet.create({
   container: { flex: 1 },
   safeArea: { flex: 1 },
   topSection: {
-    backgroundColor: 'rgba(255,255,255,0.95)',
+    backgroundColor: 'rgba(255,255,255,0.92)',
   },
   bottomSection: {
     flex: 1,

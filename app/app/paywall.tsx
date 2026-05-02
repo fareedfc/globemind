@@ -25,8 +25,8 @@ const PURPLE_DARK = '#4A0E8F';
 const GOLD        = '#FFAA00';
 
 const BENEFITS = [
-  { icon: require('../assets/icons/icon-explore.png'), title: 'Play Unlimited Levels',  sub: 'No daily limits — play as long as you want', tint: 'rgba(139,63,217,0.13)', top: true  },
-  { icon: require('../assets/icons/icon-heart.png'),   title: 'Never Run Out of Lives',  sub: 'Skip the wait and keep your streak going',   tint: 'rgba(255,170,0,0.13)',  top: true  },
+  { icon: require('../assets/icons/icon-explore.png'), title: 'Play Unlimited Levels',  sub: 'Free players get 10 levels a day — go unlimited for more', tint: 'rgba(139,63,217,0.13)', top: true  },
+  { icon: require('../assets/icons/icon-heart.png'),   title: 'Never Run Out of Lives',  sub: 'Free players get 10 lives — unlimited users never wait',   tint: 'rgba(255,170,0,0.13)',  top: true  },
   { icon: require('../assets/icons/icon-speed.png'),   title: 'Track Your Strengths',    sub: 'See where you shine and improve faster',      tint: 'rgba(139,63,217,0.08)', top: false },
   { icon: require('../assets/icons/icon-chart.png'),   title: 'Full Progress Insights',  sub: 'Detailed weekly performance breakdown',       tint: 'rgba(255,170,0,0.08)', top: false },
 ];
@@ -195,9 +195,11 @@ export default function PaywallScreen() {
 
             {reason === 'lives' && timeUntilNext && (
               <View style={s.timerCard}>
-                <Text style={s.timerLbl}>⏳ Next life refills in</Text>
+                <View>
+                  <Text style={s.timerLbl}>⏳ Next life refills in</Text>
+                  <Text style={s.timerSub}>Go Unlimited and never wait</Text>
+                </View>
                 <Text style={s.timerNum}>{timeUntilNext}</Text>
-                <Text style={s.timerSub}>Or go Unlimited and never wait again</Text>
               </View>
             )}
           </Animated.View>
@@ -363,14 +365,15 @@ const s = StyleSheet.create({
   heroSub: { fontSize: 13, fontFamily: 'Nunito_700Bold', color: '#8B3FD9', textAlign: 'center' },
 
   timerCard: {
-    marginTop: 18, width: '100%',
+    marginTop: 12, width: '100%',
     backgroundColor: 'rgba(239,71,111,0.1)', borderWidth: 1,
-    borderColor: 'rgba(239,71,111,0.25)', borderRadius: 16,
-    paddingVertical: 16, alignItems: 'center', gap: 4,
+    borderColor: 'rgba(239,71,111,0.25)', borderRadius: 14,
+    paddingVertical: 10, paddingHorizontal: 16,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
   },
   timerLbl: { fontSize: 12, fontFamily: 'Nunito_700Bold', color: Colors.coral, letterSpacing: 0.5 },
-  timerNum: { fontSize: 38, fontFamily: 'Nunito_900Black', color: '#1A1A2E' },
-  timerSub: { fontSize: 12, fontFamily: 'Nunito_400Regular', color: Colors.muted },
+  timerNum: { fontSize: 26, fontFamily: 'Nunito_900Black', color: '#1A1A2E' },
+  timerSub: { fontSize: 11, fontFamily: 'Nunito_400Regular', color: Colors.muted },
 
   // ── Benefits ────────────────────────────────────────────────────────────
   benefitRow: {

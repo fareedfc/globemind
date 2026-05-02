@@ -122,49 +122,51 @@ const s = StyleSheet.create({
   container: { flex: 1 },
 
   floatZone: {
-    flex: 1,
+    flex: 0.92,
     alignItems: 'center',
     justifyContent: 'center',
   },
 
   balloon: {
-    width: 120,
-    height: 140,
-    marginBottom: 12,
+    width: 80,
+    height: 95,
+    marginBottom: 8,
   },
 
   topSection: {
-    backgroundColor: 'rgba(255,255,255,0.95)',
+    backgroundColor: 'rgba(255,255,255,0.82)',
     width: '100%',
     alignItems: 'center',
-    paddingHorizontal: 28,
-    paddingTop: 32,
-    paddingBottom: 20,
+    paddingHorizontal: 24,
+    paddingTop: 20,
+    paddingBottom: 16,
+    borderRadius: 24,
+    marginHorizontal: 16,
+    alignSelf: 'center',
   },
   bottomSection: {
-    height: 32,
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    height: 0,
   },
 
   title: {
-    fontSize: 28,
+    fontSize: 24,
     fontFamily: 'Nunito_900Black',
     color: Colors.text,
-    marginBottom: 10,
+    marginBottom: 6,
     textAlign: 'center',
   },
   sub: {
-    fontSize: 15,
+    fontSize: 14,
     fontFamily: 'Nunito_400Regular',
     color: Colors.muted,
     textAlign: 'center',
-    lineHeight: 23,
-    marginBottom: 32,
+    lineHeight: 21,
+    marginBottom: 20,
   },
 
   btnPrimary: {
     width: '100%',
-    paddingVertical: 17,
+    paddingVertical: 14,
     backgroundColor: '#8B3FD9',
     borderRadius: 15,
     alignItems: 'center',

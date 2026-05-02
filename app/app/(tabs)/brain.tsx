@@ -625,9 +625,9 @@ const s = StyleSheet.create({
     textAlign: 'center',
   },
   soCloseSection: {
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(0,0,0,0.05)',
+    backgroundColor: 'rgba(139,63,217,0.08)',
+    borderRadius: 16,
+    padding: 12,
     gap: 8,
   },
   soCloseTitle: {

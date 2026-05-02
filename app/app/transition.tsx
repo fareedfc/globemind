@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import {
-  View, Text, TouchableOpacity, StyleSheet, Animated, Easing, ImageBackground,
+  View, Text, TouchableOpacity, StyleSheet, Animated, Easing, ImageBackground, Image,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
@@ -49,11 +49,12 @@ const X2      = SCENE_W - 44;
 const CY      = SCENE_H / 2;
 
 export default function LevelTransitionScreen() {
-  const { levelId: rawId, domain: rawDomain, oldPct: rawOldPct } = useLocalSearchParams<{ levelId: string; domain: string; oldPct: string }>();
+  const { levelId: rawId, domain: rawDomain, oldPct: rawOldPct, insight: rawInsight } = useLocalSearchParams<{ levelId: string; domain: string; oldPct: string; insight: string }>();
   const levelId  = parseInt(rawId ?? '1');
   const nextId   = levelId + 1;
   const domain   = (rawDomain ?? null) as GameType | null;
   const oldPct   = parseInt(rawOldPct ?? '0');
+  const insight  = rawInsight ? decodeURIComponent(rawInsight) : null;
   const newPct   = domain ? useBrainStore.getState().domains[domain] : 0;
   const domainColor = domain ? DOMAIN_COLORS[domain] : Colors.gold;
 
@@ -208,12 +209,12 @@ export default function LevelTransitionScreen() {
               L{nextId} 🔓
             </Animated.Text>
 
-            <Animated.Text style={[s.marker, {
+            <Animated.View style={[s.marker, {
               left: X1 - 14, top: CY - HALF - 20,
               transform: [{ translateX: markerTX }, { translateY: markerTY }],
             }]}>
-              ⭐
-            </Animated.Text>
+              <Image source={require('../assets/icons/icon-star.png')} style={s.markerImg} />
+            </Animated.View>
           </View>
           </View>
         </View>
@@ -250,6 +251,17 @@ export default function LevelTransitionScreen() {
                   width: barAnim.interpolate({ inputRange: [0, 100], outputRange: ['0%', '100%'] }),
                 }]} />
               </View>
+            </Animated.View>
+          )}
+
+          {/* ── Insight ── */}
+          {insight && (
+            <Animated.View style={[s.insight, {
+              opacity: labelAnim,
+              transform: [{ translateY: labelAnim.interpolate({ inputRange: [0, 1], outputRange: [14, 0] }) }],
+            }]}>
+              <Text style={s.insightLbl}>💡 Today's Insight</Text>
+              <Text style={s.insightTxt}>{insight}</Text>
             </Animated.View>
           )}
 
@@ -291,15 +303,17 @@ const s = StyleSheet.create({
   },
 
   topSection: {
-    backgroundColor: 'rgba(255,255,255,0.95)',
+    backgroundColor: 'rgba(255,255,255,0.82)',
     paddingHorizontal: 28,
     paddingTop: 24,
     paddingBottom: 20,
     gap: 20,
+    borderRadius: 24,
+    marginHorizontal: 16,
+    marginBottom: 16,
   },
   bottomSection: {
-    height: 32,
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    height: 0,
   },
 
   titleCard: {
@@ -369,8 +383,11 @@ const s = StyleSheet.create({
 
   marker: {
     position: 'absolute',
-    fontSize: 26,
     zIndex: 10,
+  },
+  markerImg: {
+    width: 28,
+    height: 28,
   },
 
   // ── Unlock label ───────────────────────────────────────────────────────────
@@ -424,6 +441,30 @@ const s = StyleSheet.create({
   strengthFill: {
     height: '100%',
     borderRadius: 8,
+  },
+
+  // ── Insight ────────────────────────────────────────────────────────────────
+  insight: {
+    width: '100%',
+    backgroundColor: 'rgba(139,63,217,0.07)',
+    borderWidth: 1,
+    borderColor: 'rgba(139,63,217,0.18)',
+    borderRadius: 13,
+    padding: 13,
+  },
+  insightLbl: {
+    fontSize: 11,
+    fontFamily: 'Nunito_700Bold',
+    color: '#8B3FD9',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    marginBottom: 3,
+  },
+  insightTxt: {
+    fontSize: 13,
+    fontFamily: 'Nunito_400Regular',
+    color: '#333',
+    lineHeight: 20,
   },
 
   // ── Button ─────────────────────────────────────────────────────────────────

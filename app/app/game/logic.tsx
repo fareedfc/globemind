@@ -169,13 +169,15 @@ export default function LogicGame() {
 
   const [currentRound, setCurrentRound] = useState(0);
   const [phase, setPhase] = useState<Phase>('answering');
-  const timerAnim = useRef(new Animated.Value(1)).current;
+  const timerAnim  = useRef(new Animated.Value(1)).current;
+  const [trackWidth, setTrackWidth] = useState(0);
   const [score, setScore] = useState(0);
   const [pips, setPips] = useState<PipState[]>(Array(TOTAL_ROUNDS).fill('none'));
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [foundTargets, setFoundTargets] = useState<string[]>([]);
   const [won, setWon] = useState(false);
   const [failed, setFailed] = useState(false);
+  const [gameKey, setGameKey] = useState(0);
 
   const wrongCountRef = useRef(0);
   const currentRoundRef = useRef(0);
@@ -191,6 +193,7 @@ export default function LogicGame() {
     setCurrentRound(0);
     setPhase('answering');
     timerAnim.setValue(1);
+
     setScore(0);
     scoreRef.current = 0;
     wrongCountRef.current = 0;
@@ -201,12 +204,14 @@ export default function LogicGame() {
     setFoundTargets([]);
     setWon(false);
     setFailed(false);
+    setGameKey(k => k + 1);
   }, [levelId]));
 
   const warningTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   const stopTimer = useCallback(() => {
     timerAnim.stopAnimation();
+
     warningTimersRef.current.forEach(clearTimeout);
     warningTimersRef.current = [];
   }, [timerAnim]);
@@ -297,12 +302,8 @@ export default function LogicGame() {
 
   const startTimer = useCallback(() => {
     timerAnim.setValue(1);
-    Animated.timing(timerAnim, {
-      toValue: 0,
-      duration: answerMs,
-      easing: Easing.linear,
-      useNativeDriver: false,
-    }).start(({ finished }) => {
+
+    Animated.timing(timerAnim, { toValue: 0, duration: answerMs, easing: Easing.linear, useNativeDriver: true }).start(({ finished }) => {
       if (finished) handleAnswer(null);
     });
     warningTimersRef.current = ([
@@ -316,7 +317,7 @@ export default function LogicGame() {
     if (won) return;
     startTimer();
     return stopTimer;
-  }, [currentRound, won]);
+  }, [currentRound, won, gameKey]);
 
   useEffect(() => () => stopTimer(), []);
 
@@ -335,14 +336,10 @@ export default function LogicGame() {
     setFoundTargets([]);
     setWon(false);
     setFailed(false);
+    setGameKey(k => k + 1);
   };
 
   const round = rounds.current[currentRound];
-  const timerWidth = timerAnim.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] });
-  const timerColor = timerAnim.interpolate({
-    inputRange: [0, 0.25, 0.5, 1],
-    outputRange: [Colors.coral, Colors.coral, Colors.gold, Colors.teal],
-  });
   const stars = calcPatternStars(score);
 
   const isFirstClear = useProgressStore.getState().completions[levelId] === undefined;
@@ -427,8 +424,8 @@ export default function LogicGame() {
 
           {/* Timer bar */}
           <View style={s.timerWrap}>
-            <View style={s.timerTrack}>
-              <Animated.View style={[s.timerFill, { width: timerWidth, backgroundColor: timerColor }]} />
+            <View style={s.timerTrack} onLayout={e => setTrackWidth(e.nativeEvent.layout.width)}>
+              <Animated.View style={[s.timerFill, { width: trackWidth, backgroundColor: Colors.teal, transform: [{ translateX: timerAnim.interpolate({ inputRange: [0, 1], outputRange: [-trackWidth, 0] }) }] }]} />
             </View>
           </View>
 
@@ -503,7 +500,7 @@ export default function LogicGame() {
 const s = StyleSheet.create({
   container: { flex: 1 },
   safeArea: { flex: 1 },
-  topSection: { backgroundColor: 'rgba(255,255,255,0.95)' },
+  topSection: { backgroundColor: 'rgba(255,255,255,0.92)' },
   bottomSection: { flex: 1, backgroundColor: 'rgba(255,255,255,0.05)' },
 
   header: {

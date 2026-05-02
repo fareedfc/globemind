@@ -307,20 +307,21 @@ export default function JourneyScreen() {
                   activeOpacity={0.85}
                   onPress={() => {
                     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                    if (!isPremium && lives <= 0) {
-                      closeModal();
-                      router.push('/paywall?reason=lives');
-                      return;
-                    }
-                    if (!isPremium && getDailyLevelsToday() >= FREE_DAILY_LEVELS) {
-                      closeModal();
-                      router.push('/paywall?reason=daily');
-                      return;
-                    }
+                    // TESTING — gates disabled, re-enable before shipping
+                    // if (!isPremium && lives <= 0) {
+                    //   closeModal();
+                    //   router.push('/paywall?reason=lives');
+                    //   return;
+                    // }
+                    // if (!isPremium && getDailyLevelsToday() >= FREE_DAILY_LEVELS) {
+                    //   closeModal();
+                    //   router.push('/paywall?reason=daily');
+                    //   return;
+                    // }
                     closeModal();
                     if (!isPremium) {
-                      useLive();
-                      incrementDailyLevels();
+                      // useLive();
+                      // incrementDailyLevels();
                     }
                     router.push(`/game/${selectedLevel?.type}?levelId=${selectedLevel?.id}`);
                   }}

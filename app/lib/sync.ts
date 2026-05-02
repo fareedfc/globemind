@@ -31,7 +31,7 @@ export interface BrainSyncData {
 
 export interface PullResult {
   profile:     Record<string, unknown> | null;
-  completions: { level_id: number; stars: number }[];
+  completions: { world_id: number; level_id: number; stars: number }[];
   brain:       Record<string, unknown> | null;
 }
 
@@ -40,7 +40,7 @@ export interface PullResult {
 export async function pullAll(userId: string): Promise<PullResult> {
   const [profileRes, completionsRes, brainRes] = await Promise.all([
     supabase.from('profiles').select('*').eq('id', userId).single(),
-    supabase.from('level_completions').select('level_id, stars').eq('user_id', userId),
+    supabase.from('level_completions').select('world_id, level_id, stars').eq('user_id', userId),
     supabase.from('brain_scores').select('*').eq('user_id', userId).single(),
   ]);
 
@@ -71,10 +71,10 @@ export function pushCurrentLevel(userId: string, currentLevel: number): void {
     .eq('id', userId).then(() => {});
 }
 
-export function pushCompletion(userId: string, levelId: number, stars: number): void {
+export function pushCompletion(userId: string, levelId: number, stars: number, worldId = 1): void {
   supabase.from('level_completions').upsert(
-    { user_id: userId, level_id: levelId, stars },
-    { onConflict: 'user_id,level_id' }
+    { user_id: userId, world_id: worldId, level_id: levelId, stars },
+    { onConflict: 'user_id,world_id,level_id' }
   ).then(() => {});
 }
 

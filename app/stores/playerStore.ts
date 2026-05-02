@@ -4,17 +4,19 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { pushPlayerState } from '../lib/sync';
 import { getCurrentUserId } from '../lib/userId';
 
-export const MAX_LIVES = 5;
-export const FREE_DAILY_LEVELS = 3;
+export const MAX_LIVES = 10;
+export const DAILY_START_LIVES = 5;
+export const FREE_DAILY_LEVELS = 10;
 // TESTING TIP: temporarily set this to 60_000 (1 minute) to test lives refill
 // and paywall "Go play" behaviour without waiting 30 mins. Change back before shipping.
-export const REFILL_MS = 30 * 60 * 1000; // 30 minutes
+export const REFILL_MS = 15 * 60 * 1000; // 15 minutes
 
 interface PlayerState {
   score: number;
   lives: number;
   streak: number;
   lastPlayedDate: string | null;
+  livesResetDate: string | null;
   nextRefillAt: number | null;
   isPremium: boolean;
   dailyLevelsPlayed: number;
@@ -25,6 +27,7 @@ interface PlayerState {
   useLive: () => void;
   refillLive: () => void;
   recordPlay: () => void;
+  checkDailyLivesReset: () => void;
   setPremium: (val: boolean) => void;
   incrementDailyLevels: () => void;
   getDailyLevelsToday: () => number;
@@ -34,9 +37,10 @@ export const usePlayerStore = create<PlayerState>()(
   persist(
     (set, get) => ({
       score: 0,
-      lives: 5,
+      lives: 99, // TESTING — revert to DAILY_START_LIVES before shipping
       streak: 0,
       lastPlayedDate: null,
+      livesResetDate: null,
       nextRefillAt: null,
       isPremium: false,
       dailyLevelsPlayed: 0,
@@ -58,7 +62,7 @@ export const usePlayerStore = create<PlayerState>()(
 
       useLive: () =>
         set((s) => {
-          if (s.isPremium) return {}; // premium: unlimited lives
+          if (s.isPremium) return {};
           const newLives = Math.max(0, s.lives - 1);
           const nextRefillAt =
             s.nextRefillAt ?? (newLives < MAX_LIVES ? Date.now() + REFILL_MS : null);
@@ -71,6 +75,19 @@ export const usePlayerStore = create<PlayerState>()(
           const newLives = Math.min(MAX_LIVES, s.lives + 1);
           const nextRefillAt = newLives < MAX_LIVES ? Date.now() + REFILL_MS : null;
           return { lives: newLives, nextRefillAt };
+        }),
+
+      // Resets lives to DAILY_START_LIVES each new day and starts refill timer immediately.
+      checkDailyLivesReset: () =>
+        set((s) => {
+          if (s.isPremium) return {};
+          const today = new Date().toISOString().slice(0, 10);
+          if (s.livesResetDate === today) return {};
+          return {
+            lives: DAILY_START_LIVES,
+            nextRefillAt: Date.now() + REFILL_MS,
+            livesResetDate: today,
+          };
         }),
 
       recordPlay: () =>

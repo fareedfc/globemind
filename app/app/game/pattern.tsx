@@ -184,7 +184,8 @@ export default function PatternGame() {
   const [phase, setPhase] = useState<Phase>('watching');
   const [litIndex, setLitIndex] = useState(-1);
   const [seqHidden, setSeqHidden] = useState(false);
-  const timerAnim = useRef(new Animated.Value(1)).current;
+  const timerAnim  = useRef(new Animated.Value(1)).current;
+  const [trackWidth, setTrackWidth] = useState(0);
   const [score, setScore] = useState(0);
   const [pips, setPips] = useState<PipState[]>(Array(totalRounds).fill('none'));
   const [feedbackAnswer, setFeedbackAnswer] = useState<string | null>(null);
@@ -208,6 +209,7 @@ export default function PatternGame() {
     setLitIndex(-1);
     setSeqHidden(false);
     timerAnim.setValue(1);
+
     setScore(0);
     setPips(Array(totalRounds).fill('none'));
     setFeedbackAnswer(null);
@@ -222,6 +224,7 @@ export default function PatternGame() {
 
   const stopAnswerTimer = useCallback(() => {
     timerAnim.stopAnimation();
+
     warningTimersRef.current.forEach(clearTimeout);
     warningTimersRef.current = [];
   }, [timerAnim]);
@@ -266,12 +269,8 @@ export default function PatternGame() {
 
   const startAnswerTimer = useCallback(() => {
     timerAnim.setValue(1);
-    Animated.timing(timerAnim, {
-      toValue: 0,
-      duration: answerMs,
-      easing: Easing.linear,
-      useNativeDriver: false,
-    }).start(({ finished }) => {
+
+    Animated.timing(timerAnim, { toValue: 0, duration: answerMs, easing: Easing.linear, useNativeDriver: true }).start(({ finished }) => {
       if (finished) handleAnswer(null);
     });
     warningTimersRef.current = ([
@@ -350,11 +349,6 @@ export default function PatternGame() {
   };
 
   const activeRound = rounds.current[currentRound];
-  const timerWidth = timerAnim.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] });
-  const timerColor = timerAnim.interpolate({
-    inputRange: [0, 0.25, 0.5, 1],
-    outputRange: [Colors.coral, Colors.coral, Colors.gold, Colors.teal],
-  });
 
   const winPct = Math.round((score / totalRounds) * 100);
   const stars = calcPatternStars(score);
@@ -460,8 +454,8 @@ export default function PatternGame() {
 
         {/* Timer bar */}
         <View style={[s.timerWrap, phase === 'watching' && { opacity: 0 }]}>
-          <View style={s.timerTrack}>
-            <Animated.View style={[s.timerFill, { width: timerWidth, backgroundColor: timerColor }]} />
+          <View style={s.timerTrack} onLayout={e => setTrackWidth(e.nativeEvent.layout.width)}>
+            <Animated.View style={[s.timerFill, { width: trackWidth, backgroundColor: Colors.teal, transform: [{ translateX: timerAnim.interpolate({ inputRange: [0, 1], outputRange: [-trackWidth, 0] }) }] }]} />
           </View>
         </View>
 
@@ -543,7 +537,7 @@ export default function PatternGame() {
 const s = StyleSheet.create({
   container: { flex: 1 },
   safeArea: { flex: 1 },
-  topSection: { backgroundColor: 'rgba(255,255,255,1.0)' },
+  topSection: { backgroundColor: 'rgba(255,255,255,0.92)' },
   bottomSection: { flex: 1, backgroundColor: 'rgba(255,255,255,0.05)' },
 
   header: {

@@ -120,10 +120,11 @@ export default function SpeedGame() {
   const [maxCombo, setMaxCombo] = useState(0);
   const [correct, setCorrect] = useState(0);
   const [wrong, setWrong] = useState(0);
-  const timerAnim = useRef(new Animated.Value(1)).current;
+  const timerAnim  = useRef(new Animated.Value(1)).current;
+  const [trackWidth, setTrackWidth] = useState(0);
   const [timerSecs, setTimerSecs] = useState(30);
   const [running, setRunning] = useState(false);
-  const [started, setStarted] = useState(false);
+  const [gameKey, setGameKey] = useState(0);
   const [won, setWon] = useState(false);
   const [flash, setFlash] = useState<{ idx: number; correct: boolean } | null>(null);
   const [comboText, setComboText] = useState('');
@@ -138,6 +139,7 @@ export default function SpeedGame() {
   useFocusEffect(useCallback(() => {
     if (timerRef.current) clearInterval(timerRef.current);
     timerAnim.setValue(1);
+
     comboRef.current = 0;
     runningRef.current = false;
     setRound(buildRound(pool, cellCount));
@@ -148,14 +150,15 @@ export default function SpeedGame() {
     setWrong(0);
     setTimerSecs(30);
     setRunning(false);
-    setStarted(false);
     setWon(false);
     setFlash(null);
     setComboText('');
+    setGameKey(k => k + 1);
   }, [levelId, pool, cellCount]));
 
   const stopTimer = useCallback(() => {
     timerAnim.stopAnimation();
+
     if (timerRef.current) clearInterval(timerRef.current);
     timerRef.current = null;
     runningRef.current = false;
@@ -168,14 +171,9 @@ export default function SpeedGame() {
     startTimeRef.current = Date.now();
     runningRef.current = true;
     setRunning(true);
-    // Smooth bar via Animated.timing
     timerAnim.setValue(1);
-    Animated.timing(timerAnim, {
-      toValue: 0,
-      duration: TOTAL_MS,
-      easing: Easing.linear,
-      useNativeDriver: false,
-    }).start(({ finished }) => {
+
+    Animated.timing(timerAnim, { toValue: 0, duration: TOTAL_MS, easing: Easing.linear, useNativeDriver: true }).start(({ finished }) => {
       if (finished) {
         runningRef.current = false;
         setRunning(false);
@@ -203,6 +201,12 @@ export default function SpeedGame() {
     timerAnim.stopAnimation();
     if (timerRef.current) clearInterval(timerRef.current);
   }, [timerAnim]);
+
+  // Auto-start timer on focus (gameKey incremented by useFocusEffect)
+  useEffect(() => {
+    if (gameKey === 0) return;
+    startTimer();
+  }, [gameKey]);
 
   const tapOption = useCallback((emoji: string, idx: number) => {
     if (!runningRef.current) return;
@@ -254,11 +258,6 @@ export default function SpeedGame() {
     }
   }, [round]);
 
-  const timerWidth = timerAnim.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] });
-  const timerColor = timerAnim.interpolate({
-    inputRange: [0, 0.25, 0.5, 1],
-    outputRange: [Colors.coral, Colors.coral, Colors.gold, Colors.teal],
-  });
 
   const resetGame = () => {
     stopTimer();
@@ -272,15 +271,10 @@ export default function SpeedGame() {
     timerAnim.setValue(1);
     setTimerSecs(30);
     setRunning(false);
-    setStarted(false);
     setWon(false);
     setFlash(null);
     setComboText('');
-  };
-
-  const handleStart = () => {
-    setStarted(true);
-    startTimer();
+    setGameKey(k => k + 1);
   };
 
   const acc = correct + wrong > 0 ? Math.round((correct / (correct + wrong)) * 100) : 0;
@@ -333,8 +327,8 @@ export default function SpeedGame() {
 
         {/* Timer bar */}
         <View style={s.timerWrap}>
-          <View style={s.timerTrack}>
-            <Animated.View style={[s.timerFill, { width: timerWidth, backgroundColor: timerColor }]} />
+          <View style={s.timerTrack} onLayout={e => setTrackWidth(e.nativeEvent.layout.width)}>
+            <Animated.View style={[s.timerFill, { width: trackWidth, backgroundColor: Colors.teal, transform: [{ translateX: timerAnim.interpolate({ inputRange: [0, 1], outputRange: [-trackWidth, 0] }) }] }]} />
           </View>
           <Text style={s.timerLbl}>{timerSecs}s</Text>
         </View>
@@ -369,7 +363,7 @@ export default function SpeedGame() {
                       emoji={emoji}
                       style={[s.opt, isCorrect && s.optCorrect, isWrong && s.optWrong]}
                       onPress={() => tapOption(emoji, idx)}
-                      disabled={!started || !running}
+                      disabled={!running}
                       txtStyle={[s.optTxt, { fontSize: cols === 3 && rows === 3 ? 28 : 36 }]}
                       isCorrect={isCorrect}
                     />
@@ -380,11 +374,6 @@ export default function SpeedGame() {
           </View>
         </View>
 
-        {!started && (
-          <TouchableOpacity style={s.startBtn} onPress={handleStart} activeOpacity={0.85}>
-            <Text style={s.startBtnTxt}>▶  Start Game</Text>
-          </TouchableOpacity>
-        )}
       </View>
     </SafeAreaView>
     </ImageBackground>
@@ -393,7 +382,7 @@ export default function SpeedGame() {
 
 const s = StyleSheet.create({
   container: { flex: 1 },
-  safeArea: { flex: 1, backgroundColor: 'rgba(255,255,255,0.85)' },
+  safeArea: { flex: 1, backgroundColor: 'rgba(255,255,255,0.92)' },
 
   header: {
     flexDirection: 'row',
@@ -466,13 +455,4 @@ const s = StyleSheet.create({
   optWrong: { borderColor: Colors.coral, backgroundColor: 'rgba(239,71,111,0.15)' },
   optTxt: { fontSize: 36 },
 
-  startBtn: {
-    marginTop: 16,
-    marginBottom: 24,
-    paddingVertical: 17,
-    backgroundColor: '#8B3FD9',
-    borderRadius: 16,
-    alignItems: 'center',
-  },
-  startBtnTxt: { fontSize: 17, fontFamily: 'Nunito_900Black', color: '#FFFFFF' },
 });
