@@ -3,6 +3,7 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { pushCompletion, pushCurrentLevel } from '../lib/sync';
 import { getCurrentUserId } from '../lib/userId';
+import { getPermissionStatus, scheduleNotifications } from '../lib/notifications';
 
 interface ProgressState {
   currentLevelId: number;
@@ -36,6 +37,14 @@ export const useProgressStore = create<ProgressState>()(
           pushCompletion(userId, id, stars);
           pushCurrentLevel(userId, get().currentLevelId);
         }
+
+        // Keep streak notification copy current after each play
+        getPermissionStatus().then(status => {
+          if (status === 'granted') {
+            const { streak } = require('./playerStore').usePlayerStore.getState();
+            scheduleNotifications(streak);
+          }
+        });
       },
     }),
     {

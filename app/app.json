@@ -23,6 +23,7 @@
       "infoPlist": {
         "NSCameraUsageDescription": "ThinkPop does not use your camera.",
         "NSMicrophoneUsageDescription": "ThinkPop does not use your microphone.",
+        "NSUserNotificationUsageDescription": "ThinkPop sends daily reminders to keep your brain sharp.",
         "ITSAppUsesNonExemptEncryption": false
       }
     },
@@ -53,6 +54,7 @@
     },
     "plugins": [
       "expo-router",
+      "expo-notifications",
       [
         "expo-splash-screen",
         {

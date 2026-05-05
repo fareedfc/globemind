@@ -6,6 +6,7 @@ import { getCurrentUserId } from '../lib/userId';
 
 export const MAX_LIVES = 10;
 export const DAILY_START_LIVES = 5;
+export const MAX_DAILY_REFILLS = 5;
 export const FREE_DAILY_LEVELS = 10;
 // TESTING TIP: temporarily set this to 60_000 (1 minute) to test lives refill
 // and paywall "Go play" behaviour without waiting 30 mins. Change back before shipping.
@@ -18,6 +19,7 @@ interface PlayerState {
   lastPlayedDate: string | null;
   livesResetDate: string | null;
   nextRefillAt: number | null;
+  dailyLivesRefilled: number;
   isPremium: boolean;
   dailyLevelsPlayed: number;
   dailyLevelsDate: string | null;
@@ -37,11 +39,12 @@ export const usePlayerStore = create<PlayerState>()(
   persist(
     (set, get) => ({
       score: 0,
-      lives: 99, // TESTING — revert to DAILY_START_LIVES before shipping
+      lives: DAILY_START_LIVES,
       streak: 0,
       lastPlayedDate: null,
       livesResetDate: null,
       nextRefillAt: null,
+      dailyLivesRefilled: 0,
       isPremium: false,
       dailyLevelsPlayed: 0,
       dailyLevelsDate: null,
@@ -72,9 +75,15 @@ export const usePlayerStore = create<PlayerState>()(
       refillLive: () =>
         set((s) => {
           if (s.isPremium) return {};
+          if (s.dailyLivesRefilled >= MAX_DAILY_REFILLS) {
+            return { nextRefillAt: null };
+          }
           const newLives = Math.min(MAX_LIVES, s.lives + 1);
-          const nextRefillAt = newLives < MAX_LIVES ? Date.now() + REFILL_MS : null;
-          return { lives: newLives, nextRefillAt };
+          const newRefilled = s.dailyLivesRefilled + 1;
+          const nextRefillAt = newRefilled < MAX_DAILY_REFILLS && newLives < MAX_LIVES
+            ? Date.now() + REFILL_MS
+            : null;
+          return { lives: newLives, dailyLivesRefilled: newRefilled, nextRefillAt };
         }),
 
       // Resets lives to DAILY_START_LIVES each new day and starts refill timer immediately.
@@ -87,6 +96,7 @@ export const usePlayerStore = create<PlayerState>()(
             lives: DAILY_START_LIVES,
             nextRefillAt: Date.now() + REFILL_MS,
             livesResetDate: today,
+            dailyLivesRefilled: 0,
           };
         }),
 

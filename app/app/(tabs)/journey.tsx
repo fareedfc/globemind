@@ -172,7 +172,8 @@ export default function JourneyScreen() {
                 <>
                   <Pill
                     variant="warm"
-                    label={'💎 ' + score.toLocaleString()}
+                    icon={require('../../assets/icons/icon-score_3.png')}
+                    label={score.toLocaleString()}
                     bg={WORLD_TAB_COLORS[worldIdx]}
                   />
                   {isPremium
@@ -187,7 +188,7 @@ export default function JourneyScreen() {
           ref={scrollRef}
           horizontal
           style={s.mapScroll}
-          contentContainerStyle={{ width: MAP_VIEW_WIDTH, height: mapH }}
+          contentContainerStyle={{ width: MAP_VIEW_WIDTH + 220, height: mapH }}
           showsHorizontalScrollIndicator={false}
           onContentSizeChange={scrollToCurrent}
           onLayout={(e) => setMapH(e.nativeEvent.layout.height)}
@@ -226,12 +227,26 @@ export default function JourneyScreen() {
               />
             );
           })}
+
+          {/* World 2 coming soon teaser node */}
+          <View style={[s.teaserNode, {
+            left: MAP_VIEW_WIDTH + 60,
+            top: mapH * 0.5 - 50,
+          }]}>
+            <Text style={s.teaserEmoji}>🌌</Text>
+            <Text style={s.teaserWorld}>Universe 2</Text>
+            <Text style={s.teaserSoon}>Coming Soon</Text>
+          </View>
+
         </ScrollView>
 
           {/* Level label overlaid on map — does not scroll */}
           <View style={[s.levelOverlay, { backgroundColor: WORLD_TAB_COLORS[worldIdx] }]} pointerEvents="none">
             <Text style={s.bannerLabel}>YOUR JOURNEY</Text>
-            <Text style={s.bannerTitle}>Level {currentLevelId} of {LEVELS.length} 🌍</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 1 }}>
+              <Text style={s.bannerTitle}>Level {currentLevelId} of {LEVELS.length}</Text>
+              <Image source={require('../../assets/icons/icon-world.png')} style={{ width: 19.2, height: 19.2 }} resizeMode="contain" />
+            </View>
           </View>
 
           {/* World banner overlaid on map — updates as user scrolls */}
@@ -307,21 +322,20 @@ export default function JourneyScreen() {
                   activeOpacity={0.85}
                   onPress={() => {
                     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                    // TESTING — gates disabled, re-enable before shipping
-                    // if (!isPremium && lives <= 0) {
-                    //   closeModal();
-                    //   router.push('/paywall?reason=lives');
-                    //   return;
-                    // }
-                    // if (!isPremium && getDailyLevelsToday() >= FREE_DAILY_LEVELS) {
-                    //   closeModal();
-                    //   router.push('/paywall?reason=daily');
-                    //   return;
-                    // }
+                    if (!isPremium && lives <= 0) {
+                      closeModal();
+                      router.push('/paywall?reason=lives');
+                      return;
+                    }
+                    if (!isPremium && getDailyLevelsToday() >= FREE_DAILY_LEVELS) {
+                      closeModal();
+                      router.push('/paywall?reason=daily');
+                      return;
+                    }
                     closeModal();
                     if (!isPremium) {
-                      // useLive();
-                      // incrementDailyLevels();
+                      useLive();
+                      incrementDailyLevels();
                     }
                     router.push(`/game/${selectedLevel?.type}?levelId=${selectedLevel?.id}`);
                   }}
@@ -410,6 +424,34 @@ const s = StyleSheet.create({
     fontFamily: 'Nunito_900Black',
     color: Colors.text,
     marginTop: 1,
+  },
+
+  teaserNode: {
+    position: 'absolute',
+    width: 100,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.55)',
+    borderRadius: 20,
+    borderWidth: 2,
+    borderColor: 'rgba(6,182,212,0.4)',
+    borderStyle: 'dashed',
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+    gap: 2,
+  },
+  teaserEmoji: { fontSize: 28 },
+  teaserWorld: {
+    fontSize: 12,
+    fontFamily: 'Nunito_900Black',
+    color: '#0891B2',
+    textAlign: 'center',
+  },
+  teaserSoon: {
+    fontSize: 10,
+    fontFamily: 'Nunito_700Bold',
+    color: 'rgba(8,145,178,0.7)',
+    textAlign: 'center',
   },
 
 

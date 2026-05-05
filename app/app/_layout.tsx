@@ -17,6 +17,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import Purchases, { LOG_LEVEL } from 'react-native-purchases';
 import { useAuthStore } from '../stores/authStore';
 import { supabase } from '../lib/supabase';
+import '../lib/notifications'; // registers notification handler on startup
 
 // Replace with your real RevenueCat API keys from the RevenueCat dashboard
 const RC_API_KEY_IOS     = 'appl_AgVACahWeoGFdeGJBqcHqHqxyCQ';

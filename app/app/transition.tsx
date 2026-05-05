@@ -1,7 +1,8 @@
 import { useEffect, useRef } from 'react';
 import {
-  View, Text, TouchableOpacity, StyleSheet, Animated, Easing, ImageBackground, Image,
+  View, Text, TouchableOpacity, StyleSheet, Animated, Easing, ImageBackground, Image, Alert,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
 
 const WORLD_BGS = [
@@ -25,6 +26,8 @@ import { Colors } from '../constants/colors';
 import { LEVELS, POS } from '../data/levels';
 import { NODE_SIZE } from '../constants/config';
 import { useBrainStore, type GameType } from '../stores/brainStore';
+import { getPermissionStatus, requestAndSchedule } from '../lib/notifications';
+import { usePlayerStore } from '../stores/playerStore';
 
 const DOMAIN_COLORS: Record<GameType, string> = {
   memory:  Colors.gold,
@@ -140,6 +143,33 @@ export default function LevelTransitionScreen() {
       });
     }, 450);
   }, []);
+
+  // Notification nudge — show once after first level completion
+  useEffect(() => {
+    if (levelId !== 1) return;
+    const timer = setTimeout(async () => {
+      const alreadyShown = await AsyncStorage.getItem('notifNudgeShown');
+      if (alreadyShown) return;
+      const status = await getPermissionStatus();
+      if (status === 'granted') return;
+      await AsyncStorage.setItem('notifNudgeShown', 'true');
+      Alert.alert(
+        '🔔 Stay Sharp Every Day',
+        'Get a daily reminder so your brain workout becomes a habit.',
+        [
+          { text: 'No thanks', style: 'cancel' },
+          {
+            text: 'Enable',
+            onPress: () => {
+              const { streak } = usePlayerStore.getState();
+              requestAndSchedule(streak);
+            },
+          },
+        ]
+      );
+    }, 1800);
+    return () => clearTimeout(timer);
+  }, [levelId]);
 
   if (!current || !next) return null;
 

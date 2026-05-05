@@ -130,6 +130,7 @@ export function WinScreen({ data, levelId, onExit }: Props) {
 
   // Auto-continue progress bar (runs after POP! fades)
   const progressAnim = useRef(new Animated.Value(0)).current;
+  const [trackWidth, setTrackWidth] = useState(0);
 
   // Score counter display
   const [displayScore, setDisplayScore] = useState(usePlayerStore.getState().score);
@@ -160,7 +161,7 @@ export function WinScreen({ data, levelId, onExit }: Props) {
         Animated.timing(progressAnim, {
           toValue: 1,
           duration: 3200,
-          useNativeDriver: false,
+          useNativeDriver: true,
         }).start(({ finished }) => {
           if (finished) navigateNext();
         });
@@ -294,16 +295,22 @@ export function WinScreen({ data, levelId, onExit }: Props) {
           ))}
         </View>
 
+        {/* World 1 complete teaser */}
+        {levelId === 101 && (
+          <View style={s.worldTeaser}>
+            <Text style={s.worldTeaserTitle}>🌌 Universe 2 is on its way!</Text>
+            <Text style={s.worldTeaserSub}>You've conquered Universe 1. Stay tuned for the next challenge.</Text>
+          </View>
+        )}
+
         {/* Auto-continue bar */}
-        <View style={s.progressWrap}>
+        <View style={s.progressWrap} onLayout={e => setTrackWidth(e.nativeEvent.layout.width)}>
           <Animated.View
             style={[
               s.progressBar,
               {
-                width: progressAnim.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: ['0%', '100%'],
-                }),
+                width: trackWidth,
+                transform: [{ translateX: progressAnim.interpolate({ inputRange: [0, 1], outputRange: [-trackWidth, 0] }) }],
               },
             ]}
           />
@@ -462,6 +469,31 @@ const s = StyleSheet.create({
     fontFamily: 'Nunito_400Regular',
     color: Colors.text,
     lineHeight: 20,
+  },
+
+  worldTeaser: {
+    width: '100%',
+    backgroundColor: 'rgba(6,182,212,0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(6,182,212,0.25)',
+    borderRadius: 14,
+    padding: 12,
+    alignItems: 'center',
+    gap: 4,
+    marginBottom: 4,
+  },
+  worldTeaserTitle: {
+    fontSize: 15,
+    fontFamily: 'Nunito_900Black',
+    color: '#0891B2',
+    textAlign: 'center',
+  },
+  worldTeaserSub: {
+    fontSize: 12,
+    fontFamily: 'Nunito_400Regular',
+    color: 'rgba(8,145,178,0.8)',
+    textAlign: 'center',
+    lineHeight: 18,
   },
 
   progressWrap: {
