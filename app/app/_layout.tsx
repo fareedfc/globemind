@@ -53,13 +53,18 @@ export default function RootLayout() {
     // Older implicit-flow URLs carry #access_token=XXX (hash fragment) — kept for password reset.
     const handleUrl = async (url: string) => {
       // ── PKCE flow: thinkpop://confirm?code=XXX ──────────────────────────────
+      const isReset = url.includes('reset');
       const queryString = url.includes('?') ? url.split('?')[1] : '';
       const queryParams = Object.fromEntries(new URLSearchParams(queryString));
       if (queryParams.code) {
         const { data, error } = await supabase.auth.exchangeCodeForSession(queryParams.code);
         if (!error && data.session) {
-          await initSession();
-          router.replace('/(tabs)/journey');
+          if (isReset) {
+            router.replace('/reset-password');
+          } else {
+            await initSession();
+            router.replace('/(tabs)/journey');
+          }
         }
         return;
       }
