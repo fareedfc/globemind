@@ -213,6 +213,7 @@ export const useAuthStore = create<AuthState>()(
           domains: { memory: 15, logic: 15, speed: 15, pattern: 15 },
           prevDomains: { memory: 15, logic: 15, speed: 15, pattern: 15 },
           weeklyBaseline: 0,
+          weekStart: new Date(new Date().setDate(new Date().getDate() - new Date().getDay())).toISOString().slice(0, 10),
           weeklyGamesPlayed: { memory: 0, logic: 0, speed: 0, pattern: 0 },
           weeklyPlayDays: [],
         } as any);

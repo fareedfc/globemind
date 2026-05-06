@@ -123,8 +123,8 @@ Existing brain training apps (Lumosity, BrainHQ) feel like homework. ThinkPop fe
 - Logged-in users: "Signed in as [name]" + Log out
 
 ## Monetisation — Built
-- `playerStore`: `isPremium` flag, `dailyLevelsPlayed` counter, `FREE_DAILY_LEVELS = 10`, `MAX_LIVES = 10`, `DAILY_START_LIVES = 5`, `REFILL_MS = 15min`
-- **Lives system**: daily reset to 5 lives each new day + refill timer starts immediately (+1 life every 15 min up to max 10). Premium bypasses entirely. `checkDailyLivesReset()` called on mount via `useLives` hook.
+- `playerStore`: `isPremium` flag, `dailyLevelsPlayed` counter, `FREE_DAILY_LEVELS = 10`, `MAX_LIVES = 10`, `DAILY_START_LIVES = 5`, `REFILL_MS = 15min`, `MAX_DAILY_REFILLS = 5`
+- **Lives system**: daily reset to 5 lives each new day + refill timer starts immediately (+1 life every 15 min, max 5 refills/day = 10 total daily lives). Premium bypasses entirely. `checkDailyLivesReset()` called on mount via `useLives` hook.
 - Journey play gate: premium skips all limits → free checks daily cap (10/day) → lives check
 - Paywall (`app/paywall.tsx`): reason-aware (lives vs daily cap), feature comparison table (4 rows: Daily levels, Lives, Strengths, Weekly Report — no Ads row), real RevenueCat purchase flow, success screen, Restore Purchase
 - Premium pill shown in Journey TopBar (👑 Premium replaces ❤️ lives)
@@ -154,9 +154,12 @@ Existing brain training apps (Lumosity, BrainHQ) feel like homework. ThinkPop fe
 - `authStore` — owns hydration: calls `pullAll` → hydrates playerStore, progressStore, brainStore
 - Stores call `getCurrentUserId()` + push functions on mutations (fire-and-forget)
 - Guest users: local-only, no sync
+- **Logout wipes all local stores** (playerStore, progressStore, brainStore reset to defaults) → on next login `hydrateStores` pulls from Supabase → progress restored
+- **Account deletion**: Supabase Edge Function `delete-account` — deletes brain_scores, level_completions, profiles, then auth user. Called from Settings → Delete Account.
 
 ### Auth Flow
 - `signUp` → Supabase → if no session (email unconfirmed) → returns `needsConfirmation: true`
+- Password reset deep link: `thinkpop://reset` → `app/reset.tsx` (catch screen) → `_layout.tsx` handleUrl detects `reset` in URL → routes to `/reset-password`. Both PKCE (`?code=`) and implicit (`#access_token=`) flows handled.
 - Auth screen shows "Check your inbox 📬" state with resend button (30s cooldown)
 - `login` → if "Email not confirmed" error → friendly message shown
 - Deep links handled in `_layout.tsx` via `Linking.addEventListener` + `Linking.getInitialURL`
