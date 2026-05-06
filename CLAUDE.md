@@ -206,17 +206,19 @@ Key files:
 - `lib/sync.ts` — push/pull functions (pure I/O, no store imports)
 - `lib/userId.ts` — userId singleton (breaks circular import chains)
 - `stores/authStore.ts` — Supabase auth + store hydration
+- `metro.config.js` — Metro bundler config: custom resolveRequest fixes package boundary issue caused by expo-router v6 requiring `app/app/package.json`
+- `app/app/package.json` — required by expo-router v6 (ConfigError otherwise); metro.config.js prevents it from being treated as a Metro package boundary
 
 ## Tech Stack
 - **React Native + Expo (SDK 54)** — iOS + Android
-- **expo-router** — file-based navigation
+- **expo-router v6** — file-based navigation; requires `app/app/package.json` (stub, no fields); `metro.config.js` custom `resolveRequest` prevents this from breaking Metro's relative imports
 - **Zustand + AsyncStorage** — local state persistence
 - **React Native built-in `Animated`** — all animations (no Reanimated)
 - **expo-haptics** — tactile feedback
 - **@supabase/supabase-js** — backend auth + database sync
 - **react-native-url-polyfill** — required for Supabase in React Native
 - Backend: Supabase (LIVE — auth, scores, progress)
-- Subscriptions: RevenueCat (TODO — currently mocked)
+- Subscriptions: RevenueCat (fully wired iOS + Android)
 
 ## Remaining App Store Blockers
 1. **EAS project ID** — run `npx eas init` (Apple Developer account now active), update app.json

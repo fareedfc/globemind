@@ -231,13 +231,16 @@ export const useAuthStore = create<AuthState>()(
               method: 'POST',
               headers: {
                 Authorization: `Bearer ${session.access_token}`,
+                'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5meHhtaHR6Z3lrbHhsenVlenR6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwOTY2NzAsImV4cCI6MjA5MDY3MjY3MH0.hVN-MgEv1AHRCV6j9wrx_ILYD7pgtTw3YBxx770cKg8',
                 'Content-Type': 'application/json',
               },
             }
           );
 
-          const body = await res.json();
-          if (!res.ok) return { error: body.error ?? 'Failed to delete account' };
+          const text = await res.text();
+          let body: any = {};
+          try { body = JSON.parse(text); } catch {}
+          if (!res.ok) return { error: body.error ?? `HTTP ${res.status}: ${text.slice(0, 100)}` };
 
           // Clear all local state
           await AsyncStorage.clear();
