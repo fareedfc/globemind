@@ -201,6 +201,21 @@ export const useAuthStore = create<AuthState>()(
       logout: async () => {
         await supabase.auth.signOut();
         setCurrentUserId(null);
+        // Wipe local state so device shows clean slate — progress restored from cloud on next login
+        usePlayerStore.setState({
+          score: 0, lives: 5, streak: 0, isPremium: false,
+          dailyLevelsPlayed: 0, dailyLevelsDate: null,
+          dailyLivesRefilled: 0, lastPlayedDate: null,
+          livesResetDate: null, nextRefillAt: null,
+        } as any);
+        useProgressStore.setState({ currentLevelId: 1, completions: {}, lastPlayedAt: {} });
+        useBrainStore.setState({
+          domains: { memory: 15, logic: 15, speed: 15, pattern: 15 },
+          prevDomains: { memory: 15, logic: 15, speed: 15, pattern: 15 },
+          weeklyBaseline: 0,
+          weeklyGamesPlayed: { memory: 0, logic: 0, speed: 0, pattern: 0 },
+          weeklyPlayDays: [],
+        } as any);
         set({ isLoggedIn: false, userId: null, email: null, name: null });
       },
 
