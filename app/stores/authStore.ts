@@ -226,7 +226,7 @@ export const useAuthStore = create<AuthState>()(
           if (!session) return { error: 'Not logged in' };
 
           const res = await fetch(
-            'https://nfxxmhtzgyklxlzueztz.supabase.co/functions/v1/delete-account',
+            'https://nfxxmhtzgyklxlzueztz.supabase.co/functions/v1/smooth-processor',
             {
               method: 'POST',
               headers: {
