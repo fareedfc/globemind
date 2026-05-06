@@ -1,10 +1,10 @@
 # ThinkPop — App Store Listing
 
-## Status (as of 2026-05-05)
-- iOS build: in progress (EAS free tier queue)
-- Android build: in progress (EAS free tier queue)
-- Android production access: applied, awaiting Google approval
-- iOS App Store Connect listing: mostly complete — awaiting build to attach + submit
+## Status (as of 2026-05-06)
+- iOS: ✅ Submitted for Apple review — awaiting approval (1-3 days)
+- Android build: ✅ Complete — .aab ready to download from expo.dev
+- Android production access: applied, awaiting Google approval (2-7 days)
+- RevenueCat iOS: App Store Connect API key pending (not a blocker)
 
 ---
 
