@@ -19,13 +19,14 @@ function SectionHeader({ title }: { title: string }) {
 }
 
 function Row({
-  label, icon, right, onPress, disabled,
+  label, icon, right, onPress, disabled, danger,
 }: {
   label: string;
   icon?: any;
   right?: React.ReactNode;
   onPress?: () => void;
   disabled?: boolean;
+  danger?: boolean;
 }) {
   const inner = (
     <View style={[s.row, disabled && s.rowDisabled]}>
@@ -35,7 +36,7 @@ function Row({
             <Image source={icon} style={s.rowIcon} resizeMode="contain" />
           </View>
         )}
-        <Text style={[s.rowLabel, disabled && s.rowLabelDisabled]}>{label}</Text>
+        <Text style={[s.rowLabel, disabled && s.rowLabelDisabled, danger && s.rowLabelDanger]}>{label}</Text>
       </View>
       <View style={s.rowRight}>{right}</View>
     </View>
@@ -49,7 +50,7 @@ function Row({
 }
 
 export default function SettingsScreen() {
-  const { isLoggedIn, name, email, logout } = useAuthStore();
+  const { isLoggedIn, name, email, logout, deleteAccount } = useAuthStore();
   const { hapticsEnabled, toggleHaptics, isPremium, streak } = usePlayerStore();
   const [notifStatus, setNotifStatus] = useState<Notifications.PermissionStatus | null>(null);
 
@@ -81,6 +82,28 @@ export default function SettingsScreen() {
       { text: 'Cancel', style: 'cancel' },
       { text: 'Log out', style: 'destructive', onPress: logout },
     ]);
+  };
+
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      'Delete Account',
+      'This will permanently delete your account and all your data. This cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete Account',
+          style: 'destructive',
+          onPress: async () => {
+            const { error } = await deleteAccount();
+            if (error) {
+              Alert.alert('Error', error);
+            } else {
+              router.replace('/onboarding');
+            }
+          },
+        },
+      ]
+    );
   };
 
   return (
@@ -122,6 +145,8 @@ export default function SettingsScreen() {
                 </View>
                 <View style={s.divider} />
                 <Row label="Log out" onPress={handleLogout} right={<Text style={s.chevron}>›</Text>} />
+                <View style={s.divider} />
+                <Row label="Delete Account" onPress={handleDeleteAccount} danger right={<Text style={[s.chevron, { color: '#EF4444' }]}>›</Text>} />
               </>
             ) : (
               <Row
@@ -275,6 +300,7 @@ const s = StyleSheet.create({
   rowIcon: { width: 22, height: 22 },
   rowDisabled: { opacity: 0.5 },
   rowLabel: { fontSize: 15, fontFamily: 'Nunito_700Bold', color: Colors.text },
+  rowLabelDanger: { color: '#EF4444' },
   rowLabelDisabled: { color: Colors.muted },
   rowSub: { fontSize: 13, fontFamily: 'Nunito_400Regular', color: Colors.muted },
   rowRight: { flexDirection: 'row', alignItems: 'center' },

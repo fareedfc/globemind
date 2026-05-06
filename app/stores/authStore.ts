@@ -19,8 +19,9 @@ interface AuthState {
   resendConfirmation: (email: string)                          => Promise<{ error?: string }>;
   resetPassword:      (email: string)                          => Promise<{ error?: string }>;
   updatePassword:     (newPassword: string)                    => Promise<{ error?: string }>;
-  logout:      () => Promise<void>;
-  initSession: () => Promise<void>;
+  logout:        () => Promise<void>;
+  deleteAccount: () => Promise<{ error?: string }>;
+  initSession:   () => Promise<void>;
 }
 
 function hydrateStores(data: Awaited<ReturnType<typeof pullAll>>, userId: string) {
@@ -201,6 +202,40 @@ export const useAuthStore = create<AuthState>()(
         await supabase.auth.signOut();
         setCurrentUserId(null);
         set({ isLoggedIn: false, userId: null, email: null, name: null });
+      },
+
+      deleteAccount: async () => {
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (!session) return { error: 'Not logged in' };
+
+          const res = await fetch(
+            'https://nfxxmhtzgyklxlzueztz.supabase.co/functions/v1/delete-account',
+            {
+              method: 'POST',
+              headers: {
+                Authorization: `Bearer ${session.access_token}`,
+                'Content-Type': 'application/json',
+              },
+            }
+          );
+
+          const body = await res.json();
+          if (!res.ok) return { error: body.error ?? 'Failed to delete account' };
+
+          // Clear all local state
+          await AsyncStorage.clear();
+          setCurrentUserId(null);
+          usePlayerStore.setState({ score: 0, lives: 5, streak: 0, isPremium: false, dailyLevelsPlayed: 0 } as any);
+          useProgressStore.setState({ currentLevelId: 1, completions: {}, lastPlayedAt: {} });
+          useBrainStore.setState({ domains: { memory: 15, logic: 15, speed: 15, pattern: 15 } } as any);
+          await supabase.auth.signOut();
+          set({ isLoggedIn: false, userId: null, email: null, name: null });
+
+          return {};
+        } catch (e: any) {
+          return { error: e?.message ?? 'Something went wrong' };
+        }
       },
 
       initSession: async () => {
