@@ -1,12 +1,20 @@
 # ThinkPop — App Store Listing
 
+## Status (as of 2026-05-05)
+- iOS build: in progress (EAS free tier queue)
+- Android build: in progress (EAS free tier queue)
+- Android production access: applied, awaiting Google approval
+- iOS App Store Connect listing: mostly complete — awaiting build to attach + submit
+
+---
+
 ## App Name
 ThinkPop
 
-## Subtitle (29/30 chars)
+## Subtitle (29/30 chars) ✅
 Daily Puzzle Games for Adults
 
-## Description
+## Description ✅
 ThinkPop is the daily game habit built for adults who love a real challenge.
 
 Four game modes. Hundreds of levels. Fresh variety every day.
@@ -32,37 +40,79 @@ Sessions are 5–10 minutes. Perfect for a morning coffee, a lunch break, or win
 
 Download ThinkPop and start your streak today.
 
-## Keywords (98/100 chars)
+## Keywords (98/100 chars) ✅
 puzzle,brain game,memory,logic,pattern,daily game,adult game,quiz,speed game,brain training,focus
 
-## Category
+## Category ✅
 Games → Puzzle
 
-## Support URL
-support@thinkpop.app
-(Note: App Store Connect requires a web URL — use https://fareedfc.github.io/thinkpop-legal/ and reference support@thinkpop.app on that page)
+## Support URL ✅
+https://fareedfc.github.io/thinkpop-legal/
+(support@thinkpop.app referenced on that page)
 
-## Privacy Policy URL
+## Privacy Policy URL ✅
 https://www.iubenda.com/privacy-policy/14041250
 
-## Terms & Conditions URL
+## Terms & Conditions URL ✅
 https://fareedfc.github.io/thinkpop-legal/terms.html
 
-## Pricing
+## Copyright ✅
+© 2026 Fareed Chamadiya
+
+## Pricing ✅
 Free (with In-App Purchases)
 
-## In-App Purchases
-- ThinkPop Unlimited Monthly — $3.99/month
-- ThinkPop Unlimited Annual — $24.99/year
+## In-App Purchases ✅
+- ThinkPop Unlimited Monthly — $3.99/month (Product ID: thinkpop_unlimited_monthly)
+- ThinkPop Unlimited Annual — $24.99/year (Product ID: thinkpop_unlimited_annual)
+- Subscription Group: ThinkPop Unlimited (Group ID: 22031228)
+- Both set to Ready to Submit
 
-## Age Rating
-4+ (complete questionnaire in App Store Connect)
+## Age Rating ✅
+4+
 
-## App Review Notes
+## App Review Notes ✅
 The app does not require a login to play. Tap "Play Now" on the landing screen to start immediately as a guest. Complete any level to see the full game flow including the win screen, level transition, and journey map progression. To test the paywall, exhaust your daily lives or play 10 levels. Demo account available on request.
 
 ## Release
 Manual release recommended — allows you to control the launch moment.
+
+## App Privacy ✅
+Data collected:
+- Email Address — App Functionality, Analytics (linked to identity, not used for tracking)
+- User ID — App Functionality, Analytics (linked to identity, not used for tracking)
+- Product Interaction — Analytics, App Functionality
+- Crash Data — App Functionality
+
+## App Store Connect Setup ✅
+- Age ratings: 4+ ✅
+- DSA compliance: completed ✅
+- Paid Apps Agreement: signed ✅
+- Legal entity: updated ✅
+- Bank account: added ✅
+- Tax form: W-9, Non-Exempt Payee ✅
+- Content Rights: no third-party content ✅
+- App-Specific Shared Secret: generated, added to RevenueCat ✅
+- In-App Purchase Key: JB86HFBT72 (Issuer: c8429786-d5f3-4705-a8b2-073cf1322f1d) ✅
+- Screenshots: uploaded (6.7" format, 1290×2796) ✅
+- Subscriptions linked to version ✅
+
+## Remaining Steps for iOS Submit
+1. Wait for EAS build to finish
+2. Run: `npx eas submit --platform ios --profile production`
+3. Attach build to version in App Store Connect
+4. Hit Submit for Review
+
+## Remaining Steps for Android Submit
+1. Download .aab from expo.dev when build finishes
+2. Wait for Google production access approval
+3. Upload .aab to Google Play Console → Production → Create new release
+4. Submit for review
+
+## EAS Submit Config (eas.json)
+- Apple ID: fareedfc@icloud.com
+- ASC App ID: 6762158015
+- Apple Team ID: AR56Y99XT3
 
 ## Notification Texts (for reference)
 - Daily 9am: "Time for ThinkPop! ⚡" / "Your daily dose of ThinkPop awaits."
