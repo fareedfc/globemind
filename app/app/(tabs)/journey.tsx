@@ -322,7 +322,7 @@ export default function JourneyScreen() {
                   activeOpacity={0.85}
                   onPress={() => {
                     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                    if (!isPremium && lives <= 0) {
+                    if (false && !isPremium && lives <= 0) {
                       closeModal();
                       router.push('/paywall?reason=lives');
                       return;
