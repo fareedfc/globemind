@@ -76,7 +76,7 @@ export function PathSVG({ width = MAP_WIDTH, height = MAP_HEIGHT }: Props) {
               d={fullPath}
               fill="none"
               stroke="rgba(0,0,0,0.12)"
-              strokeWidth={26}
+              strokeWidth={45}
               strokeLinecap="round"
               strokeLinejoin="round"
             />
@@ -85,7 +85,7 @@ export function PathSVG({ width = MAP_WIDTH, height = MAP_HEIGHT }: Props) {
               d={segments[i]}
               fill="none"
               stroke={WORLD_COLORS[i]}
-              strokeWidth={18}
+              strokeWidth={35}
               strokeLinecap="round"
               strokeLinejoin="round"
             />
@@ -94,7 +94,7 @@ export function PathSVG({ width = MAP_WIDTH, height = MAP_HEIGHT }: Props) {
               d={segments[i]}
               fill="none"
               stroke="rgba(255,255,255,0.35)"
-              strokeWidth={8}
+              strokeWidth={14}
               strokeLinecap="round"
               strokeLinejoin="round"
             />
@@ -103,7 +103,7 @@ export function PathSVG({ width = MAP_WIDTH, height = MAP_HEIGHT }: Props) {
               d={fullPath}
               fill="none"
               stroke="rgba(255,255,255,0.55)"
-              strokeWidth={2.5}
+              strokeWidth={4}
               strokeLinecap="round"
               strokeDasharray="12 14"
             />

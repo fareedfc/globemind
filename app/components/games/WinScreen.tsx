@@ -148,16 +148,13 @@ export function WinScreen({ data, levelId, onExit }: Props) {
       Animated.spring(popScale, { toValue: 1.15, tension: 260, friction: 5, useNativeDriver: true }),
       Animated.spring(popScale, { toValue: 1,    tension: 200, friction: 8, useNativeDriver: true }),
       Animated.delay(340),
-      Animated.timing(popOpacity, { toValue: 0, duration: 240, useNativeDriver: true }),
+      Animated.parallel([
+        // POP! fades out while breakout icon springs in — seamless handoff
+        Animated.timing(popOpacity, { toValue: 0, duration: 240, useNativeDriver: true }),
+        Animated.spring(iconBreakoutAnim, { toValue: 1, tension: 120, friction: 6, useNativeDriver: true }),
+      ]),
     ]).start(() => {
       setPopGone(true);
-      // Icon breaks out from card bottom
-      Animated.spring(iconBreakoutAnim, {
-        toValue: 1,
-        tension: 120,
-        friction: 6,
-        useNativeDriver: true,
-      }).start();
       setTimeout(() => {
         Animated.timing(progressAnim, {
           toValue: 1,
@@ -437,8 +434,8 @@ const s = StyleSheet.create({
     marginBottom: 4,
   },
   breakoutIcon: {
-    width: 96,
-    height: 96,
+    width: 130,
+    height: 130,
   },
 
   // Stats bare on world background
@@ -446,7 +443,7 @@ const s = StyleSheet.create({
     flexDirection: 'row',
     gap: 9,
     marginHorizontal: 16,
-    marginTop: 58,
+    marginTop: 68,
     marginBottom: 8,
   },
   statCard: {

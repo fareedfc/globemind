@@ -148,12 +148,12 @@ const s = StyleSheet.create({
     shadowRadius: 10,
     elevation: 10,
   },
-  bubbleLocked: {
-    backgroundColor: 'rgba(0,0,0,0.06)',
-    borderColor: Colors.border,
-  },
   dimmed: {
-    opacity: 0.45,
+    opacity: 0.6,
+  },
+  bubbleLocked: {
+    backgroundColor: 'rgba(0,0,0,0.75)',
+    borderColor: 'rgba(150,150,165,0.5)',
   },
   ring: {
     position: 'absolute',

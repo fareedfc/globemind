@@ -19,7 +19,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.thinkpop.thinkapp",
-      "buildNumber": "2",
+      "buildNumber": "3",
       "infoPlist": {
         "NSCameraUsageDescription": "ThinkPop does not use your camera.",
         "NSMicrophoneUsageDescription": "ThinkPop does not use your microphone.",
