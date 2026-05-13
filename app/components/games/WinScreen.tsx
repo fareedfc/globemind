@@ -264,44 +264,41 @@ export function WinScreen({ data, levelId, onExit }: Props) {
         </View>
       </View>
 
-      {/* Card + icon wrapped together so negative margin is contained.
-          Stats then position cleanly after the full wrapper height. */}
-      <View>
-        <View style={s.card}>
-          <Animated.View style={[s.emojiWrap, { transform: [{ scale: burstAnim }] }]}>
-            <Text style={s.emoji}>{data.emoji}</Text>
-          </Animated.View>
+      {/* Card — title, score, sub only */}
+      <View style={s.card}>
+        <Animated.View style={[s.emojiWrap, { transform: [{ scale: burstAnim }] }]}>
+          <Text style={s.emoji}>{data.emoji}</Text>
+        </Animated.View>
 
-          <Text style={s.title}>{data.title}</Text>
+        <Text style={s.title}>{data.title}</Text>
 
-          <View style={s.scoreDelta}>
-            <Text style={s.scoreDeltaNum}>{displayScore.toLocaleString()}</Text>
-            <View style={s.scoreDeltaBadge}>
-              <Text style={s.scoreDeltaBadgeTxt}>+{pointsEarned} ⭐</Text>
-            </View>
+        <View style={s.scoreDelta}>
+          <Text style={s.scoreDeltaNum}>{displayScore.toLocaleString()}</Text>
+          <View style={s.scoreDeltaBadge}>
+            <Text style={s.scoreDeltaBadgeTxt}>+{pointsEarned} ⭐</Text>
           </View>
-
-          <Text style={s.sub}>{data.sub}</Text>
-
-          {levelId === 101 && (
-            <View style={s.worldTeaser}>
-              <Text style={s.worldTeaserTitle}>🌌 Universe 2 is on its way!</Text>
-              <Text style={s.worldTeaserSub}>You've conquered Universe 1. Stay tuned for the next challenge.</Text>
-            </View>
-          )}
         </View>
 
-        {/* Icon breaks out from card bottom — negative margin contained in parent */}
-        <View style={s.iconBreakout}>
-          <Animated.Image
-            source={GAME_ICONS[data.type]}
-            style={[s.breakoutIcon, { transform: [{ scale: iconBreakoutAnim }] }]}
-            resizeMode="contain"
-          />
-        </View>
+        <Text style={s.sub}>{data.sub}</Text>
+
+        {levelId === 101 && (
+          <View style={s.worldTeaser}>
+            <Text style={s.worldTeaserTitle}>🌌 Universe 2 is on its way!</Text>
+            <Text style={s.worldTeaserSub}>You've conquered Universe 1. Stay tuned for the next challenge.</Text>
+          </View>
+        )}
       </View>
 
-      {/* Stats — bare on world background, cleanly after wrapper */}
+      {/* Icon centered below card — springs in, no overlap */}
+      <View style={s.iconWrap}>
+        <Animated.Image
+          source={GAME_ICONS[data.type]}
+          style={[s.breakoutIcon, { transform: [{ scale: iconBreakoutAnim }] }]}
+          resizeMode="contain"
+        />
+      </View>
+
+      {/* Stats — cleanly below icon */}
       <View style={s.statsRow}>
         {data.stats.map((stat, i) => (
           <View key={i} style={s.statCard}>
@@ -433,16 +430,15 @@ const s = StyleSheet.create({
     lineHeight: 18,
   },
 
-  // Icon pops out from card bottom edge
-  iconBreakout: {
+  // Icon centered below card, no overlap
+  iconWrap: {
     alignItems: 'center',
-    marginTop: -44,
+    marginTop: 20,
     marginBottom: 4,
-    zIndex: 10,
   },
   breakoutIcon: {
-    width: 88,
-    height: 88,
+    width: 96,
+    height: 96,
   },
 
   // Stats bare on world background
