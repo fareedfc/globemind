@@ -245,7 +245,7 @@ export default function JourneyScreen() {
             <Text style={s.bannerLabel}>YOUR JOURNEY</Text>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 1 }}>
               <Text style={s.bannerTitle}>Level {currentLevelId} of {LEVELS.length}</Text>
-              <Image source={require('../../assets/icons/icon-world.png')} style={{ width: 19.2, height: 19.2 }} resizeMode="contain" />
+              <Image source={require('../../assets/icons/icon-globe.png')} style={{ width: 19.2, height: 19.2 }} resizeMode="contain" />
             </View>
           </View>
 
