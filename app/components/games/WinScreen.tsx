@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Animated, Dimensions, Image, ImageBackground, ImageSourcePropType } from 'react-native';
+import { View, Text, StyleSheet, Animated, Dimensions, Image, ImageBackground, ImageSourcePropType } from 'react-native';
 
 const WORLD_BGS = [
   require('../../assets/worlds/w1-forest.png'),
@@ -77,6 +77,7 @@ function Confetti() {
     </View>
   );
 }
+
 import { router } from 'expo-router';
 import { Colors } from '../../constants/colors';
 import { LEVELS } from '../../data/levels';
@@ -93,7 +94,7 @@ export interface WinData {
   sub: string;
   stats: Array<{ num: string | number; lbl: string }>;
   insight: string;
-  stars: number; // 1–3
+  stars: number;
 }
 
 interface Props {
@@ -113,13 +114,12 @@ export function WinScreen({ data, levelId, onExit }: Props) {
   const rewarded = useRef(false);
   const oldDomainPct = useRef(useBrainStore.getState().domains[data.type]).current;
 
-  // POP! moment
   const [popGone, setPopGone] = useState(false);
   const popScale = useRef(new Animated.Value(0)).current;
   const popOpacity = useRef(new Animated.Value(1)).current;
 
-  // Animated values
   const burstAnim = useRef(new Animated.Value(0)).current;
+  const iconBreakoutAnim = useRef(new Animated.Value(0)).current;
   const starAnims = useRef([
     new Animated.Value(0),
     new Animated.Value(0),
@@ -128,11 +128,8 @@ export function WinScreen({ data, levelId, onExit }: Props) {
     new Animated.Value(0),
   ]).current;
 
-  // Auto-continue progress bar (runs after POP! fades)
   const progressAnim = useRef(new Animated.Value(0)).current;
   const [trackWidth, setTrackWidth] = useState(0);
-
-  // Score counter display
   const [displayScore, setDisplayScore] = useState(usePlayerStore.getState().score);
 
   const navigateNext = () => {
@@ -145,10 +142,8 @@ export function WinScreen({ data, levelId, onExit }: Props) {
   };
 
   useEffect(() => {
-    // Win haptic
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 
-    // POP! splash — runs first, content reveals after
     Animated.sequence([
       Animated.spring(popScale, { toValue: 1.15, tension: 260, friction: 5, useNativeDriver: true }),
       Animated.spring(popScale, { toValue: 1,    tension: 200, friction: 8, useNativeDriver: true }),
@@ -156,7 +151,13 @@ export function WinScreen({ data, levelId, onExit }: Props) {
       Animated.timing(popOpacity, { toValue: 0, duration: 240, useNativeDriver: true }),
     ]).start(() => {
       setPopGone(true);
-      // Start progress bar after a short pause so content has landed
+      // Icon breaks out from card bottom
+      Animated.spring(iconBreakoutAnim, {
+        toValue: 1,
+        tension: 120,
+        friction: 6,
+        useNativeDriver: true,
+      }).start();
       setTimeout(() => {
         Animated.timing(progressAnim, {
           toValue: 1,
@@ -171,13 +172,11 @@ export function WinScreen({ data, levelId, onExit }: Props) {
     if (!rewarded.current) {
       rewarded.current = true;
       const oldScore = usePlayerStore.getState().score;
-
       addScore(pointsEarned);
       completeLevel(levelId, data.stars);
       recordGame(data.type, data.stars, levelId, isFirstClear, lastPlayedAt);
       recordPlay();
 
-      // Animate score counter: old → old + earned over 1.2s
       const steps = 24;
       const stepSize = pointsEarned / steps;
       let current = oldScore;
@@ -195,7 +194,6 @@ export function WinScreen({ data, levelId, onExit }: Props) {
       }, 1200 / steps);
     }
 
-    // Emoji burst — slight delay so it lands after POP!
     setTimeout(() => {
       Animated.spring(burstAnim, {
         toValue: 1,
@@ -205,7 +203,6 @@ export function WinScreen({ data, levelId, onExit }: Props) {
       }).start();
     }, 500);
 
-    // Stars pop in one by one — after POP! fades
     starAnims.forEach((anim, i) => {
       setTimeout(() => {
         if (i < data.stars) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -223,7 +220,8 @@ export function WinScreen({ data, levelId, onExit }: Props) {
 
   return (
     <ImageBackground source={worldBg} style={s.root} resizeMode="cover">
-      {/* POP! splash overlay */}
+
+      {/* POP! splash — brief full-screen icon burst */}
       {!popGone && (
         <Animated.View
           pointerEvents="none"
@@ -238,7 +236,7 @@ export function WinScreen({ data, levelId, onExit }: Props) {
       )}
       <Confetti />
 
-      {/* Stars float above the content section, against world bg */}
+      {/* Stars float above card against world bg */}
       <View style={s.starsWrap}>
         <View style={s.starsRow}>
           {[0, 1, 2, 3, 4].map(i => {
@@ -266,16 +264,14 @@ export function WinScreen({ data, levelId, onExit }: Props) {
         </View>
       </View>
 
-      {/* Content section — high opacity for readability */}
-      <View style={s.topSection}>
-        {/* Emoji */}
+      {/* Card — title, score, sub only (no stats) */}
+      <View style={s.card}>
         <Animated.View style={[s.emojiWrap, { transform: [{ scale: burstAnim }] }]}>
           <Text style={s.emoji}>{data.emoji}</Text>
         </Animated.View>
 
         <Text style={s.title}>{data.title}</Text>
 
-        {/* Score counter */}
         <View style={s.scoreDelta}>
           <Text style={s.scoreDeltaNum}>{displayScore.toLocaleString()}</Text>
           <View style={s.scoreDeltaBadge}>
@@ -285,41 +281,47 @@ export function WinScreen({ data, levelId, onExit }: Props) {
 
         <Text style={s.sub}>{data.sub}</Text>
 
-        {/* Stat cards */}
-        <View style={s.statsRow}>
-          {data.stats.map((stat, i) => (
-            <View key={i} style={s.statCard}>
-              <Text style={s.statNum}>{stat.num}</Text>
-              <Text style={s.statLbl}>{stat.lbl}</Text>
-            </View>
-          ))}
-        </View>
-
-        {/* World 1 complete teaser */}
         {levelId === 101 && (
           <View style={s.worldTeaser}>
             <Text style={s.worldTeaserTitle}>🌌 Universe 2 is on its way!</Text>
             <Text style={s.worldTeaserSub}>You've conquered Universe 1. Stay tuned for the next challenge.</Text>
           </View>
         )}
-
-        {/* Auto-continue bar */}
-        <View style={s.progressWrap} onLayout={e => setTrackWidth(e.nativeEvent.layout.width)}>
-          <Animated.View
-            style={[
-              s.progressBar,
-              {
-                width: trackWidth,
-                transform: [{ translateX: progressAnim.interpolate({ inputRange: [0, 1], outputRange: [-trackWidth, 0] }) }],
-              },
-            ]}
-          />
-        </View>
-        <Text style={s.progressLbl}>Continuing to Journey...</Text>
       </View>
 
-      {/* Bottom world art strip */}
-      <View style={s.bottomSection} />
+      {/* Game icon breaks out from card bottom edge */}
+      <View style={s.iconBreakout}>
+        <Animated.Image
+          source={GAME_ICONS[data.type]}
+          style={[s.breakoutIcon, { transform: [{ scale: iconBreakoutAnim }] }]}
+          resizeMode="contain"
+        />
+      </View>
+
+      {/* Stats — bare on world background */}
+      <View style={s.statsRow}>
+        {data.stats.map((stat, i) => (
+          <View key={i} style={s.statCard}>
+            <Text style={s.statNum}>{stat.num}</Text>
+            <Text style={s.statLbl}>{stat.lbl}</Text>
+          </View>
+        ))}
+      </View>
+
+      {/* Auto-continue bar — bare on world background */}
+      <View style={s.progressWrap} onLayout={e => setTrackWidth(e.nativeEvent.layout.width)}>
+        <Animated.View
+          style={[
+            s.progressBar,
+            {
+              width: trackWidth,
+              transform: [{ translateX: progressAnim.interpolate({ inputRange: [0, 1], outputRange: [-trackWidth, 0] }) }],
+            },
+          ]}
+        />
+      </View>
+      <Text style={s.progressLbl}>Continuing to Journey...</Text>
+
     </ImageBackground>
   );
 }
@@ -338,7 +340,6 @@ const s = StyleSheet.create({
     height: 140,
   },
 
-  // Stars float above the white section against the world bg
   starsWrap: {
     alignItems: 'center',
     paddingTop: 28,
@@ -350,19 +351,15 @@ const s = StyleSheet.create({
   },
   star: { width: 36, height: 36 },
 
-  topSection: {
-    backgroundColor: 'rgba(255,255,255,0.82)',
+  // Card: title + score + sub only
+  card: {
+    backgroundColor: 'rgba(255,255,255,0.88)',
     alignItems: 'center',
     paddingHorizontal: 24,
     paddingTop: 20,
-    paddingBottom: 16,
+    paddingBottom: 32,
     borderRadius: 24,
     marginHorizontal: 16,
-    marginBottom: 16,
-  },
-  bottomSection: {
-    flex: 1,
-    backgroundColor: 'rgba(255,255,255,0)',
   },
 
   emojiWrap: { marginBottom: 12 },
@@ -377,7 +374,6 @@ const s = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 10,
   },
-
   scoreDelta: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -400,7 +396,6 @@ const s = StyleSheet.create({
     fontFamily: 'Nunito_700Bold',
     color: Colors.gold,
   },
-
   sub: {
     fontSize: 14,
     fontFamily: 'Nunito_400Regular',
@@ -408,14 +403,52 @@ const s = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 22,
     marginTop: 4,
-    marginBottom: 18,
   },
 
+  worldTeaser: {
+    width: '100%',
+    backgroundColor: 'rgba(6,182,212,0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(6,182,212,0.25)',
+    borderRadius: 14,
+    padding: 12,
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 12,
+  },
+  worldTeaserTitle: {
+    fontSize: 15,
+    fontFamily: 'Nunito_900Black',
+    color: '#0891B2',
+    textAlign: 'center',
+  },
+  worldTeaserSub: {
+    fontSize: 12,
+    fontFamily: 'Nunito_400Regular',
+    color: 'rgba(8,145,178,0.8)',
+    textAlign: 'center',
+    lineHeight: 18,
+  },
+
+  // Icon pops out from card bottom edge
+  iconBreakout: {
+    alignItems: 'center',
+    marginTop: -44,
+    marginBottom: 4,
+    zIndex: 10,
+  },
+  breakoutIcon: {
+    width: 88,
+    height: 88,
+  },
+
+  // Stats bare on world background
   statsRow: {
     flexDirection: 'row',
     gap: 9,
-    width: '100%',
-    marginBottom: 14,
+    marginHorizontal: 16,
+    marginTop: 12,
+    marginBottom: 8,
   },
   statCard: {
     flex: 1,
@@ -424,13 +457,11 @@ const s = StyleSheet.create({
     paddingVertical: 13,
     paddingHorizontal: 6,
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: Colors.border,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
+    shadowOpacity: 0.12,
     shadowRadius: 8,
-    elevation: 2,
+    elevation: 3,
   },
   statNum: {
     fontSize: 20,
@@ -447,62 +478,14 @@ const s = StyleSheet.create({
     textAlign: 'center',
   },
 
-  insight: {
-    width: '100%',
-    backgroundColor: 'rgba(139,63,217,0.07)',
-    borderWidth: 1,
-    borderColor: 'rgba(139,63,217,0.18)',
-    borderRadius: 13,
-    padding: 13,
-    marginBottom: 12,
-  },
-  insightLbl: {
-    fontSize: 11,
-    fontFamily: 'Nunito_700Bold',
-    color: '#8B3FD9',
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-    marginBottom: 3,
-  },
-  insightTxt: {
-    fontSize: 13,
-    fontFamily: 'Nunito_400Regular',
-    color: Colors.text,
-    lineHeight: 20,
-  },
-
-  worldTeaser: {
-    width: '100%',
-    backgroundColor: 'rgba(6,182,212,0.08)',
-    borderWidth: 1,
-    borderColor: 'rgba(6,182,212,0.25)',
-    borderRadius: 14,
-    padding: 12,
-    alignItems: 'center',
-    gap: 4,
-    marginBottom: 4,
-  },
-  worldTeaserTitle: {
-    fontSize: 15,
-    fontFamily: 'Nunito_900Black',
-    color: '#0891B2',
-    textAlign: 'center',
-  },
-  worldTeaserSub: {
-    fontSize: 12,
-    fontFamily: 'Nunito_400Regular',
-    color: 'rgba(8,145,178,0.8)',
-    textAlign: 'center',
-    lineHeight: 18,
-  },
-
+  // Progress bar bare on world background
   progressWrap: {
-    width: '100%',
+    marginHorizontal: 16,
     height: 7,
-    backgroundColor: 'rgba(0,0,0,0.07)',
+    backgroundColor: 'rgba(255,255,255,0.35)',
     borderRadius: 4,
     overflow: 'hidden',
-    marginTop: 24,
+    marginTop: 16,
     marginBottom: 8,
   },
   progressBar: {
@@ -513,9 +496,11 @@ const s = StyleSheet.create({
   progressLbl: {
     fontSize: 12,
     fontFamily: 'Nunito_700Bold',
-    color: Colors.muted,
+    color: 'rgba(255,255,255,0.9)',
     textAlign: 'center',
     letterSpacing: 0.3,
-    marginBottom: 16,
+    textShadowColor: 'rgba(0,0,0,0.25)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
 });
