@@ -161,7 +161,7 @@ export function WinScreen({ data, levelId, onExit }: Props) {
       setTimeout(() => {
         Animated.timing(progressAnim, {
           toValue: 1,
-          duration: 3200,
+          duration: 4500,
           useNativeDriver: true,
         }).start(({ finished }) => {
           if (finished) navigateNext();
