@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { AppState } from 'react-native';
 import { usePlayerStore, MAX_LIVES } from '../stores/playerStore';
 
 export function useLives() {
@@ -7,6 +8,12 @@ export function useLives() {
 
   useEffect(() => {
     checkDailyLivesReset();
+
+    // Re-check whenever app comes back to foreground
+    const sub = AppState.addEventListener('change', state => {
+      if (state === 'active') checkDailyLivesReset();
+    });
+    return () => sub.remove();
   }, []);
 
   useEffect(() => {

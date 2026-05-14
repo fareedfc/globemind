@@ -124,7 +124,7 @@ Existing brain training apps (Lumosity, BrainHQ) feel like homework. ThinkPop fe
 
 ## Monetisation — Built
 - `playerStore`: `isPremium` flag, `dailyLevelsPlayed` counter, `FREE_DAILY_LEVELS = 10`, `MAX_LIVES = 10`, `DAILY_START_LIVES = 5`, `REFILL_MS = 15min`, `MAX_DAILY_REFILLS = 5`
-- **Lives system**: daily reset to 5 lives each new day + refill timer starts immediately (+1 life every 15 min, max 5 refills/day = 10 total daily lives). Premium bypasses entirely. `checkDailyLivesReset()` called on mount via `useLives` hook.
+- **Lives system**: daily reset to 5 lives each new day + refill timer starts immediately (+1 life every 15 min, max 5 refills/day = 10 total daily lives). Premium bypasses entirely. `checkDailyLivesReset()` called on mount AND on AppState foreground event via `useLives` hook — so lives reset instantly when app is foregrounded after midnight.
 - Journey play gate: premium skips all limits → free checks daily cap (10/day) → lives check
 - Paywall (`app/paywall.tsx`): reason-aware (lives vs daily cap), feature comparison table (4 rows: Daily levels, Lives, Strengths, Weekly Report — no Ads row), real RevenueCat purchase flow, success screen, Restore Purchase
 - Premium pill shown in Journey TopBar (👑 Premium replaces ❤️ lives)
@@ -198,7 +198,7 @@ Key files:
 - `app/game/speed.tsx` — Speed game with 3 modes + 10 themed pools + dynamic grid
 - `app/game/logic.tsx` — Logic game with 3 modes + timer scaling
 - `app/game/pattern.tsx` — Pattern game with 4 modes + sequence length scaling
-- `components/games/WinScreen.tsx` — POP! + score counter + transition routing
+- `components/games/WinScreen.tsx` — POP! + score counter + transition routing. Layout: card (title+score+sub) → game icon springs in below card as POP! fades (seamless handoff) → stats row bare on world background → progress bar. 4.5s auto-continue.
 - `components/games/FailScreen.tsx` — deflating bubble fail state
 - `components/path/LevelNode.tsx` — 80px nodes, 5-star display, all unlocked for dev
 - `components/path/PathSVG.tsx` — world-coloured SVG road
